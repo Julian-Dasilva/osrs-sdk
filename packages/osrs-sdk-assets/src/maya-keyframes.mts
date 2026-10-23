@@ -1,4 +1,5 @@
-/** The runtime divides translations (12 to 14) by 128, so the dropped digits never reach the screen. */
+// The runtime reads these into a Float32Array and divides translations (12 to 14) by 128,
+// so the dropped digits never reach the screen.
 export function roundBoneMatrix(values) {
   return Array.from(values, (value, index) => {
     const scale = index >= 12 && index <= 14 ? 1e3 : 1e5;
