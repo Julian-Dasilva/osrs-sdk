@@ -7,6 +7,7 @@ import { compileScene } from "./compile-scene.mts";
 import { contourModel } from "./scene-contour.mts";
 import { applyDefinitionOverrides } from "./definition-overrides";
 import { renderFaceIndices } from "./face-rendering";
+import { keyframeTimeline, roundBoneMatrix } from "./maya-keyframes.mts";
 
 const OBJECT_TYPE = Object.freeze({
   WALL_CORNER: 2,
@@ -738,19 +739,14 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
           matrices.push(
             frameDef.framemap.animayaSkeleton
               .getAllBones()
-              // The runtime reads these into a Float32Array and divides translations (12 to 14) by 128,
-              // so the dropped digits never reach the screen.
-              .map((bone) =>
-                Array.from(bone.method687(frameDef.field1257).matrixVals, (value, index) => {
-                  const scale = index >= 12 && index <= 14 ? 1e3 : 1e5;
-                  return Math.round(value * scale) / scale;
-                }),
-              ),
+              .map((bone) => roundBoneMatrix(bone.method687(frameDef.field1257).matrixVals)),
           );
         }
-        result[id].mayaFrames = matrices;
+        const timeline = keyframeTimeline(matrices, frameSounds);
+        result[id].mayaFrames = timeline.poses;
         result[id].frames = [];
-        result[id].lengths = new Array(matrices.length).fill(1);
+        result[id].lengths = timeline.lengths;
+        if (result[id].frameSounds) result[id].frameSounds = timeline.frameSounds;
       }
     }
     return result;
