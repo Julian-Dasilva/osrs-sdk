@@ -25,7 +25,6 @@ export function validateCacheRenderBundleManifest(value: any): CacheRenderBundle
   return "asset";
 }
 
-// Waits between attempts; the attempt after the last delay is final and reports its own failure.
 const FETCH_RETRY_DELAYS_MS = [250, 750] as const;
 
 function isTransientStatus(status: number): boolean {
@@ -34,12 +33,8 @@ function isTransientStatus(status: number): boolean {
 
 async function fetchRetryingTransientFailures(url: string): Promise<Response> {
   for (const delayMs of FETCH_RETRY_DELAYS_MS) {
-    try {
-      const response = await fetch(url);
-      if (!isTransientStatus(response.status)) return response;
-    } catch {
-      // A rejected fetch is a network failure; the next attempt or the final one reports it.
-    }
+    const response = await fetch(url).catch(() => undefined);
+    if (response && !isTransientStatus(response.status)) return response;
     await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
   return fetch(url);

@@ -98,7 +98,7 @@ test("composes attack and pose frames using sequence transform slots", () => {
 
 type FetchOutcome = "network-error" | number;
 
-// fetch is the network boundary; each URL replays its queued outcomes, and an exhausted queue repeats the last one.
+// fetch is the network boundary.
 function serveBundle(bodyOutcomes: FetchOutcome[]) {
   const body = new TextEncoder().encode("123456789");
   const manifest = { schemaVersion: 3, bundleVersion: "test", cache: { revision: 1, source: "fixture", contentHash: checksum }, assets: { body: { file: "body.bin", crc32: "cbf43926", bytes: 9 } }, references: {} };
@@ -106,7 +106,8 @@ function serveBundle(bodyOutcomes: FetchOutcome[]) {
   (global as any).fetch = async (url: string) => {
     requests.push(url);
     if (url.endsWith("manifest.json")) return { ok: true, status: 200, json: async () => manifest };
-    const outcome = bodyOutcomes[Math.min(requests.filter((request) => request === url).length - 1, bodyOutcomes.length - 1)];
+    const attempt = requests.filter((request) => request === url).length - 1;
+    const outcome = bodyOutcomes[attempt] ?? bodyOutcomes[bodyOutcomes.length - 1];
     if (outcome === "network-error") throw new TypeError("Failed to fetch");
     return { ok: outcome >= 200 && outcome < 300, status: outcome, arrayBuffer: async () => body.slice().buffer };
   };
