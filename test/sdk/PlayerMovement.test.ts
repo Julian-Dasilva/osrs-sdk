@@ -30,6 +30,23 @@ test("walking enqueues only the authoritative one-tile step", () => {
   expect(player.visualPath.map(({ x, y }) => ({ x, y }))).toEqual([{ x: 3, y: 2 }]);
 });
 
+test("a run steps one tile on the tick its run energy runs out", () => {
+  const region = new TestRegion(20, 20);
+  const player = new Player(region, { x: 2, y: 2 });
+  player.running = true;
+  player.currentStats.run = 40;
+  player.moveTo(6, 2);
+
+  player.moveTowardsDestination();
+
+  expect([player.location, player.visualPath, player.running, player.currentStats.run]).toEqual([
+    { x: 3, y: 2 },
+    [{ x: 3, y: 2, run: false }],
+    false,
+    0,
+  ]);
+});
+
 test("uses movement poses supplied by the equipped weapon", () => {
   class CustomPoseWeapon extends Weapon {
     override get idleAnimationId() { return 101; }
