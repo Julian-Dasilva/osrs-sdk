@@ -602,9 +602,12 @@ export class Player extends Unit {
     }
   }
 
+  private get runsThisOrder() {
+    return this.running && this.pace === "run-setting";
+  }
+
   moveTowardsDestination() {
     this.nextAngle = this.getTargetAngle();
-    const runs = this.running && this.pace === "run-setting";
 
     // Check if player will move this tick and at what speed
     const willMoveThisTick =
@@ -614,7 +617,7 @@ export class Player extends Unit {
     // Pre-calculate the movement to determine actual speed used
     let actualMovementSpeed = 1; // default to walk
     if (willMoveThisTick) {
-      const speed = runs ? 2 : 1;
+      const speed = this.runsThisOrder ? 2 : 1;
       const { path } = Pathing.path(this.region, this.location, this.destinationLocation, speed, this.aggro);
 
       // Actual movement speed is how many tiles we'll move this tick
@@ -626,7 +629,7 @@ export class Player extends Unit {
     }
 
     // Energy only drains when ACTUALLY running (moving 2 tiles this tick)
-    if (runs && willMoveThisTick && actualMovementSpeed === 2) {
+    if (this.runsThisOrder && willMoveThisTick && actualMovementSpeed === 2) {
       // New energy drain formula: ⌊60 + 67 * clamp[0,64](weight) / 64⌋ * (1 - agility / 300)
       const clampedWeight = Math.min(Math.max(0, this.weight), 64);
       const baseReduction = Math.floor(60 + (67 * clampedWeight) / 64);
@@ -666,7 +669,7 @@ export class Player extends Unit {
       return;
     }
 
-    const speed = runs ? 2 : 1;
+    const speed = this.runsThisOrder ? 2 : 1;
 
     const { path, destination } = Pathing.path(this.region, this.location, this.destinationLocation, speed, this.aggro);
     this.pathTargetLocation = destination;
@@ -697,7 +700,7 @@ export class Player extends Unit {
     }
     const newTiles = visualSteps.map((pos) => ({
       ...pos,
-      run: runs && path.length >= 2,
+      run: speed === 2 && path.length >= 2,
     }));
     if (ENABLE_POSITION_DEBUG) {
       newTiles.forEach((tile) => {
