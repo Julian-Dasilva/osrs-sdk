@@ -11,7 +11,7 @@ import type { Unit } from "./Unit";
 import { Viewport } from "./Viewport";
 import { MapController } from "./MapController";
 import { ControlPanelController } from "./ControlPanelController";
-import { Player } from "./Player";
+import { MovePace, Player } from "./Player";
 import { Mob } from "./Mob";
 import { World } from "./World";
 import { Region } from "./Region";
@@ -82,8 +82,13 @@ export class ClickController {
     Settings.persistToStorage();
   }
 
+  // macOS Firefox reports Control-click as a secondary press; the game treats it as a Control-modified primary click.
+  private static button(e: MouseEvent) {
+    return e.button === 2 && e.ctrlKey && navigator.platform.startsWith("Mac") ? 0 : e.button;
+  }
+
   leftClickUp(e: MouseEvent) {
-    if (e.button !== 0) {
+    if (ClickController.button(e) !== 0) {
       return;
     }
 
@@ -238,16 +243,17 @@ export class ClickController {
   }
 
   clickDown(e: MouseEvent) {
-    if (e.button === 2) {
+    const button = ClickController.button(e);
+    if (button === 2) {
       this.rightClickDown(e);
     }
 
-    if (e.button === 1) {
+    if (button === 1) {
       e.preventDefault(); // prevent autoscroll on middle click
       return;
     }
 
-    if (e.button !== 0) {
+    if (button !== 0) {
       return;
     }
     const region = Trainer.player.region;
@@ -279,7 +285,8 @@ export class ClickController {
     } else if (x !== null && y !== null) {
       this.yellowClick();
       player.showTargetMarker({ x: Math.floor(x), y: Math.floor(y) });
-      inputController.queueAction(() => this.playerWalkClick(x, y));
+      const pace: MovePace = e.ctrlKey ? "walk" : "run-setting";
+      inputController.queueAction(() => this.playerWalkClick(x, y, pace));
     }
     Viewport.viewport.contextMenu.setInactive();
   }
@@ -364,8 +371,8 @@ export class ClickController {
     Trainer.player.setAggro(mob);
   }
 
-  playerWalkClick(x: number, y: number) {
-    Trainer.player.moveTo(Math.floor(x), Math.floor(y));
+  playerWalkClick(x: number, y: number, pace: MovePace = "run-setting") {
+    Trainer.player.moveTo(Math.floor(x), Math.floor(y), pace);
   }
 
   redClick() {

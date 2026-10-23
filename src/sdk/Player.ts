@@ -51,6 +51,9 @@ const ROTATION_RADIANS_PER_CLIENT_TICK = PLAYER_ROTATION_RATE_JAU / JAU_PER_RADI
 
 const ENABLE_POSITION_DEBUG = false;
 
+/** A Control-click order walks its route even with run on; every other order follows the run setting. */
+export type MovePace = "run-setting" | "walk";
+
 export class Player extends Unit {
   manualSpellCastSelection: Weapon;
 
@@ -64,6 +67,7 @@ export class Player extends Unit {
   xpDrops: XpDrop[] = [];
   overhead: BasePrayer;
   running = true;
+  private pace: MovePace = "run-setting";
   cachedBonuses: UnitBonuses = null;
   useSpecialAttack = false;
   effects = new PlayerEffects();
@@ -324,8 +328,9 @@ export class Player extends Unit {
     this.clearXpDrops();
   }
 
-  moveTo(x: number, y: number) {
+  moveTo(x: number, y: number, pace: MovePace = "run-setting") {
     this.interruptCombat();
+    this.pace = pace;
 
     this.manualSpellCastSelection = null;
 
@@ -436,11 +441,13 @@ export class Player extends Unit {
 
     this.aggro = mob;
     this.seekingItem = null;
+    if (mob) this.pace = "run-setting";
   }
 
   setSeekingItem(item: Item) {
     this.interruptCombat();
     this.seekingItem = item;
+    this.pace = "run-setting";
   }
   determineDestination() {
     if (this.aggro) {
@@ -597,6 +604,7 @@ export class Player extends Unit {
 
   moveTowardsDestination() {
     this.nextAngle = this.getTargetAngle();
+    const runs = this.running && this.pace === "run-setting";
 
     // Check if player will move this tick and at what speed
     const willMoveThisTick =
@@ -606,7 +614,7 @@ export class Player extends Unit {
     // Pre-calculate the movement to determine actual speed used
     let actualMovementSpeed = 1; // default to walk
     if (willMoveThisTick) {
-      const speed = this.running ? 2 : 1;
+      const speed = runs ? 2 : 1;
       const { path } = Pathing.path(this.region, this.location, this.destinationLocation, speed, this.aggro);
 
       // Actual movement speed is how many tiles we'll move this tick
@@ -618,7 +626,7 @@ export class Player extends Unit {
     }
 
     // Energy only drains when ACTUALLY running (moving 2 tiles this tick)
-    if (this.running && willMoveThisTick && actualMovementSpeed === 2) {
+    if (runs && willMoveThisTick && actualMovementSpeed === 2) {
       // New energy drain formula: ⌊60 + 67 * clamp[0,64](weight) / 64⌋ * (1 - agility / 300)
       const clampedWeight = Math.min(Math.max(0, this.weight), 64);
       const baseReduction = Math.floor(60 + (67 * clampedWeight) / 64);
@@ -658,7 +666,7 @@ export class Player extends Unit {
       return;
     }
 
-    const speed = this.running ? 2 : 1;
+    const speed = runs ? 2 : 1;
 
     const { path, destination } = Pathing.path(this.region, this.location, this.destinationLocation, speed, this.aggro);
     this.pathTargetLocation = destination;
@@ -682,14 +690,14 @@ export class Player extends Unit {
     // Walking advances one authoritative tile per server tick; running may
     // advance two. Do not enqueue the second look-ahead tile for a walker or
     // the visual queue grows faster than the true tile and falls behind.
-    const visualSteps = path.slice(0, this.running ? 2 : 1);
+    const visualSteps = path.slice(0, speed);
     if (this.consumesSpace) {
       visualSteps.forEach(({ x, y }) => this.region.clearTileCollisionFlags(x, y, this.size));
       this.region.setTileCollisionFlags(this.location.x, this.location.y, this.size);
     }
     const newTiles = visualSteps.map((pos) => ({
       ...pos,
-      run: this.running && path.length >= 2,
+      run: runs && path.length >= 2,
     }));
     if (ENABLE_POSITION_DEBUG) {
       newTiles.forEach((tile) => {
