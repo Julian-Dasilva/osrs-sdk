@@ -1,7 +1,7 @@
 import { CacheRenderModel } from "../src/sdk/rendering/CacheRenderModel";
 import { applyBlendedRawFrames, applyRawFrame } from "../src/sdk/rendering/utils/animations";
 import { decodeCacheRenderPayload, mergePayloads } from "../src/sdk/rendering/utils/payloadUtils";
-import { validateCacheRenderBundleManifest } from "../src/sdk/rendering/CacheRenderBundle";
+import { CacheRenderBundle, validateCacheRenderBundleManifest } from "../src/sdk/rendering/CacheRenderBundle";
 import { crc32 } from "../src/cache-render-format";
 import { TextDecoder, TextEncoder } from "util";
 import { gzipSync } from "fflate";
@@ -94,4 +94,42 @@ test("composes attack and pose frames using sequence transform slots", () => {
   applyBlendedRawFrames(positions, [[0], [1]], [0, 1], attack, pose, [2, 9999999]);
   // Attack owns non-interleaved slot 1; pose owns interleaved slot 2.
   expect(Array.from(positions, (value) => value || 0)).toEqual([1, 0, 0, 2, 0, 0]);
+});
+
+type FetchOutcome = "network-error" | number;
+
+// fetch is the network boundary; each URL replays its queued outcomes, and an exhausted queue repeats the last one.
+function serveBundle(bodyOutcomes: FetchOutcome[]) {
+  const body = new TextEncoder().encode("123456789");
+  const manifest = { schemaVersion: 3, bundleVersion: "test", cache: { revision: 1, source: "fixture", contentHash: checksum }, assets: { body: { file: "body.bin", crc32: "cbf43926", bytes: 9 } }, references: {} };
+  const requests: string[] = [];
+  (global as any).fetch = async (url: string) => {
+    requests.push(url);
+    if (url.endsWith("manifest.json")) return { ok: true, status: 200, json: async () => manifest };
+    const outcome = bodyOutcomes[Math.min(requests.filter((request) => request === url).length - 1, bodyOutcomes.length - 1)];
+    if (outcome === "network-error") throw new TypeError("Failed to fetch");
+    return { ok: outcome >= 200 && outcome < 300, status: outcome, arrayBuffer: async () => body.slice().buffer };
+  };
+  return { bodyRequests: () => requests.filter((request) => request.endsWith("body.bin")).length };
+}
+
+test.each<FetchOutcome>(["network-error", 503, 429])("loads a cache render asset after one transient %s failure", async (failure) => {
+  const server = serveBundle([failure, 200]);
+  const bundle = await CacheRenderBundle.load("http://localhost/assets/manifest.json");
+  expect(new TextDecoder().decode(await bundle.fetchAsset("body"))).toBe("123456789");
+  expect(server.bodyRequests()).toBe(2);
+});
+
+test("guard: fails a missing cache render asset on its first 404", async () => {
+  const server = serveBundle([404, 200]);
+  const bundle = await CacheRenderBundle.load("http://localhost/assets/manifest.json");
+  await expect(bundle.fetchAsset("body")).rejects.toThrow("Unable to load cache render asset body (404)");
+  expect(server.bodyRequests()).toBe(1);
+});
+
+test("fails with the network error after three failed attempts", async () => {
+  const server = serveBundle(["network-error"]);
+  const bundle = await CacheRenderBundle.load("http://localhost/assets/manifest.json");
+  await expect(bundle.fetchAsset("body")).rejects.toThrow("Unable to load cache render asset body: Failed to fetch");
+  expect(server.bodyRequests()).toBe(3);
 });

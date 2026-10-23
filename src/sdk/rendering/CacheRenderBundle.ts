@@ -25,12 +25,32 @@ export function validateCacheRenderBundleManifest(value: any): CacheRenderBundle
   return "asset";
 }
 
+// Waits between attempts; the attempt after the last delay is final and reports its own failure.
+const FETCH_RETRY_DELAYS_MS = [250, 750] as const;
+
+function isTransientStatus(status: number): boolean {
+  return status >= 500 || status === 429;
+}
+
+async function fetchRetryingTransientFailures(url: string): Promise<Response> {
+  for (const delayMs of FETCH_RETRY_DELAYS_MS) {
+    try {
+      const response = await fetch(url);
+      if (!isTransientStatus(response.status)) return response;
+    } catch {
+      // A rejected fetch is a network failure; the next attempt or the final one reports it.
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  return fetch(url);
+}
+
 export class CacheRenderBundle {
   private constructor(public readonly baseUrl: string, public readonly manifest: CacheRenderBundleManifest) {}
 
   static async load(manifestUrl: string): Promise<CacheRenderBundle> {
     let response: Response;
-    try { response = await fetch(manifestUrl); } catch (error) {
+    try { response = await fetchRetryingTransientFailures(manifestUrl); } catch (error) {
       throw new CacheRenderBundleError("network", `Unable to load cache render manifest: ${error.message}`);
     }
     if (!response.ok) throw new CacheRenderBundleError("network", `Unable to load cache render manifest (${response.status})`);
@@ -91,7 +111,7 @@ export class CacheRenderBundle {
 
   private async fetchManifestAsset(asset: CacheRenderAsset, label: string): Promise<ArrayBuffer> {
     let response: Response;
-    try { response = await fetch(new URL(asset.file, this.baseUrl).toString()); } catch (error) {
+    try { response = await fetchRetryingTransientFailures(new URL(asset.file, this.baseUrl).toString()); } catch (error) {
       throw new CacheRenderBundleError("network", `Unable to load ${label}: ${error.message}`);
     }
     if (!response.ok) throw new CacheRenderBundleError("missing-asset", `Unable to load ${label} (${response.status})`);
