@@ -738,7 +738,14 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
           matrices.push(
             frameDef.framemap.animayaSkeleton
               .getAllBones()
-              .map((bone) => Array.from(bone.method687(frameDef.field1257).matrixVals)),
+              // The runtime reads these into a Float32Array and divides translations (12 to 14) by 128,
+              // so the dropped digits never reach the screen.
+              .map((bone) =>
+                Array.from(bone.method687(frameDef.field1257).matrixVals, (value, index) => {
+                  const scale = index >= 12 && index <= 14 ? 1e3 : 1e5;
+                  return Math.round(value * scale) / scale;
+                }),
+              ),
           );
         }
         result[id].mayaFrames = matrices;
