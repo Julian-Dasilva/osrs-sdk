@@ -54,6 +54,9 @@ const ENABLE_POSITION_DEBUG = false;
 /** A Control-click order walks its route even with run on; every other order follows the run setting. */
 export type MovePace = "run-setting" | "walk";
 
+/** The tiles a player stepped onto during the current tick, in order: none, one walked tile, or both tiles of a run. */
+export type TickSteps = readonly [] | readonly [Readonly<Location>] | readonly [Readonly<Location>, Readonly<Location>];
+
 export class Player extends Unit {
   manualSpellCastSelection: Weapon;
 
@@ -68,6 +71,7 @@ export class Player extends Unit {
   overhead: BasePrayer;
   running = true;
   private pace: MovePace = "run-setting";
+  private _stepsThisTick: TickSteps = [];
   cachedBonuses: UnitBonuses = null;
   useSpecialAttack = false;
   effects = new PlayerEffects();
@@ -602,6 +606,10 @@ export class Player extends Unit {
     }
   }
 
+  get stepsThisTick(): TickSteps {
+    return this._stepsThisTick;
+  }
+
   private get runsThisOrder() {
     return this.running && this.pace === "run-setting";
   }
@@ -694,6 +702,7 @@ export class Player extends Unit {
     // advance two. Do not enqueue the second look-ahead tile for a walker or
     // the visual queue grows faster than the true tile and falls behind.
     const visualSteps = path.slice(0, speed);
+    this._stepsThisTick = visualSteps.length === 2 ? [visualSteps[0], visualSteps[1]] : [visualSteps[0]];
     if (this.consumesSpace) {
       visualSteps.forEach(({ x, y }) => this.region.clearTileCollisionFlags(x, y, this.size));
       this.region.setTileCollisionFlags(this.location.x, this.location.y, this.size);
@@ -788,6 +797,7 @@ export class Player extends Unit {
   }
 
   movementStep() {
+    this._stepsThisTick = [];
     if (this.dying > -1 || this.currentStats.hitpoint <= 0) {
       return;
     }
