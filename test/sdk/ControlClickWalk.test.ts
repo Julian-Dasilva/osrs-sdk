@@ -73,4 +73,19 @@ describe("Control-click movement", () => {
 
     expect(tilesOverTicks(1)).toEqual([{ x: 17, y: 14 }]);
   });
+
+  test("the pace names the order: walk after a Control-click, the run setting after an attack or a plain click", async () => {
+    const paceAfter = async (order: () => Promise<void> | void) => {
+      await order();
+      tilesOverTicks(1);
+      return player.pace;
+    };
+
+    expect([
+      await paceAfter(() => press({ x: 20, y: 14 }, { button: 0, ctrlKey: true })),
+      await paceAfter(() => player.setAggro(new TestNpc(player.region, { x: 30, y: 14 }, { aggro: player }))),
+      await paceAfter(() => press({ x: 20, y: 16 }, { button: 0, ctrlKey: true })),
+      await paceAfter(() => press({ x: 20, y: 18 }, { button: 0 })),
+    ]).toEqual(["walk", "run-setting", "walk", "run-setting"]);
+  });
 });
