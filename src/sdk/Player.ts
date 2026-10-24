@@ -70,7 +70,7 @@ export class Player extends Unit {
   xpDrops: XpDrop[] = [];
   overhead: BasePrayer;
   running = true;
-  private pace: MovePace = "run-setting";
+  private _pace: MovePace = "run-setting";
   private _stepsThisTick: TickSteps = [];
   cachedBonuses: UnitBonuses = null;
   useSpecialAttack = false;
@@ -334,7 +334,7 @@ export class Player extends Unit {
 
   moveTo(x: number, y: number, pace: MovePace = "run-setting") {
     this.interruptCombat();
-    this.pace = pace;
+    this._pace = pace;
 
     this.manualSpellCastSelection = null;
 
@@ -445,13 +445,13 @@ export class Player extends Unit {
 
     this.aggro = mob;
     this.seekingItem = null;
-    if (mob) this.pace = "run-setting";
+    if (mob) this._pace = "run-setting";
   }
 
   setSeekingItem(item: Item) {
     this.interruptCombat();
     this.seekingItem = item;
-    this.pace = "run-setting";
+    this._pace = "run-setting";
   }
   determineDestination() {
     if (this.aggro) {
@@ -610,8 +610,13 @@ export class Player extends Unit {
     return this._stepsThisTick;
   }
 
+  /** The pace the current order moves at: `walk` after a Control-click, otherwise the run setting. */
+  get pace(): MovePace {
+    return this._pace;
+  }
+
   private get runsThisOrder() {
-    return this.running && this.pace === "run-setting";
+    return this.running && this._pace === "run-setting";
   }
 
   moveTowardsDestination() {
