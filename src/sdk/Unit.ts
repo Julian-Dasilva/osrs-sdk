@@ -107,6 +107,9 @@ export interface IncomingAttackRollModifiers {
   consumeAfterDamage?: boolean;
 }
 
+/** A hit whose damage a unit took, with `damage` as it landed, after any change made before landing. */
+export type AppliedHit = Readonly<{ damage: number; attackStyle: string; from: Unit }>;
+
 export abstract class Unit extends Renderable {
   private unitTargetRotation = 0;
   private unitRotation = 0;
@@ -135,6 +138,7 @@ export abstract class Unit extends Renderable {
   frozen = 0;
   stunned = 0;
   incomingProjectiles: Projectile[] = [];
+  private landedHits: Readonly<{ tick: number; hits: readonly AppliedHit[] }> = { tick: 0, hits: [] };
   healHitsplatImage: HTMLImageElement = ImageLoader.createImage(HealSplat);
   missedHitsplatImage: HTMLImageElement = ImageLoader.createImage(MissSplat);
   damageHitsplatImage: HTMLImageElement = ImageLoader.createImage(DamageSplat);
@@ -812,8 +816,14 @@ export abstract class Unit extends Renderable {
     }
   }
 
+  /** The hits that landed on this unit during the world's current tick, in landing order. */
+  get hitsThisTick(): readonly AppliedHit[] {
+    return this.landedHits.tick === this.region.world?.globalTickCounter ? this.landedHits.hits : [];
+  }
+
   processIncomingAttacks() {
     this.lastHitAgo++;
+    const landed: AppliedHit[] = [];
     this.incomingProjectiles = filter(
       this.incomingProjectiles,
       (projectile: Projectile) => !projectile.shouldDestroy(),
@@ -833,6 +843,7 @@ export abstract class Unit extends Renderable {
         ) {
           return;
         }
+        landed.push({ damage: projectile.damage, attackStyle: projectile.attackStyle, from: projectile.from });
 
         if (projectile.damage < 0) {
           // subtracting a negative gives a positive
@@ -862,6 +873,7 @@ export abstract class Unit extends Renderable {
       }
     });
     this.currentStats.hitpoint = Math.max(0, this.currentStats.hitpoint);
+    this.landedHits = { tick: this.region.world?.globalTickCounter, hits: landed };
     this.postAttacksEvent();
   }
 
