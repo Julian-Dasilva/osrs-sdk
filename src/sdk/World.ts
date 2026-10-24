@@ -99,9 +99,6 @@ export class World {
       this.nextTickTimer += Settings.tickMs;
       this.tickTimer = now;
       this.tickPercent = 0;
-      if (this.getReadyTimer > 0) {
-        this.getReadyTimer--;
-      }
       this.tickWorld();
     }
     // Server movement must enqueue its step before the client-cycle movement
@@ -115,6 +112,9 @@ export class World {
   }
 
   tickWorld(n = 1) {
+    if (this.getReadyTimer > 0) {
+      this.getReadyTimer--;
+    }
     this.globalTickCounter++;
     InputController.controller.onWorldTick();
     ControlPanelController.controller.onWorldTick();
