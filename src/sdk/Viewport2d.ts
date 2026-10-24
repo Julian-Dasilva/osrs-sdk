@@ -13,6 +13,7 @@ import _ from "lodash";
 import { Trainer } from "./Trainer";
 import { Location } from "./Location";
 import { CHUNK_SIZE } from "./utils/Chunk";
+import { ScreenPoint } from "./rendering/utils/projectedClickbox";
 
 export class Viewport2d implements ViewportDelegate {
   private selectedTile: Location | null = null;
@@ -189,6 +190,16 @@ export class Viewport2d implements ViewportDelegate {
         y: adjustedY,
       },
     };
+  }
+
+  projectTile(tile: Location, world: World, viewport: Viewport): ScreenPoint | null {
+    const { viewportX, viewportY } = viewport.getViewport(world.tickPercent);
+    const width = viewport.width * Settings.tileSize;
+    const height = viewport.height * Settings.tileSize;
+    const x = Math.round((tile.x + 0.5 - viewportX) * Settings.tileSize);
+    const y = Math.round((tile.y + 0.5 - viewportY) * Settings.tileSize);
+    const point = Settings.rotated === "south" ? { x: width - x, y: height - y } : { x, y };
+    return point.x >= 0 && point.x < width && point.y >= 0 && point.y < height ? point : null;
   }
 
   setMapRotation(direction: CardinalDirection) {

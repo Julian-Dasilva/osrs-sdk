@@ -28,10 +28,10 @@ describe("Control-click movement", () => {
 
   // jsdom's MouseEvent has no layout, so the canvas offset a browser would compute is set by hand.
   async function press(tile: Location, init: MouseEventInit) {
-    const { viewportX, viewportY } = Viewport.viewport.getViewport(0);
+    const { x, y } = Viewport.viewport.projectTile(tile, world);
     const event = new MouseEvent("mousedown", init);
-    Object.defineProperty(event, "offsetX", { value: (tile.x + 0.5 - viewportX) * Settings.tileSize });
-    Object.defineProperty(event, "offsetY", { value: (tile.y + 0.5 - viewportY) * Settings.tileSize });
+    Object.defineProperty(event, "offsetX", { value: x });
+    Object.defineProperty(event, "offsetY", { value: y });
     Viewport.viewport.canvas.dispatchEvent(event);
     await new Promise((resolve) => setTimeout(resolve, Settings.inputDelay));
   }

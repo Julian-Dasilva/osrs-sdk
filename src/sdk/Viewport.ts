@@ -18,6 +18,7 @@ import { Viewport2d } from "./Viewport2d";
 import { Trainer } from "./Trainer";
 import { Component } from "./ui/Component";
 import { ToggleButton } from "./ui/ToggleButton";
+import { ScreenPoint } from "./rendering/utils/projectedClickbox";
 
 type ViewportEntitiesClick = {
   type: "entities";
@@ -59,6 +60,9 @@ export interface ViewportDelegate {
 
   // translate the click (relative to the viewport) to a location in the world or something that got clicked
   translateClick(offsetX: number, offsetY: number, world: World, viewport: Viewport): ViewportClickResult;
+
+  // the inverse of translateClick for the floor: the point whose click resolves to the tile, or null if the tile is off-canvas or behind the camera
+  projectTile(tile: Location, world: World, viewport: Viewport): ScreenPoint | null;
 
   getMapRotation(): number;
 
@@ -109,6 +113,14 @@ export class Viewport {
    */
   translateClick(offsetX: number, offsetY: number, world: World): ViewportClickResult {
     return this.delegate.translateClick(offsetX, offsetY, world, this);
+  }
+
+  /**
+   * Return the point (relative to the top-left of the viewport) whose click resolves to the given tile's floor,
+   * or null when the tile is off the canvas or behind the camera. UI drawn over the viewport is not considered.
+   */
+  projectTile(tile: Location, world: World): ScreenPoint | null {
+    return this.delegate.projectTile(tile, world, this);
   }
 
   get context() {

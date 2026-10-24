@@ -838,6 +838,15 @@ export class Viewport3d implements ViewportDelegate {
     };
   }
 
+  projectTile(tile: Location): ScreenPoint | null {
+    // translateClick selects (floor(x), floor(z) + 1) where the ray meets the floor plane.
+    const centre = new THREE.Vector3(tile.x + 0.5, FLOOR_Y_POS, tile.y - 0.5);
+    if (!this.isInFrontOfCameraNearPlane(centre)) return null;
+    const point = this.projectToScreen(centre);
+    const { width, height } = this.canvasDimensions;
+    return point.x >= 0 && point.x < width && point.y >= 0 && point.y < height ? point : null;
+  }
+
   setMapRotation(direction: CardinalDirection) {
     if (direction === CardinalDirection.SOUTH) {
       this.yaw.rotation.y = Math.PI;
