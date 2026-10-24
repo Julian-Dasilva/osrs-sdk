@@ -275,7 +275,7 @@ export abstract class Unit extends Renderable {
     }
   }
 
-  contextActions(region: Region, x: number, y: number) {
+  contextActions(region: Region, x: number | null, y: number | null) {
     return [];
   }
 

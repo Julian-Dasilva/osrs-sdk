@@ -25,7 +25,7 @@ type ViewportEntitiesClick = {
   mobs: Mob[];
   players: Player[];
   groundItems: Item[];
-  location: Location;
+  location: Location | null;
 };
 
 type ViewportCoordinateClick = {
@@ -110,6 +110,7 @@ export class Viewport {
 
   /**
    * Return all objects or world coordinates at the given position (relative to the top-left of the viewport).
+   * The location is null when the position shows no floor, and the result is null when it shows nothing.
    */
   translateClick(offsetX: number, offsetY: number, world: World): ViewportClickResult {
     return this.delegate.translateClick(offsetX, offsetY, world, this);

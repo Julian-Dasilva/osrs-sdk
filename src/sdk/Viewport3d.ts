@@ -573,6 +573,8 @@ export class Viewport3d implements ViewportDelegate {
       const hoveredTileColor = Settings.hoveredTileColor;
       (this.selectedTileMesh.material as THREE.MeshBasicMaterial).color.set(hoveredTileColor);
       this.selectedTileMesh.visible = Settings.hoveredTileEnabled;
+    } else {
+      this.selectedTileMesh.visible = false;
     }
   }
 
@@ -799,12 +801,9 @@ export class Viewport3d implements ViewportDelegate {
 
   // return intersection with world object or world coordinates from canvas coordinates
   translateClick(offsetX, offsetY, world, viewport) {
-    const tile = this.floorTileAt({ x: offsetX, y: offsetY });
-    this.selectedTile = {
-      x: tile.x + 0.5,
-      y: tile.y + 0.5,
-    };
     const point = { x: offsetX, y: offsetY };
+    const tile = this.floorTileAt(point);
+    this.selectedTile = tile && { x: tile.x + 0.5, y: tile.y + 0.5 };
     this.pickingPointer = point;
     const projectedMobs = this.getProjectedMobsAt(point);
 
@@ -828,27 +827,21 @@ export class Viewport3d implements ViewportDelegate {
         mobs,
         players: [],
         groundItems: [],
-        location: {
-          x: this.selectedTile.x,
-          y: this.selectedTile.y,
-        },
+        location: this.selectedTile && { ...this.selectedTile },
       };
     }
+    if (!this.selectedTile) return null;
     return {
       type: "coordinate" as const,
-      location: {
-        x: this.selectedTile.x,
-        y: this.selectedTile.y,
-      },
+      location: { ...this.selectedTile },
     };
   }
 
-  private floorTileAt(point: ScreenPoint): Location {
+  private floorTileAt(point: ScreenPoint): Location | null {
     const { width, height } = this.canvasDimensions;
     this.raycaster.setFromCamera(new THREE.Vector2(point.x / width * 2 - 1, 1 - point.y / height * 2), this.camera);
-    const floor = new THREE.Vector3(0, 0, 0);
-    this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, -1, 0), FLOOR_Y_POS), floor);
-    return { x: Math.floor(floor.x), y: Math.floor(floor.z) + 1 };
+    const floor = this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, -1, 0), FLOOR_Y_POS), new THREE.Vector3());
+    return floor && { x: Math.floor(floor.x), y: Math.floor(floor.z) + 1 };
   }
 
   private clipToNearPlane(polygon: THREE.Vector3[]): THREE.Vector3[] {
@@ -892,7 +885,7 @@ export class Viewport3d implements ViewportDelegate {
       const point = squareRing(start, distance).find((candidate) => {
         if (!screenBoundsContain(footprint, candidate)) return false;
         const selected = this.floorTileAt(candidate);
-        return selected.x === tile.x && selected.y === tile.y;
+        return selected !== null && selected.x === tile.x && selected.y === tile.y;
       });
       if (point) return point;
     }

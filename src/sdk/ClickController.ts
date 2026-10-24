@@ -5,6 +5,7 @@ import { MenuOption } from "./ContextMenu";
 import { Entity } from "./Entity";
 import { EntityNames } from "./EntityName";
 import { Item } from "./Item";
+import { Location } from "./Location";
 import { Pathing } from "./Pathing";
 import { Settings } from "./Settings";
 import type { Unit } from "./Unit";
@@ -138,8 +139,7 @@ export class ClickController {
         visibleMobs,
         hoveredOn.players,
         hoveredOn.groundItems,
-        hoveredOn.location.x,
-        hoveredOn.location.y,
+        hoveredOn.location,
       )[0];
       this.hoverTooltip = firstAction
         ? { text: firstAction.text, x: e.offsetX, y: e.offsetY + 10 }
@@ -174,7 +174,9 @@ export class ClickController {
     context.restore();
   }
 
-  private contextActionsFor(region: Region, mobs: Mob[], players: Player[], groundItems: Item[], x: number, y: number) {
+  private contextActionsFor(region: Region, mobs: Mob[], players: Player[], groundItems: Item[], location: Location | null) {
+    const x = location?.x ?? null;
+    const y = location?.y ?? null;
     let menuOptions: MenuOption[] = [];
     mobs.filter((mob) => mob.visible()).forEach((mob) => {
       menuOptions = menuOptions.concat(mob.contextActions(region, x, y));
@@ -229,7 +231,6 @@ export class ClickController {
     if (!clickedOn) {
       return null;
     }
-    const { x, y } = clickedOn.location;
 
     const mobs: Mob[] = [];
     const players: Player[] = [];
@@ -239,7 +240,7 @@ export class ClickController {
       players.push(...clickedOn.players);
       groundItems.push(...clickedOn.groundItems);
     }
-    return { mobs, players, groundItems, x, y };
+    return { mobs, players, groundItems, location: clickedOn.location };
   }
 
   clickDown(e: MouseEvent) {
@@ -267,7 +268,7 @@ export class ClickController {
       return;
     }
 
-    const { mobs, players, groundItems, x, y } = clickedOn;
+    const { mobs, players, groundItems, location } = clickedOn;
 
     Trainer.player.interruptCombat();
 
@@ -282,11 +283,11 @@ export class ClickController {
       this.redClick();
 
       inputController.queueAction(() => player.setSeekingItem(groundItems[0]));
-    } else if (x !== null && y !== null) {
+    } else if (location) {
       this.yellowClick();
-      player.showTargetMarker({ x: Math.floor(x), y: Math.floor(y) });
+      player.showTargetMarker({ x: Math.floor(location.x), y: Math.floor(location.y) });
       const pace: MovePace = e.ctrlKey ? "walk" : "run-setting";
-      inputController.queueAction(() => this.playerWalkClick(x, y, pace));
+      inputController.queueAction(() => this.playerWalkClick(location.x, location.y, pace));
     }
     Viewport.viewport.contextMenu.setInactive();
   }
@@ -311,54 +312,56 @@ export class ClickController {
       return;
     }
 
-    const { mobs, players, groundItems, x, y } = clickedOn;
+    const { mobs, players, groundItems, location } = clickedOn;
 
-    Viewport.viewport.contextMenu.destinationLocation = {
-      x: Math.floor(x),
-      y: Math.floor(y),
-    };
+    let menuOptions = this.contextActionsFor(region, mobs, players, groundItems, location);
 
-    let menuOptions = this.contextActionsFor(region, mobs, players, groundItems, x, y);
+    if (location) {
+      Viewport.viewport.contextMenu.destinationLocation = {
+        x: Math.floor(location.x),
+        y: Math.floor(location.y),
+      };
 
-    menuOptions.push(
-      {
-        text: [{ text: `Walk Here`, fillStyle: "white" }],
-        action: () => {
-          this.yellowClick();
-          const x = Viewport.viewport.contextMenu.destinationLocation.x;
-          const y = Viewport.viewport.contextMenu.destinationLocation.y;
-          InputController.controller.queueAction(() => this.playerWalkClick(x, y));
+      menuOptions.push(
+        {
+          text: [{ text: `Walk Here`, fillStyle: "white" }],
+          action: () => {
+            this.yellowClick();
+            const x = Viewport.viewport.contextMenu.destinationLocation.x;
+            const y = Viewport.viewport.contextMenu.destinationLocation.y;
+            InputController.controller.queueAction(() => this.playerWalkClick(x, y));
+          },
         },
-      },
-      {
-        text: [{ text: "Mark / Unmark Tile", fillStyle: "white" }],
-        action: () => {
-          this.yellowClick();
-          const x = Viewport.viewport.contextMenu.destinationLocation.x;
-          const y = Viewport.viewport.contextMenu.destinationLocation.y;
+        {
+          text: [{ text: "Mark / Unmark Tile", fillStyle: "white" }],
+          action: () => {
+            this.yellowClick();
+            const x = Viewport.viewport.contextMenu.destinationLocation.x;
+            const y = Viewport.viewport.contextMenu.destinationLocation.y;
 
-          let removed = false;
-          const entitiesAtPoint = Pathing.entitiesAtPoint(region, x, y, 1);
-          entitiesAtPoint.forEach((entity: TileMarker) => {
-            if (entity.entityName() === EntityNames.TILE_MARKER && entity.saveable) {
-              region.removeEntity(entity);
-              removed = true;
+            let removed = false;
+            const entitiesAtPoint = Pathing.entitiesAtPoint(region, x, y, 1);
+            entitiesAtPoint.forEach((entity: TileMarker) => {
+              if (entity.entityName() === EntityNames.TILE_MARKER && entity.saveable) {
+                region.removeEntity(entity);
+                removed = true;
+              }
+            });
+
+            if (!removed) {
+              region.addEntity(new TileMarker(Trainer.player.region, { x, y }, "#FF0000"));
             }
-          });
 
-          if (!removed) {
-            region.addEntity(new TileMarker(Trainer.player.region, { x, y }, "#FF0000"));
-          }
+            Settings.tile_markers = filter(
+              filter(region.entities, (entity: Entity) => entity.entityName() === EntityNames.TILE_MARKER),
+              (tileMarker: TileMarker) => tileMarker.saveable,
+            ).map((entity: Entity) => entity.location);
 
-          Settings.tile_markers = filter(
-            filter(region.entities, (entity: Entity) => entity.entityName() === EntityNames.TILE_MARKER),
-            (tileMarker: TileMarker) => tileMarker.saveable,
-          ).map((entity: Entity) => entity.location);
-
-          Settings.persistToStorage();
+            Settings.persistToStorage();
+          },
         },
-      },
-    );
+      );
+    }
 
     menuOptions = menuOptions.concat(region.rightClickActions());
 

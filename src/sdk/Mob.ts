@@ -416,7 +416,7 @@ export class Mob extends Unit {
     return 99;
   }
 
-  override contextActions(region: Region, x: number, y: number) {
+  override contextActions(region: Region, x: number | null, y: number | null) {
     const actions = [
       {
         text: [

@@ -106,7 +106,7 @@ export class Player extends Unit {
     this.prayerController = new PrayerController(this);
   }
 
-  contextActions(region: Region, x: number, y: number) {
+  contextActions(region: Region, x: number | null, y: number | null) {
     return super.contextActions(region, x, y).concat([
       {
         text: [
