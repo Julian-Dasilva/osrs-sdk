@@ -7,7 +7,13 @@ import { Viewport } from "../../src/sdk/Viewport";
 import { Viewport3d } from "../../src/sdk/Viewport3d";
 import { World } from "../../src/sdk/World";
 import { TestRegion } from "../../src/sdk/testing/TestRegion";
-import { MAX_CAMERA_PITCH, MIN_CAMERA_PITCH, RELAXED_MAX_CAMERA_PITCH } from "../../src/sdk/utils/camera/CameraRotation";
+import {
+  ClientCameraRotation,
+  MAX_CAMERA_PITCH,
+  MIN_CAMERA_PITCH,
+  RELAXED_MAX_CAMERA_PITCH,
+  RELAXED_MIN_CAMERA_PITCH,
+} from "../../src/sdk/utils/camera/CameraRotation";
 import { cameraOrbitDistance } from "../../src/sdk/utils/camera/CameraOrbit";
 
 jest.mock("three", () => ({
@@ -75,17 +81,29 @@ describe("2D tile projection", () => {
 });
 
 describe("3D tile projection", () => {
-  // jsdom has no WebGL context, so the viewport is built without its renderer, around the camera rig its constructor builds.
-  function viewport3d(focal: { x: number; y: number }, facing: CardinalDirection, pitch: number) {
+  // jsdom has no WebGL context, so the viewport is built around the camera rig its constructor builds, with a renderer that only takes a size.
+  function viewport3d(
+    focal: { x: number; y: number },
+    facing: CardinalDirection,
+    pitch: number,
+    canvas = { width: 800, height: 600 },
+  ) {
     const viewport = Object.create(Viewport3d.prototype);
     Object.assign(viewport, {
-      canvasDimensions: { width: 800, height: 600 },
-      camera: new THREE.PerspectiveCamera(70, 800 / 600, 0.1, 50),
+      canvas: { width: 1, height: 1 },
+      uiCanvas: { width: 1, height: 1 },
+      renderer: { setSize: () => undefined },
+      canvasDimensions: { width: 1, height: 1 },
+      camera: new THREE.PerspectiveCamera(70, 1, 0.1, 50),
       raycaster: new THREE.Raycaster(),
       scene: new THREE.Scene(),
       pivot: new THREE.Object3D(),
       yaw: new THREE.Object3D(),
       pitch: new THREE.Object3D(),
+      yawDelta: 0,
+      pitchDelta: 0,
+      orbitZoomOffset: 0,
+      clientCameraRotation: new ClientCameraRotation(),
       projectedClickboxes: new Map(),
       pickingPointer: null,
     });
@@ -96,6 +114,7 @@ describe("3D tile projection", () => {
     viewport.pitch.rotation.x = pitch;
     viewport.camera.position.z = cameraOrbitDistance(pitch);
     viewport.setMapRotation(facing);
+    viewport.resize(canvas.width, canvas.height);
     viewport.camera.updateWorldMatrix(true, false);
     return viewport as Viewport3d;
   }
@@ -147,5 +166,63 @@ describe("3D tile projection", () => {
     const [outside, inside] = [{ x: 0, y: 14 }, { x: 20, y: 20 }].map((tile) => viewport.projectTile(tile));
 
     expect([outside, clickedTile(viewport, inside)]).toEqual([null, { x: 20, y: 20 }]);
+  });
+
+  // translateClick resolves a ray that misses the floor to tile (0, 1), so no compared tile is (0, 1).
+  function tilesSomePixelSelects(viewport: Viewport3d, canvas: { width: number; height: number }, tiles: Location[]) {
+    const selected = new Set<string>();
+    for (let x = 0; x < canvas.width; x++) {
+      for (let y = 0; y < canvas.height; y++) {
+        const tile = clickedTile(viewport, { x, y });
+        selected.add(`${tile.x},${tile.y}`);
+      }
+    }
+    return tiles.map((tile) => (selected.has(`${tile.x},${tile.y}`) ? tile : null));
+  }
+
+  describe("with camera pitch unclamped", () => {
+    beforeEach(() => Settings.set({ relaxCameraPitch: true }));
+    afterEach(() => Settings.set({ relaxCameraPitch: false }));
+
+    test("lowered to level and zoomed out by the key and wheel handlers, a tile has a point exactly when some pixel selects it", () => {
+      const canvas = { width: 1280, height: 800 };
+      const viewport = viewport3d({ x: 5.5, y: 0.5 }, facing.south, -0.7, canvas);
+      viewport.onKeyDown(new KeyboardEvent("keydown", { key: "ArrowDown" }));
+      viewport.updateCamera(1);
+      viewport.onKeyUp(new KeyboardEvent("keyup", { key: "ArrowDown" }));
+      viewport.onDocumentMouseWheel(new WheelEvent("wheel", { deltaY: 3062.5 }));
+      viewport.updateCamera(0);
+      const camera = Reflect.get(viewport, "camera");
+      camera.updateWorldMatrix(true, false);
+      const column = [0, 1, 2, 3, 4].map((y) => ({ x: 11, y }));
+
+      expect({
+        pitch: Reflect.get(viewport, "pitch").rotation.x,
+        distance: camera.position.z,
+        clicked: column.map((tile) => clickedTile(viewport, viewport.projectTile(tile))),
+      }).toEqual({ pitch: 0, distance: 20, clicked: tilesSomePixelSelects(viewport, canvas, column) });
+    });
+  });
+
+  const around = Array.from({ length: 21 * 21 }, (_, i) => ({ x: 10 + (i % 21), y: 10 + Math.floor(i / 21) }));
+
+  test.each([
+    { width: 128, height: 80 },
+    { width: 60, height: 130 },
+  ])("on a %o canvas at every camera the handlers allow, a tile has a point exactly when some pixel selects it", (canvas) => {
+    for (let turn = 0; turn < 16; turn++) {
+      for (const pitch of [RELAXED_MIN_CAMERA_PITCH, MIN_CAMERA_PITCH, -0.7, MAX_CAMERA_PITCH, -0.05, RELAXED_MAX_CAMERA_PITCH]) {
+        for (const distance of [2, 2.3, cameraOrbitDistance(pitch), 20]) {
+          const viewport = viewport3d({ x: 20.5, y: 19.5 }, facing.north, pitch, canvas);
+          Reflect.get(viewport, "yaw").rotation.y = turn * Math.PI / 8;
+          const camera = Reflect.get(viewport, "camera");
+          camera.position.z = distance;
+          camera.updateWorldMatrix(true, false);
+
+          expect({ turn, pitch, distance, clicked: around.map((tile) => clickedTile(viewport, viewport.projectTile(tile))) })
+            .toEqual({ turn, pitch, distance, clicked: tilesSomePixelSelects(viewport, canvas, around) });
+        }
+      }
+    }
   });
 });
