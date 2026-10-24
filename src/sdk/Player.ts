@@ -54,7 +54,7 @@ const ENABLE_POSITION_DEBUG = false;
 /** A Control-click order walks its route even with run on; every other order follows the run setting. */
 export type MovePace = "run-setting" | "walk";
 
-/** The tiles a player stepped onto during the current tick, in order: none, one walked tile, or both tiles of a run. */
+/** The tiles a player stepped onto during the current tick, in order: none, one, or two. Only a run can step two. */
 export type TickSteps = readonly [] | readonly [Readonly<Location>] | readonly [Readonly<Location>, Readonly<Location>];
 
 export class Player extends Unit {
