@@ -48,6 +48,20 @@ const ROTATE_MULT = 0.006;
 const ZOOM_MULT = 0.005;
 const TOUCH_MULT = 2;
 
+function squareRing(centre: ScreenPoint, distance: number): ScreenPoint[] {
+  if (distance === 0) return [centre];
+  const ring: ScreenPoint[] = [];
+  for (let step = -distance; step < distance; step++) {
+    ring.push(
+      { x: centre.x + step, y: centre.y - distance },
+      { x: centre.x + distance, y: centre.y + step },
+      { x: centre.x - step, y: centre.y + distance },
+      { x: centre.x - distance, y: centre.y - step },
+    );
+  }
+  return ring;
+}
+
 export class Viewport3d implements ViewportDelegate {
   private canvas: OffscreenCanvas;
   private uiCanvas: OffscreenCanvas;
@@ -785,19 +799,10 @@ export class Viewport3d implements ViewportDelegate {
 
   // return intersection with world object or world coordinates from canvas coordinates
   translateClick(offsetX, offsetY, world, viewport) {
-    const { width, height } = this.canvasDimensions;
-    const rayX = (offsetX / width) * 2 - 1;
-    const rayY = -(offsetY / height) * 2 + 1;
-
-    this.raycaster.setFromCamera(new THREE.Vector2(rayX, rayY), this.camera);
-    // check intersection of the ray and the flor plane
-    const floorPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), FLOOR_Y_POS);
-    const floor = new THREE.Vector3(0, 0, 0);
-    this.raycaster.ray.intersectPlane(floorPlane, floor);
-
+    const tile = this.floorTileAt({ x: offsetX, y: offsetY });
     this.selectedTile = {
-      x: Math.floor(floor.x) + 0.5,
-      y: Math.floor(floor.z) + 1.5,
+      x: tile.x + 0.5,
+      y: tile.y + 0.5,
     };
     const point = { x: offsetX, y: offsetY };
     this.pickingPointer = point;
@@ -838,13 +843,60 @@ export class Viewport3d implements ViewportDelegate {
     };
   }
 
-  projectTile(tile: Location): ScreenPoint | null {
-    // translateClick selects (floor(x), floor(z) + 1) where the ray meets the floor plane.
-    const centre = new THREE.Vector3(tile.x + 0.5, FLOOR_Y_POS, tile.y - 0.5);
-    if (!this.isInFrontOfCameraNearPlane(centre)) return null;
-    const point = this.projectToScreen(centre);
+  private floorTileAt(point: ScreenPoint): Location {
     const { width, height } = this.canvasDimensions;
-    return point.x >= 0 && point.x < width && point.y >= 0 && point.y < height ? point : null;
+    this.raycaster.setFromCamera(new THREE.Vector2(point.x / width * 2 - 1, 1 - point.y / height * 2), this.camera);
+    const floor = new THREE.Vector3(0, 0, 0);
+    this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, -1, 0), FLOOR_Y_POS), floor);
+    return { x: Math.floor(floor.x), y: Math.floor(floor.z) + 1 };
+  }
+
+  private clipToNearPlane(polygon: THREE.Vector3[]): THREE.Vector3[] {
+    const { near, matrixWorldInverse } = this.camera;
+    const depths = polygon.map((vertex) => vertex.clone().applyMatrix4(matrixWorldInverse).z);
+    const visible: THREE.Vector3[] = [];
+    polygon.forEach((vertex, i) => {
+      const next = (i + 1) % polygon.length;
+      const inFront = isInFrontOfNearPlane(depths[i], near);
+      if (inFront) visible.push(vertex);
+      if (inFront !== isInFrontOfNearPlane(depths[next], near)) {
+        visible.push(vertex.clone().lerp(polygon[next], (-near - depths[i]) / (depths[next] - depths[i])));
+      }
+    });
+    return visible;
+  }
+
+  projectTile(tile: Location): ScreenPoint | null {
+    const visible = this.clipToNearPlane(
+      [[0, -1], [1, -1], [1, 0], [0, 0]].map(([dx, dz]) => new THREE.Vector3(tile.x + dx, FLOOR_Y_POS, tile.y + dz)),
+    );
+    if (visible.length === 0) return null;
+    const projected = visible.map((vertex) => this.projectToScreen(vertex));
+    const { width, height } = this.canvasDimensions;
+    const footprint: ScreenBounds = {
+      minX: Math.max(0, Math.min(...projected.map(({ x }) => x))),
+      maxX: Math.min(width - 1, Math.max(...projected.map(({ x }) => x))),
+      minY: Math.max(0, Math.min(...projected.map(({ y }) => y))),
+      maxY: Math.min(height - 1, Math.max(...projected.map(({ y }) => y))),
+    };
+    if (footprint.minX > footprint.maxX || footprint.minY > footprint.maxY) return null;
+    const centre = this.projectToScreen(
+      visible.reduce((sum, vertex) => sum.add(vertex), new THREE.Vector3()).divideScalar(visible.length),
+    );
+    const start = {
+      x: Math.min(Math.max(centre.x, footprint.minX), footprint.maxX),
+      y: Math.min(Math.max(centre.y, footprint.minY), footprint.maxY),
+    };
+    const reach = Math.max(start.x - footprint.minX, footprint.maxX - start.x, start.y - footprint.minY, footprint.maxY - start.y);
+    for (let distance = 0; distance <= reach; distance++) {
+      const point = squareRing(start, distance).find((candidate) => {
+        if (!screenBoundsContain(footprint, candidate)) return false;
+        const selected = this.floorTileAt(candidate);
+        return selected.x === tile.x && selected.y === tile.y;
+      });
+      if (point) return point;
+    }
+    return null;
   }
 
   setMapRotation(direction: CardinalDirection) {
