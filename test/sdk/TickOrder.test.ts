@@ -137,7 +137,7 @@ describe("actor timer and queue ordering", () => {
   });
 
   test("GET READY holds NPC clocks and damage queues while consuming the player movement lock", () => {
-    world.getReadyTimer = 1;
+    world.getReadyTimer = 2;
     mob.attackDelay = 6;
     player.attackDelay = 4;
     player.freeze(3);
@@ -149,7 +149,6 @@ describe("actor timer and queue ordering", () => {
     expect(player.attackDelay).toBe(4);
     expect(player.currentStats.hitpoint).toBe(99);
     expect(player.frozen).toBe(2);
-    world.getReadyTimer = 0;
     world.tickWorld();
     expect(mob.attackDelay).toBe(5);
     expect(player.attackDelay).toBe(3);
