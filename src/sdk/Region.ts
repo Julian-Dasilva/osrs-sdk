@@ -65,6 +65,11 @@ export abstract class Region {
     return CardinalDirection.SOUTH;
   }
 
+  /** Runs once per world tick after GET READY, after player pretick and entity ticks, and before any NPC timer. */
+  beforeNpcTurns() {
+    // Override me
+  }
+
   midTick() {
     // Override me
   }

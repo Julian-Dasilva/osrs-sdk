@@ -148,6 +148,7 @@ export class World {
     region.entities.forEach((entity) => entity.tick());
 
     if (this.getReadyTimer == 0) {
+      region.beforeNpcTurns();
       region.mobs.forEach((mob) => {
         mob.timerStep();
       });
