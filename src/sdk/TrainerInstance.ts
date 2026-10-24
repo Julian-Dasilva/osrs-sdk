@@ -166,7 +166,7 @@ export class TrainerInstance {
       assetsReady: Assets.loadingAssetUrls.length === 0,
       assetsTotal,
       error: undefined,
-      imagesReady: ImageLoader.pendingImages === ImageLoader.completedImages,
+      imagesReady: ImageLoader.allImagesLoaded(),
       status: "loading",
       viewportReady: false,
     });
@@ -184,11 +184,15 @@ export class TrainerInstance {
   }
 
   private waitForImages() {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve, reject) => {
       let interval: NodeJS.Timeout;
-      const onLoaded = () => {
+      const onLoaded = (failure?: Error) => {
         unsubscribe();
         if (interval) clearInterval(interval);
+        if (failure) {
+          reject(failure);
+          return;
+        }
         MapController.controller.updateOrbsMask(this.player.currentStats, this.player.stats);
         this.setLoadingState({ imagesReady: true });
         resolve();

@@ -1,8 +1,10 @@
+const RETRY_DELAYS_MS = [250, 500, 1000, 2000];
+
+type ImageLoad = "loading" | "loaded" | Error;
+
 export class ImageLoader {
-  static onLoadFns: (() => void)[] = [];
-  static pendingImages = 0;
-  static completedImages = 0;
-  static hasLoaded = false;
+  static onLoadFns: ((failure?: Error) => void)[] = [];
+  static loads = new Map<string, ImageLoad>();
 
   static imageCache = {};
 
@@ -15,20 +17,32 @@ export class ImageLoader {
       return this.imageCache[src];
     }
 
-    ImageLoader.pendingImages++;
+    ImageLoader.loads.set(src, "loading");
     const img = new Image();
-    img.src = src;
+    let retries = 0;
     img.addEventListener("load", () => {
-      ImageLoader.completedImages++;
+      ImageLoader.loads.set(src, "loaded");
     });
     img.addEventListener("error", () => {
-      ImageLoader.completedImages++;
+      if (retries === RETRY_DELAYS_MS.length) {
+        ImageLoader.loads.set(src, new Error(`Image failed to load: ${src}`));
+        return;
+      }
+      setTimeout(() => {
+        img.src = src;
+      }, RETRY_DELAYS_MS[retries++]);
     });
+    img.src = src;
     this.imageCache[src] = img;
     return img;
   }
 
-  static onAllImagesLoaded(loadFn: () => void) {
+  static allImagesLoaded() {
+    return Array.from(ImageLoader.loads.values()).every((load) => load === "loaded");
+  }
+
+  /** Calls `loadFn` once every image has loaded, or as soon as one has failed every retry, with an error naming that image. */
+  static onAllImagesLoaded(loadFn: (failure?: Error) => void) {
     ImageLoader.onLoadFns.push(loadFn);
     return () => {
       ImageLoader.onLoadFns = ImageLoader.onLoadFns.filter((listener) => listener !== loadFn);
@@ -36,9 +50,12 @@ export class ImageLoader {
   }
 
   static checkImagesLoaded(timer: NodeJS.Timeout) {
-    if (ImageLoader.pendingImages === ImageLoader.completedImages) {
-      ImageLoader.onLoadFns.forEach((onLoadFunction) => onLoadFunction());
-      clearInterval(timer);
+    const loads = Array.from(ImageLoader.loads.values());
+    const failure = loads.find((load): load is Error => load instanceof Error);
+    if (!failure && loads.includes("loading")) {
+      return;
     }
+    ImageLoader.onLoadFns.forEach((onLoadFunction) => onLoadFunction(failure));
+    clearInterval(timer);
   }
 }
