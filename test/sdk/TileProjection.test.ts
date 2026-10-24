@@ -6,6 +6,7 @@ import { Settings } from "../../src/sdk/Settings";
 import { Viewport } from "../../src/sdk/Viewport";
 import { Viewport3d } from "../../src/sdk/Viewport3d";
 import { World } from "../../src/sdk/World";
+import { TestNpc } from "../../src/sdk/testing/TestNpc";
 import { TestRegion } from "../../src/sdk/testing/TestRegion";
 import {
   ClientCameraRotation,
@@ -25,6 +26,21 @@ jest.mock("three", () => ({
   },
 }));
 
+// jsdom's MouseEvent has no layout, so the canvas offset a browser would compute is set by hand.
+function dispatch(type: "mousedown" | "mousemove", point: { x: number; y: number }, init: MouseEventInit = {}) {
+  const event = new MouseEvent(type, init);
+  Object.defineProperty(event, "offsetX", { value: point.x });
+  Object.defineProperty(event, "offsetY", { value: point.y });
+  Viewport.viewport.canvas.dispatchEvent(event);
+}
+
+async function walkOrderedBy(world: World, player: Player, point: { x: number; y: number }, init: MouseEventInit = { button: 0 }) {
+  dispatch("mousedown", point, init);
+  await new Promise((resolve) => setTimeout(resolve, Settings.inputDelay));
+  world.tickWorld();
+  return player.destinationLocation;
+}
+
 describe("2D tile projection", () => {
   let world: World;
   let player: Player;
@@ -43,17 +59,6 @@ describe("2D tile projection", () => {
     Settings.rotated = rotated;
   }
 
-  // jsdom's MouseEvent has no layout, so the canvas offset a browser would compute is set by hand.
-  async function clickedTile(point: { x: number; y: number }) {
-    const event = new MouseEvent("mousedown", { button: 0 });
-    Object.defineProperty(event, "offsetX", { value: point.x });
-    Object.defineProperty(event, "offsetY", { value: point.y });
-    Viewport.viewport.canvas.dispatchEvent(event);
-    await new Promise((resolve) => setTimeout(resolve, Settings.inputDelay));
-    world.tickWorld();
-    return player.destinationLocation;
-  }
-
   test.each([
     [{ x: 14, y: 14 }, "north", { x: 16, y: 14 }, { x: 440, y: 300 }],
     [{ x: 14, y: 14 }, "south", { x: 16, y: 14 }, { x: 360, y: 300 }],
@@ -68,7 +73,7 @@ describe("2D tile projection", () => {
 
     const projected = Viewport.viewport.projectTile(tile, world);
 
-    expect([projected, await clickedTile(projected)]).toEqual([point, tile]);
+    expect([projected, await walkOrderedBy(world, player, projected)]).toEqual([point, tile]);
   });
 
   test.each(["north", "south"] as const)("facing %s, a tile past the canvas edge has no point, and the tile inside it does", (rotated) => {
@@ -121,8 +126,8 @@ describe("3D tile projection", () => {
 
   function clickedTile(viewport: Viewport3d, point: { x: number; y: number } | null) {
     if (!point) return null;
-    const { location } = viewport.translateClick(point.x, point.y, null, null);
-    return { x: Math.floor(location.x), y: Math.floor(location.y) };
+    const click = viewport.translateClick(point.x, point.y, null, null);
+    return click && { x: Math.floor(click.location.x), y: Math.floor(click.location.y) };
   }
 
   const tiles = [
@@ -168,13 +173,12 @@ describe("3D tile projection", () => {
     expect([outside, clickedTile(viewport, inside)]).toEqual([null, { x: 20, y: 20 }]);
   });
 
-  // translateClick resolves a ray that misses the floor to tile (0, 1), so no compared tile is (0, 1).
   function tilesSomePixelSelects(viewport: Viewport3d, canvas: { width: number; height: number }, tiles: Location[]) {
     const selected = new Set<string>();
     for (let x = 0; x < canvas.width; x++) {
       for (let y = 0; y < canvas.height; y++) {
         const tile = clickedTile(viewport, { x, y });
-        selected.add(`${tile.x},${tile.y}`);
+        if (tile) selected.add(`${tile.x},${tile.y}`);
       }
     }
     return tiles.map((tile) => (selected.has(`${tile.x},${tile.y}`) ? tile : null));
@@ -184,16 +188,35 @@ describe("3D tile projection", () => {
     beforeEach(() => Settings.set({ relaxCameraPitch: true }));
     afterEach(() => Settings.set({ relaxCameraPitch: false }));
 
-    test("lowered to level and zoomed out by the key and wheel handlers, a tile has a point exactly when some pixel selects it", () => {
-      const canvas = { width: 1280, height: 800 };
+    const canvas = { width: 1280, height: 800 };
+
+    function levelCameraFromTheKeyAndWheelHandlers() {
       const viewport = viewport3d({ x: 5.5, y: 0.5 }, facing.south, -0.7, canvas);
       viewport.onKeyDown(new KeyboardEvent("keydown", { key: "ArrowDown" }));
       viewport.updateCamera(1);
       viewport.onKeyUp(new KeyboardEvent("keyup", { key: "ArrowDown" }));
       viewport.onDocumentMouseWheel(new WheelEvent("wheel", { deltaY: 3062.5 }));
       viewport.updateCamera(0);
+      Reflect.get(viewport, "camera").updateWorldMatrix(true, false);
+      return viewport;
+    }
+
+    function mountPlayer(delegate: Viewport3d) {
+      const region = new TestRegion(40, 40);
+      const world = new World();
+      region.world = world;
+      world.addRegion(region);
+      Viewport.viewport = new Viewport(delegate, document.createElement("canvas"), document.createElement("div"));
+      const player = new Player(region, { x: 5, y: 0 });
+      region.addPlayer(player);
+      Viewport.viewport.setPlayer(player);
+      Viewport.viewport.resize(canvas.width, canvas.height);
+      return { world, region, player };
+    }
+
+    test("lowered to level and zoomed out by the key and wheel handlers, a tile has a point exactly when some pixel selects it", () => {
+      const viewport = levelCameraFromTheKeyAndWheelHandlers();
       const camera = Reflect.get(viewport, "camera");
-      camera.updateWorldMatrix(true, false);
       const column = [0, 1, 2, 3, 4].map((y) => ({ x: 11, y }));
 
       expect({
@@ -202,9 +225,50 @@ describe("3D tile projection", () => {
         clicked: column.map((tile) => clickedTile(viewport, viewport.projectTile(tile))),
       }).toEqual({ pitch: 0, distance: 20, clicked: tilesSomePixelSelects(viewport, canvas, column) });
     });
+
+    test("at a level camera, a press on the sky leaves the player on its tile, and a press on the floor walks there", async () => {
+      const viewport = levelCameraFromTheKeyAndWheelHandlers();
+      const { world, player } = mountPlayer(viewport);
+
+      expect([
+        await walkOrderedBy(world, player, { x: 640, y: 0 }),
+        await walkOrderedBy(world, player, viewport.projectTile({ x: 12, y: 3 })),
+      ]).toEqual([{ x: 5, y: 0 }, { x: 12, y: 3 }]);
+    });
+
+    test("at a level camera, a mob drawn against the sky offers its attack, a press attacks it, and a Shift-press on it leaves the player on its tile, with no handler error", async () => {
+      const viewport = levelCameraFromTheKeyAndWheelHandlers();
+      const { world, region, player } = mountPlayer(viewport);
+      const npc = new (class extends TestNpc {
+        override get size() {
+          return 1;
+        }
+      })(region, { x: 15, y: 0 }, {});
+      region.addMob(npc);
+      const clickbox = new THREE.Box3(new THREE.Vector3(15, -0.5, -1), new THREE.Vector3(16, 3, 0));
+      Reflect.set(viewport, "knownActors", new Map([[npc, { getModel: () => ({
+        getClickboxBounds: () => clickbox,
+        getClickboxVertices: () => [clickbox.min, clickbox.max],
+        getClickboxTriangles: () => [],
+      }) }]]));
+      Reflect.get(viewport, "refreshProjectedClickboxes").call(viewport);
+      const sky = viewport.projectToScreen(new THREE.Vector3(15.5, 2, -0.5));
+      const handlerErrors: string[] = [];
+      const recordError = (event: ErrorEvent) => handlerErrors.push(event.message);
+      window.addEventListener("error", recordError);
+
+      dispatch("mousedown", sky, { button: 2 });
+      const menu = Viewport.viewport.contextMenu.menuOptions.map((option) => option.text.map(({ text }) => text).join(""));
+      const shiftPress = await walkOrderedBy(world, player, sky, { button: 0, shiftKey: true });
+      await walkOrderedBy(world, player, sky);
+      window.removeEventListener("error", recordError);
+
+      expect({ menu, shiftPress, attacking: player.aggro === npc, handlerErrors })
+        .toEqual({ menu: ["Attack  (level 99)"], shiftPress: { x: 5, y: 0 }, attacking: true, handlerErrors: [] });
+    });
   });
 
-  const around = Array.from({ length: 21 * 21 }, (_, i) => ({ x: 10 + (i % 21), y: 10 + Math.floor(i / 21) }));
+  const around = [{ x: 0, y: 1 }, ...Array.from({ length: 21 * 21 }, (_, i) => ({ x: 10 + (i % 21), y: 10 + Math.floor(i / 21) }))];
 
   test.each([
     { width: 128, height: 80 },

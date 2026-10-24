@@ -132,7 +132,7 @@ test("client pixel projection truncates offsets before adding the viewport centr
 test("rejects a distant pointer without extracting model vertices or building a hull", () => {
   const { viewport, model } = fixture(cube());
   expect(model.getClickboxVertices).not.toHaveBeenCalled();
-  expect(viewport.translateClick(0, 0, {}, {}).type).toBe("coordinate");
+  expect(viewport.translateClick(0, 599, {}, {}).type).toBe("coordinate");
   expect(model.getClickboxVertices).not.toHaveBeenCalled();
 });
 
