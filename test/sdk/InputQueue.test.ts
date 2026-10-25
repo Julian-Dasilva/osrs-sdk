@@ -30,7 +30,6 @@ describe("clicks queued for the world tick", () => {
     jest.useRealTimers();
   });
 
-  // jsdom's MouseEvent has no layout, so the canvas offset a browser would compute is set by hand.
   function press(tile: Location) {
     const { x, y } = Viewport.viewport.projectTile(tile, world);
     const event = new MouseEvent("mousedown", { button: 0 });
