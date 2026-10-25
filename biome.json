@@ -1,11 +1,13 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": {
-    "enabled": false,
-    "useIgnoreFile": false
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": ["**", "!packages/osrs-sdk-assets/test/fixtures"]
   },
   "formatter": {
     "enabled": true,
@@ -32,6 +34,19 @@
   "json": {
     "formatter": {
       "trailingCommas": "none"
+    }
+  },
+  "html": {
+    "experimentalFullSupportEnabled": true,
+    "formatter": {
+      "enabled": true,
+      "indentScriptAndStyle": true,
+      "selfCloseVoidElements": "always"
+    }
+  },
+  "markdown": {
+    "formatter": {
+      "formatEmbeds": false
     }
   }
 }
