@@ -2,14 +2,14 @@ import { Settings } from "./Settings";
 
 const MAX_QUEUED_ACTIONS = 8;
 
+type QueuedAction = Readonly<{ run: () => void; registersAt: number }>;
+
 /**
  * Controller to manage delayed inputs (due to input lag and/or tick timers)
  */
 export class InputController {
-  inputDelay?: ReturnType<typeof setTimeout> = null;
-
   clientActions: (() => void)[] = [];
-  queuedActions: (() => void)[] = [];
+  queuedActions: QueuedAction[] = [];
 
   static controller = new InputController();
 
@@ -29,26 +29,21 @@ export class InputController {
     actions.forEach((action) => action());
   }
 
+  /**
+   * The input registers on the first world tick at or after the click plus the simulated
+   * input delay, so every click made before a tick runs on that tick, in click order.
+   */
   queueAction(fn: () => void) {
-    /*if (this.inputDelay) {
-      clearTimeout(this.inputDelay);
-    }*/
     if (this.queuedActions.length >= MAX_QUEUED_ACTIONS) {
       return;
     }
-    this.inputDelay = setTimeout(() => {
-      this.queuedActions.push(fn);
-    }, Settings.inputDelay);
+    this.queuedActions.push({ run: fn, registersAt: performance.now() + Settings.inputDelay });
   }
 
   onWorldTick() {
-    const actions = this.flushQueuedActions();
-    actions.forEach((action) => action());
-  }
-
-  private flushQueuedActions() {
-    const actions = this.queuedActions;
-    this.queuedActions = [];
-    return actions;
+    const now = performance.now();
+    const due = this.queuedActions.filter((action) => action.registersAt <= now);
+    this.queuedActions = this.queuedActions.filter((action) => action.registersAt > now);
+    due.forEach((action) => action.run());
   }
 }
