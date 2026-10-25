@@ -54,6 +54,7 @@ export class GraphicsObject extends Entity {
     );
   }
 
-  // GraphicsObjects are cache-rendered effects and have no 2D fallback tile.
-  override draw() {}
+  override draw() {
+    // GraphicsObjects are cache-rendered effects and have no 2D fallback tile.
+  }
 }

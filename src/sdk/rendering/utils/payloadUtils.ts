@@ -51,8 +51,8 @@ export function mergePayloads(payloads: CacheRenderPayload[]): CacheRenderPayloa
   // hit stack limits for large payloads.
   let positions: number[] = [];
   let indices: number[] = [];
-  let vertexGroups: number[][] = [];
-  let alphaGroups: number[][] = [];
+  const vertexGroups: number[][] = [];
+  const alphaGroups: number[][] = [];
   let sourceVertices: number[] = [];
   let animayaGroups: number[][] = [];
   let animayaScales: number[][] = [];

@@ -75,7 +75,7 @@
     "no-useless-escape": "error",
     "no-var": "error",
     "no-with": "error",
-    "prefer-const": "error",
+    "prefer-const": ["error", { "ignoreReadBeforeAssign": true }],
     "prefer-rest-params": "error",
     "prefer-spread": "error",
     "require-yield": "error",
@@ -83,5 +83,14 @@
     "no-array-constructor": "error",
     "no-empty-function": "error",
     "no-loss-of-precision": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["test/**"],
+      "rules": {
+        "no-empty-function": "off",
+        "typescript/no-var-requires": "off"
+      }
+    }
+  ]
 }

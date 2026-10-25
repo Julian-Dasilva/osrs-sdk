@@ -317,7 +317,7 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
           blendedUnderlays[x][y] = packHsl((hue * 256) / multiplier, saturation / count, lightness / count);
       }
     const colorsForTile = async (tile) => {
-      let underlay = null;
+      const underlay = null;
       let overlay = null;
       let transparentOverlay = false;
       if (tile?.overlayId > 0) {
