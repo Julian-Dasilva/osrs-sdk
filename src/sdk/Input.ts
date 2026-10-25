@@ -29,10 +29,6 @@ export class InputController {
     actions.forEach((action) => action());
   }
 
-  /**
-   * The input registers on the first world tick at or after the click plus the simulated
-   * input delay, so every click made before a tick runs on that tick, in click order.
-   */
   queueAction(fn: () => void) {
     if (this.queuedActions.length >= MAX_QUEUED_ACTIONS) {
       return;
