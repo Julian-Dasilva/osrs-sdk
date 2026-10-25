@@ -7,6 +7,7 @@ import {
   CacheRenderReferences,
   CacheRenderSpotAnim,
 } from "../src/sdk/rendering/CacheRenderReference";
+import { SoundCache } from "../src/sdk/utils/SoundCache";
 import type { CacheRenderPayload } from "../src/cache-render-format";
 
 (global as any).TextDecoder = TextDecoder;
@@ -118,10 +119,42 @@ test("attaching a spotanim builds its mesh alone, once", async () => {
   cycle();
   expect(mesh.visible).toBe(true);
   attach({ id: 2, height: 1 });
-  expect(spotMeshes()).toEqual([mesh]);
+  expect(spotMeshes()).toHaveLength(1);
+  expect(spotMeshes()[0]).toBe(mesh);
 });
 
 test("a spotanim-only renderable builds the graphics it references", async () => {
   const { spotMeshes } = await fixture([effect(1), effect(2)], CacheRenderReferences.spotAnim([{ id: 2 }]));
   expect(spotMeshes().map((spot) => spot.userData.spotAnimId)).toEqual([2]);
+});
+
+test("a model change rebuilds the actor's mesh and keeps its spotanim meshes", async () => {
+  const { model, attach, cycle, root, spotMeshes } = await fixture([effect(1), effect(2)]);
+  attach({ id: 2 });
+  cycle();
+  const [spot] = spotMeshes();
+  const actorMesh = (model as any).mesh;
+  model.modelChanged();
+  await model.preload();
+  expect((model as any).mesh).not.toBe(actorMesh);
+  expect(spotMeshes()).toHaveLength(1);
+  expect(spotMeshes()[0]).toBe(spot);
+  // Model offsets apply to the root's children by index, so the actor's mesh stays first.
+  expect(root().children[0]).toBe((model as any).mesh);
+  cycle();
+  expect(spot.visible).toBe(true);
+});
+
+test("a model change does not replay the sounds of a playing spotanim", async () => {
+  const sounding = effect(2);
+  sounding.animations![302].frameSounds = { 0: [{ id: 902, loops: 0, location: 0, retain: 0, weight: 1 }] };
+  const { model, attach, cycle } = await fixture([sounding]);
+  const play = jest.spyOn(SoundCache, "play");
+  attach({ id: 2 });
+  cycle();
+  expect(play).toHaveBeenCalledTimes(1);
+  model.modelChanged();
+  await model.preload();
+  cycle();
+  expect(play).toHaveBeenCalledTimes(1);
 });
