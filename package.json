@@ -15,6 +15,7 @@
     "build:core": "npm run clean && webpack --config webpack.production.js",
     "build:react": "npm run build --workspace osrs-sdk-react",
     "lint": "oxlint --fix .",
+    "lint:check": "oxlint .",
     "prettier": "npx prettier --write .",
     "start": "npx webpack serve --config webpack.dev.js",
     "watch": "npx webpack --config webpack.production.js --watch",
