@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { readFileSync } from "fs";
+import { join } from "path";
 import { parseSoundEffectPack } from "../src/sdk/audio/CacheSoundEffects";
 import { synthesizeSoundEffect } from "../src/sdk/audio/SoundEffectSynth";
 import { CACHE_SOUND_EFFECT_IDS } from "../src/assets/CacheAssets";
@@ -25,7 +26,6 @@ const EXPECTED_PCM = new Map<number, [number, string]>([
 test("cache sound pack synthesizes the reference PCM", () => {
   const packed = readFileSync("test/fixtures/cache-sound-effects.soundpack");
   const definitions = parseSoundEffectPack(packed);
-  expect(CACHE_SOUND_EFFECT_IDS.every((id) => definitions.has(id))).toBe(true);
   // Shared Varl effects referenced by Sol's sequence definitions are pulled in
   // automatically even though they are not part of the named sound registry.
   expect([8066, 8289].every((id) => definitions.has(id))).toBe(true);
@@ -37,3 +37,18 @@ test("cache sound pack synthesizes the reference PCM", () => {
     expect(createHash("sha256").update(raw.samples).digest("hex")).toBe(hash);
   });
 });
+
+const cacheDir = process.env.OSRS_CACHE_DIR;
+const registryInCache = "every registered sound exists in the OpenRS2 cache at OSRS_CACHE_DIR";
+
+if (cacheDir === undefined) {
+  test.skip(`${registryInCache} (skipped: OSRS_CACHE_DIR is unset)`, () => {});
+} else {
+  test(registryInCache, () => {
+    // Each sound-effect index entry is 6 bytes: a 3-byte archive length, then a 3-byte first sector.
+    // A zero length, or an id past the end of the index, means the cache has no such sound.
+    const index = readFileSync(join(cacheDir, "main_file_cache.idx4"));
+    const inCache = (id: number) => (id + 1) * 6 <= index.length && index.readUIntBE(id * 6, 3) > 0;
+    expect(CACHE_SOUND_EFFECT_IDS.filter((id) => !inCache(id))).toEqual([]);
+  });
+}
