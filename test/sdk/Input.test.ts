@@ -57,4 +57,38 @@ describe("InputController client-tick inputs", () => {
 
     expect(actions).toEqual([1, 2]);
   });
+
+  test("an action queued while the tick runs its actions waits for the next tick", () => {
+    const controller = new InputController();
+    const seen: number[] = [];
+
+    controller.queueAction(() => {
+      seen.push(1);
+      controller.queueAction(() => seen.push(2));
+    });
+    jest.runOnlyPendingTimers();
+    controller.onWorldTick();
+    const afterFirstTick = [...seen];
+    jest.runOnlyPendingTimers();
+    controller.onWorldTick();
+
+    expect([afterFirstTick, seen]).toEqual([[1], [1, 2]]);
+  });
+
+  test("drops a ninth action in one tick, and accepts actions again after the tick", () => {
+    const controller = new InputController();
+    const seen: number[] = [];
+
+    for (let action = 1; action <= 9; action++) {
+      controller.queueAction(() => seen.push(action));
+      jest.runOnlyPendingTimers();
+    }
+    controller.onWorldTick();
+    const afterFirstTick = [...seen];
+    controller.queueAction(() => seen.push(10));
+    jest.runOnlyPendingTimers();
+    controller.onWorldTick();
+
+    expect([afterFirstTick, seen]).toEqual([[1, 2, 3, 4, 5, 6, 7, 8], [1, 2, 3, 4, 5, 6, 7, 8, 10]]);
+  });
 });
