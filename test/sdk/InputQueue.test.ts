@@ -27,8 +27,16 @@ describe("clicks queued for the world tick", () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.useRealTimers();
   });
+
+  function startWorld() {
+    // The test ticks the world itself, and jsdom has no canvas context to draw a frame into.
+    jest.spyOn(window, "requestAnimationFrame").mockReturnValue(0);
+    jest.spyOn(Viewport.viewport, "draw").mockReturnValue(undefined);
+    world.startTicking();
+  }
 
   function press(tile: Location) {
     const { x, y } = Viewport.viewport.projectTile(tile, world);
@@ -105,4 +113,51 @@ describe("clicks queued for the world tick", () => {
 
     expect(player.destinationLocation).toEqual({ x: 14, y: 20 });
   });
+
+  test.each([
+    { when: "with no stop", stopped: false },
+    { when: "across a 10 s stop", stopped: true },
+  ])("a click with a 1000 ms input delay registers on the second tick after it, $when", ({ stopped }) => {
+    Settings.inputDelay = 1000;
+    startWorld();
+    press({ x: 20, y: 14 });
+    jest.advanceTimersByTime(100);
+    if (stopped) {
+      world.stopTicking();
+      jest.advanceTimersByTime(10_000);
+      world.startTicking();
+    }
+    jest.advanceTimersByTime(500);
+    const firstTick = tilesOverTicks(1)[0];
+    jest.advanceTimersByTime(600);
+    const secondTick = tilesOverTicks(1)[0];
+
+    expect([firstTick, secondTick]).toEqual([
+      { x: 14, y: 14 },
+      { x: 16, y: 14 },
+    ]);
+  });
+
+  test.each([
+    { delay: 0, stopped: true },
+    { delay: 600, stopped: false },
+    { delay: 600, stopped: true },
+  ])(
+    "of twenty inputs that register together, the newest eight run in order (input delay $delay ms, made while stopped: $stopped)",
+    ({ delay, stopped }) => {
+      Settings.inputDelay = delay;
+      startWorld();
+      if (stopped) world.stopTicking();
+      const ran: number[] = [];
+      for (let input = 1; input <= 20; input++) InputController.controller.queueAction(() => ran.push(input));
+      if (stopped) {
+        jest.advanceTimersByTime(10_000);
+        world.startTicking();
+      }
+      jest.advanceTimersByTime(600);
+      world.tickWorld();
+
+      expect(ran).toEqual([13, 14, 15, 16, 17, 18, 19, 20]);
+    },
+  );
 });
