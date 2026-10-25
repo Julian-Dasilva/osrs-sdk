@@ -4,4 +4,4 @@ export class XpDrop {
     public xp: number,
     public damage?: number,
   ) {}
-}
+};
