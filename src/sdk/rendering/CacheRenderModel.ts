@@ -36,6 +36,7 @@ type RawFrame = CacheRenderRawFrame;
 type AnimationPayload = CacheRenderAnimation;
 type Payload = CacheRenderPayload;
 type SpotAnimRuntime = {
+  assetId: string;
   interpolatedMayaFrame: number[][];
   animayaGroups: number[][];
   animayaScales: number[][];
@@ -142,6 +143,9 @@ export class CacheRenderModel implements Model, RenderableListener {
   private animayaGroups: number[][] = [];
   private animayaScales: number[][] = [];
   private spotAnims: SpotAnimRuntime[] = [];
+  // Decoded spotanim payloads by bundle asset id. An actor builds an effect's
+  // mesh from these when the effect is first attached.
+  private spotAnimPayloads = new Map<string, Payload>();
   private activeSpotAnims: CacheRenderSpotAnim[] = [];
   // Attached spotanims have their own one-shot clock. They follow the actor's
   // world transform, but must not depend on whether the actor is currently
@@ -227,6 +231,7 @@ export class CacheRenderModel implements Model, RenderableListener {
     this.spotAnimStarts = starts;
     this.spotAnimPlacements = placements;
     this.animationRevision++;
+    this.buildSpotAnims();
   }
   private currentSpotAnims(fallback?: CacheRenderSpotAnim[]) {
     const attached = this.renderable.spotAnims;
@@ -308,17 +313,20 @@ export class CacheRenderModel implements Model, RenderableListener {
     if (this.ready) return this.ready;
     this.ready = (async () => {
       const generation = this.modelGeneration;
-      const previousChildren = this.root.children.slice();
+      // Effects attached since the model changed already have current meshes.
+      const previousChildren = this.root.children.filter(
+        (child) => !this.spotAnims.some((spot) => spot.mesh === child),
+      );
       const previousOutline = this.outline;
       const previousClickbox = this.clickbox;
       const bundle = await CacheRender.bundle();
       const assetIds = bundle.assetIds(this.reference);
       const sharedAssetIds = bundle.sharedAssetIds(this.reference);
       const payloads = await Promise.all([...assetIds, ...sharedAssetIds].map((id) => cachedPayload(bundle, id)));
-      // Preload effect meshes independently of the active list. Gameplay can
-      // attach a Spotanim later without invalidating/rebuilding the base model.
-      // Spotanim-only effects should load only the requested graphic. Actor
-      // models retain the eager path because gameplay may attach effects later.
+      // Preload effect payloads independently of the active list, so gameplay
+      // can attach a Spotanim later without a fetch or rebuilding the base
+      // model. Spotanim-only effects should load only the requested graphic.
+      // Actors fetch every effect but build a mesh only for attached ones.
       const spotIds = this.reference.kind === "spotAnim" ? bundle.spotAnimIds(this.reference) : bundle.allSpotAnimIds();
       const spotPayloads = await Promise.all(spotIds.map((id) => cachedPayload(bundle, id)));
       if (generation !== this.modelGeneration) return;
@@ -489,67 +497,8 @@ export class CacheRenderModel implements Model, RenderableListener {
         this.clickbox?.userData.cacheGeometryClickbox ? this.clickbox : null,
       );
       this.meshGeneration = generation;
-      spotPayloads.forEach((spotPayload) => {
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute("position", new THREE.Float32BufferAttribute(spotPayload.positions, 3));
-        const spotAlphas =
-          spotPayload.alphas?.map(normalizeCacheAlpha) ?? Array(spotPayload.positions.length / 3).fill(0);
-        if (spotPayload.colors && spotPayload.colors.length * 3 === spotPayload.positions.length) {
-          geometry.setAttribute(
-            "color",
-            new THREE.Float32BufferAttribute(cacheColorsToRgba(spotPayload.colors, spotAlphas), 4),
-          );
-        }
-        geometry.setIndex(spotPayload.indices ?? []);
-        const effect = new THREE.Mesh(
-          geometry,
-          new THREE.MeshBasicMaterial({
-            color: spotPayload.color ?? 0xffffff,
-            vertexColors: Boolean(spotPayload.colors?.length),
-            transparent: true,
-            wireframe: DRAW_CACHE_MODEL_WIREFRAME,
-          }),
-        );
-        const metadata = spotPayload.spotAnim ?? {};
-        const placement = this.activeSpotAnims[0];
-        effect.userData.spotAnimId = metadata.id;
-        effect.userData.cacheBaseColors = spotPayload.colors ?? [];
-        effect.userData.cacheFaceColors = spotPayload.faceColors ?? [];
-        effect.visible = false;
-        // Actor roots already carry the NPC definition's model scale. Cache
-        // spotanim resize values are world-space scales in the client, so
-        // compensate for the inherited root scale instead of multiplying the
-        // two definitions together (Sol uses 300 for both).
-        effect.scale.set(
-          (metadata.resizeX ?? 128) / 128 / this.root.scale.x,
-          (metadata.resizeY ?? 128) / 128 / this.root.scale.y,
-          (metadata.resizeX ?? 128) / 128 / this.root.scale.z,
-        );
-        effect.rotation.y = ((placement?.rotation ?? metadata.rotation ?? 0) * Math.PI) / 1024;
-        this.root.add(effect);
-        this.spotAnims.push({
-          interpolatedMayaFrame: [],
-          animayaGroups: spotPayload.animayaGroups ?? [],
-          animayaScales: spotPayload.animayaScales ?? [],
-          posedPositions: new Float32Array(spotPayload.positions.length),
-          posedAlphas: new Float32Array(spotAlphas.length),
-          workspace: new RawFrameWorkspace(),
-          interpolatedFrame: { types: [], maps: [], indexFrameIds: [], x: [], y: [], z: [] },
-          mesh: effect,
-          basePositions: new Float32Array(spotPayload.positions),
-          vertexGroups: spotPayload.vertexGroups ?? [],
-          sourceVertices: spotPayload.sourceVertices ?? [],
-          baseAlphas: new Float32Array(spotAlphas),
-          alphaGroups: spotPayload.alphaGroups ?? [],
-          animationId: metadata.animationId,
-          animation: metadata.animationId >= 0 ? spotPayload.animations?.[String(metadata.animationId)] : undefined,
-          scaleX: metadata.resizeX ?? 128,
-          scaleY: metadata.resizeY ?? 128,
-          rotation: metadata.rotation ?? 0,
-          height: placement?.height ?? 0,
-          delay: placement?.delay ?? 0,
-        });
-      });
+      this.spotAnimPayloads = new Map(spotIds.map((id, index) => [id, spotPayloads[index]] as [string, Payload]));
+      this.buildSpotAnims();
       // A queued actor animation may have begun while its cache geometry was
       // loading. Start it once the mesh is ready so short spawn sequences are
       // not skipped.
@@ -566,6 +515,79 @@ export class CacheRenderModel implements Model, RenderableListener {
       if (previousClickbox?.parent) previousClickbox.parent.remove(previousClickbox);
     })();
     return this.ready;
+  }
+
+  /**
+   * Build a mesh for each attached effect that has none. A spotanim-only
+   * renderable builds every graphic it references.
+   */
+  private buildSpotAnims() {
+    const attached = this.activeSpotAnims.map((spotAnim) => spotAnim.id);
+    this.spotAnimPayloads.forEach((spotPayload, assetId) => {
+      if (this.spotAnims.some((spot) => spot.assetId === assetId)) return;
+      if (this.reference.kind !== "spotAnim" && attached.indexOf(spotPayload.spotAnim?.id) < 0) return;
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(spotPayload.positions, 3));
+      const spotAlphas =
+        spotPayload.alphas?.map(normalizeCacheAlpha) ?? Array(spotPayload.positions.length / 3).fill(0);
+      if (spotPayload.colors && spotPayload.colors.length * 3 === spotPayload.positions.length) {
+        geometry.setAttribute(
+          "color",
+          new THREE.Float32BufferAttribute(cacheColorsToRgba(spotPayload.colors, spotAlphas), 4),
+        );
+      }
+      geometry.setIndex(spotPayload.indices ?? []);
+      const effect = new THREE.Mesh(
+        geometry,
+        new THREE.MeshBasicMaterial({
+          color: spotPayload.color ?? 0xffffff,
+          vertexColors: Boolean(spotPayload.colors?.length),
+          transparent: true,
+          wireframe: DRAW_CACHE_MODEL_WIREFRAME,
+        }),
+      );
+      const metadata = spotPayload.spotAnim ?? {};
+      // The effect's own placement, when it is attached as it is built.
+      const placement = this.activeSpotAnims.filter((spotAnim) => spotAnim.id === metadata.id)[0];
+      effect.userData.spotAnimId = metadata.id;
+      effect.userData.cacheBaseColors = spotPayload.colors ?? [];
+      effect.userData.cacheFaceColors = spotPayload.faceColors ?? [];
+      effect.visible = false;
+      // Actor roots already carry the NPC definition's model scale. Cache
+      // spotanim resize values are world-space scales in the client, so
+      // compensate for the inherited root scale instead of multiplying the
+      // two definitions together (Sol uses 300 for both).
+      effect.scale.set(
+        (metadata.resizeX ?? 128) / 128 / this.root.scale.x,
+        (metadata.resizeY ?? 128) / 128 / this.root.scale.y,
+        (metadata.resizeX ?? 128) / 128 / this.root.scale.z,
+      );
+      effect.rotation.y = ((placement?.rotation ?? metadata.rotation ?? 0) * Math.PI) / 1024;
+      this.root.add(effect);
+      this.spotAnims.push({
+        assetId,
+        interpolatedMayaFrame: [],
+        animayaGroups: spotPayload.animayaGroups ?? [],
+        animayaScales: spotPayload.animayaScales ?? [],
+        posedPositions: new Float32Array(spotPayload.positions.length),
+        posedAlphas: new Float32Array(spotAlphas.length),
+        workspace: new RawFrameWorkspace(),
+        interpolatedFrame: { types: [], maps: [], indexFrameIds: [], x: [], y: [], z: [] },
+        mesh: effect,
+        basePositions: new Float32Array(spotPayload.positions),
+        vertexGroups: spotPayload.vertexGroups ?? [],
+        sourceVertices: spotPayload.sourceVertices ?? [],
+        baseAlphas: new Float32Array(spotAlphas),
+        alphaGroups: spotPayload.alphaGroups ?? [],
+        animationId: metadata.animationId,
+        animation: metadata.animationId >= 0 ? spotPayload.animations?.[String(metadata.animationId)] : undefined,
+        scaleX: metadata.resizeX ?? 128,
+        scaleY: metadata.resizeY ?? 128,
+        rotation: metadata.rotation ?? 0,
+        height: placement?.height ?? 0,
+        delay: placement?.delay ?? 0,
+      });
+    });
   }
 
   draw(
