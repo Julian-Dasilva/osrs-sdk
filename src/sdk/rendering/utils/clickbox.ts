@@ -36,7 +36,9 @@ export class ClickboxController {
     this.clickboxTriangleIndices = [];
     const indices = mesh.geometry.index?.array ?? [];
     for (let i = 0; i < indices.length; i += 3) {
-      const a = renderToClickboxIndex[indices[i]], b = renderToClickboxIndex[indices[i + 1]], c = renderToClickboxIndex[indices[i + 2]];
+      const a = renderToClickboxIndex[indices[i]],
+        b = renderToClickboxIndex[indices[i + 1]],
+        c = renderToClickboxIndex[indices[i + 2]];
       // The extractor represents client-hidden type-2 faces as [a, a, a].
       if (a === b && b === c) continue;
       this.clickboxTriangleIndices.push(a, b, c);
@@ -47,7 +49,9 @@ export class ClickboxController {
       const offset = this.clickboxVertexIndices.length;
       const authoredIndices = authoredMesh.geometry.index?.array ?? [];
       for (let i = 0; i < authoredIndices.length; i += 3) {
-        const a = authoredIndices[i], b = authoredIndices[i + 1], c = authoredIndices[i + 2];
+        const a = authoredIndices[i],
+          b = authoredIndices[i + 1],
+          c = authoredIndices[i + 2];
         if (a === b && b === c) continue;
         this.clickboxTriangleIndices.push(offset + a, offset + b, offset + c);
       }
@@ -93,21 +97,28 @@ export class ClickboxController {
     const e = this.mesh.matrixWorld.elements;
     this.clickboxWorldBounds.min.set(e[12], e[13], e[14]);
     this.clickboxWorldBounds.max.copy(this.clickboxWorldBounds.min);
-    this.expandBounds(this.mesh.geometry.getAttribute("position") as THREE.BufferAttribute,
-      this.mesh.matrixWorld, this.clickboxVertexIndices);
+    this.expandBounds(
+      this.mesh.geometry.getAttribute("position") as THREE.BufferAttribute,
+      this.mesh.matrixWorld,
+      this.clickboxVertexIndices,
+    );
     if (this.authoredMesh) {
       this.authoredMesh.updateWorldMatrix(true, false);
-      this.expandBounds(this.authoredMesh.geometry.getAttribute("position") as THREE.BufferAttribute,
-        this.authoredMesh.matrixWorld);
+      this.expandBounds(
+        this.authoredMesh.geometry.getAttribute("position") as THREE.BufferAttribute,
+        this.authoredMesh.matrixWorld,
+      );
     }
     const { min, max } = this.clickboxWorldBounds;
     const padding = this.getSize() === 1 ? 8 / 128 : 0;
     for (const axis of ["x", "z"] as const) {
       const center = (min[axis] + max[axis]) / 2;
       const extent = Math.max(32 / 128, (max[axis] - min[axis] + 1 / 128) / 2) + padding;
-      min[axis] = center - extent; max[axis] = center + extent;
+      min[axis] = center - extent;
+      max[axis] = center + extent;
     }
-    min.y -= 1 / 256; max.y += 1 / 256;
+    min.y -= 1 / 256;
+    max.y += 1 / 256;
     this.clickboxBoundsDirty = false;
     return this.clickboxWorldBounds;
   }
@@ -116,13 +127,21 @@ export class ClickboxController {
     const { min, max } = this.clickboxWorldBounds;
     for (let i = 0; i < (indices?.length ?? position.count); i++) {
       const index = indices?.[i] ?? i;
-      const x = position.getX(index), y = position.getY(index), z = position.getZ(index);
+      const x = position.getX(index),
+        y = position.getY(index),
+        z = position.getZ(index);
       const wx = e[0] * x + e[4] * y + e[8] * z + e[12];
       const wy = e[1] * x + e[5] * y + e[9] * z + e[13];
       const wz = e[2] * x + e[6] * y + e[10] * z + e[14];
-      min.x = Math.min(min.x, wx); min.y = Math.min(min.y, wy); min.z = Math.min(min.z, wz);
-      max.x = Math.max(max.x, wx); max.y = Math.max(max.y, wy); max.z = Math.max(max.z, wz);
+      min.x = Math.min(min.x, wx);
+      min.y = Math.min(min.y, wy);
+      min.z = Math.min(min.z, wz);
+      max.x = Math.max(max.x, wx);
+      max.y = Math.max(max.y, wy);
+      max.z = Math.max(max.z, wz);
     }
   }
-  getTriangles() { return this.clickboxTriangleIndices; }
+  getTriangles() {
+    return this.clickboxTriangleIndices;
+  }
 }

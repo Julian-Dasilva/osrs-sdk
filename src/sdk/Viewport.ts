@@ -91,7 +91,6 @@ export class Viewport {
   width: number;
   height: number;
 
-
   public components: Component[] = [];
 
   constructor(
@@ -199,7 +198,7 @@ export class Viewport {
 
   clientTick(timestamp?: number) {
     if (Trainer.player) {
-      this.delegate.clientTick?.(Trainer.player.region, timestamp); 
+      this.delegate.clientTick?.(Trainer.player.region, timestamp);
     }
   }
 
@@ -251,12 +250,7 @@ export class Viewport {
 
     // draw control panel
     ControlPanelController.controller.draw(this.context);
-    XpDropController.controller.draw(
-      this.context,
-      width - 140 - MapController.controller.width,
-      0,
-      world.tickPercent,
-    );
+    XpDropController.controller.draw(this.context, width - 140 - MapController.controller.width, 0, world.tickPercent);
     MapController.controller.draw(this.context);
     this.clickController.drawHoverTooltip(this.context);
     this.contextMenu.draw(this.context);
@@ -310,24 +304,26 @@ export class Viewport {
     this.context.fillStyle = "#050403";
     this.context.fillRect(barX, barY, barWidth, barHeight);
     this.context.fillStyle = "#e00000";
-    this.context.fillRect(barX + BOSS_BAR_INNER_PADDING, barY + BOSS_BAR_INNER_PADDING, barWidth - BOSS_BAR_INNER_PADDING * 2, barHeight - BOSS_BAR_INNER_PADDING * 2);
+    this.context.fillRect(
+      barX + BOSS_BAR_INNER_PADDING,
+      barY + BOSS_BAR_INNER_PADDING,
+      barWidth - BOSS_BAR_INNER_PADDING * 2,
+      barHeight - BOSS_BAR_INNER_PADDING * 2,
+    );
     this.context.fillStyle = "#00d900";
-    this.context.fillRect(barX + BOSS_BAR_INNER_PADDING, barY + BOSS_BAR_INNER_PADDING, Math.round((barWidth - BOSS_BAR_INNER_PADDING * 2) * healthRatio), barHeight - BOSS_BAR_INNER_PADDING * 2);
+    this.context.fillRect(
+      barX + BOSS_BAR_INNER_PADDING,
+      barY + BOSS_BAR_INNER_PADDING,
+      Math.round((barWidth - BOSS_BAR_INNER_PADDING * 2) * healthRatio),
+      barHeight - BOSS_BAR_INNER_PADDING * 2,
+    );
 
     const textX = x + width / 2;
     const textY = barY + 17;
     this.context.fillStyle = "black";
-    this.context.fillText(
-      `${current} / ${maximum} (${(healthRatio * 100).toFixed(1)}%)`,
-      textX + 1,
-      textY + 1,
-    );
+    this.context.fillText(`${current} / ${maximum} (${(healthRatio * 100).toFixed(1)}%)`, textX + 1, textY + 1);
     this.context.fillStyle = "white";
-    this.context.fillText(
-      `${current} / ${maximum} (${(healthRatio * 100).toFixed(1)}%)`,
-      textX,
-      textY,
-    );
+    this.context.fillText(`${current} / ${maximum} (${(healthRatio * 100).toFixed(1)}%)`, textX, textY);
     this.context.restore();
   }
 }

@@ -20,8 +20,12 @@ import { Weapon } from "../../src/sdk/gear/Weapon";
 describe("basic combat scenario", () => {
   test("attaches a weapon firing graphic to its attack animation", () => {
     class FiringGraphicWeapon extends Weapon {
-      override get attackAnimationId() { return 123; }
-      override get attackSpotAnim() { return { id: 456 }; }
+      override get attackAnimationId() {
+        return 123;
+      }
+      override get attackSpotAnim() {
+        return { id: 456 };
+      }
       override rollDamage() {
         this.damageRoll = 0;
         this.damage = 0;
@@ -171,9 +175,11 @@ describe("basic combat scenario", () => {
     const attacker = new TestNpc(region, { x: 4, y: 5 }, {});
     const target = new TestNpc(region, { x: 5, y: 5 }, {});
     target.grantMaxDamageRollsOnNextIncomingAttack();
-    target.addProjectile(new Projectile(null, 0, attacker, target, "stab", {
-      consumeTargetMaxDamageRoll: true,
-    }));
+    target.addProjectile(
+      new Projectile(null, 0, attacker, target, "stab", {
+        consumeTargetMaxDamageRoll: true,
+      }),
+    );
 
     target.processIncomingAttacks();
     DelayedAction.tick();
@@ -186,18 +192,21 @@ describe("basic combat scenario", () => {
     ["east", { x: 5, y: 4 }, { x: 5, y: 4 }, CACHE_ASSETS.spotAnims.scytheEast.id],
     ["south", { x: 4, y: 7 }, { x: 4, y: 5 }, CACHE_ASSETS.spotAnims.scytheSouth.id],
     ["west", { x: 1, y: 4 }, { x: 3, y: 4 }, CACHE_ASSETS.spotAnims.scytheWest.id],
-  ])("spawns the %s Scythe GraphicsObject one tile ahead", (_direction, targetLocation, expectedLocation, spotAnimId) => {
-    const region = new TestRegion(10, 10);
-    const attacker = new Player(region, { x: 4, y: 4 });
-    const target = new TestNpc(region, targetLocation, {});
+  ])(
+    "spawns the %s Scythe GraphicsObject one tile ahead",
+    (_direction, targetLocation, expectedLocation, spotAnimId) => {
+      const region = new TestRegion(10, 10);
+      const attacker = new Player(region, { x: 4, y: 4 });
+      const target = new TestNpc(region, targetLocation, {});
 
-    new ScytheOfVitur().attack(attacker, target, {});
+      new ScytheOfVitur().attack(attacker, target, {});
 
-    expect(region.entities).toHaveLength(1);
-    expect(region.entities[0]).toBeInstanceOf(GraphicsObject);
-    expect(region.entities[0].location).toEqual(expectedLocation);
-    expect((region.entities[0] as GraphicsObject).spotAnimId).toBe(spotAnimId);
-  });
+      expect(region.entities).toHaveLength(1);
+      expect(region.entities[0]).toBeInstanceOf(GraphicsObject);
+      expect(region.entities[0].location).toEqual(expectedLocation);
+      expect((region.entities[0] as GraphicsObject).spotAnimId).toBe(spotAnimId);
+    },
+  );
 
   test("Dragon Claws special attack creates four linked hitsplats after its first successful accuracy roll", () => {
     const region = new TestRegion(10, 10);

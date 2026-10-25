@@ -140,9 +140,7 @@ export class SoundCache {
     );
     if (distance >= range) return 0;
     const denominator = range - retain;
-    const attenuation = denominator > 0
-      ? Math.min(Math.max((range - distance) / denominator, 0), 1)
-      : 1;
+    const attenuation = denominator > 0 ? Math.min(Math.max((range - distance) / denominator, 0), 1) : 1;
     return sound.volume * attenuation;
   }
 }

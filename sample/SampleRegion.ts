@@ -1,9 +1,4 @@
-import {
-  CardinalDirection,
-  Manticore,
-  Player,
-  Region,
-} from "../src";
+import { CardinalDirection, Manticore, Player, Region } from "../src";
 import type { Loadout as LoadoutData } from "../src";
 import { SampleNpc } from "./SampleNpc";
 import { SamplePillar } from "./SamplePillar";

@@ -109,7 +109,9 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
     const vertexNormals = Array.from({ length: model.vertexCount }, () => ({ x: 0, y: 0, z: 0, magnitude: 0 }));
     const faceNormals = [];
     for (let face = 0; face < model.faceCount; face++) {
-      const a = model.faceVertexIndices1[face], b = model.faceVertexIndices2[face], c = model.faceVertexIndices3[face];
+      const a = model.faceVertexIndices1[face],
+        b = model.faceVertexIndices2[face],
+        c = model.faceVertexIndices3[face];
       const ab = {
         x: model.vertexPositionsX[b] - model.vertexPositionsX[a],
         y: model.vertexPositionsY[b] - model.vertexPositionsY[a],
@@ -124,10 +126,16 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
       let y = ab.z * ac.x - ac.z * ab.x;
       let z = ab.x * ac.y - ac.x * ab.y;
       while (x > 8192 || y > 8192 || z > 8192 || x < -8192 || y < -8192 || z < -8192) {
-        x >>= 1; y >>= 1; z >>= 1;
+        x >>= 1;
+        y >>= 1;
+        z >>= 1;
       }
       const length = Math.max(1, Math.floor(Math.hypot(x, y, z)));
-      const normal = { x: Math.trunc(x * 256 / length), y: Math.trunc(y * 256 / length), z: Math.trunc(z * 256 / length) };
+      const normal = {
+        x: Math.trunc((x * 256) / length),
+        y: Math.trunc((y * 256) / length),
+        z: Math.trunc((z * 256) / length),
+      };
       const renderType = modelRenderType(model, face);
       if (renderType === 1) faceNormals[face] = normal;
       else if (renderType === 0) {
@@ -146,12 +154,13 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
       if (renderType === 3) return 128;
       const normal = renderType === 1 ? faceNormals[face] : vertexNormals[vertex];
       if (!normal) return lighting.ambient;
-      const divisor = renderType === 1
-        ? Math.trunc(scaledContrast / 2) + scaledContrast
-        : scaledContrast * Math.max(1, normal.magnitude);
-      const brightness = Math.trunc(
-        (lighting.y * normal.y + lighting.z * normal.z + lighting.x * normal.x) / Math.max(1, divisor),
-      ) + lighting.ambient;
+      const divisor =
+        renderType === 1
+          ? Math.trunc(scaledContrast / 2) + scaledContrast
+          : scaledContrast * Math.max(1, normal.magnitude);
+      const brightness =
+        Math.trunc((lighting.y * normal.y + lighting.z * normal.z + lighting.x * normal.x) / Math.max(1, divisor)) +
+        lighting.ambient;
       return brightness;
     };
   }
@@ -494,8 +503,8 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
         definition = await cache.getDef(IndexType.CONFIGS.id, ConfigType.OBJECT.id, location.id);
         definitions.set(location.id, definition);
       }
-      const width = location.orientation & 1 ? definition?.sizeY ?? 1 : definition?.sizeX ?? 1;
-      const height = location.orientation & 1 ? definition?.sizeX ?? 1 : definition?.sizeY ?? 1;
+      const width = location.orientation & 1 ? (definition?.sizeY ?? 1) : (definition?.sizeX ?? 1);
+      const height = location.orientation & 1 ? (definition?.sizeX ?? 1) : (definition?.sizeY ?? 1);
       const terrain = objectTerrain(location, width, height);
       // Kotlin's SceneRegionBuilder changes the model orientation for wall
       // corners/diagonal decorations, and WALL_CORNER (type 2) emits a second
@@ -542,8 +551,7 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
       needsContour,
     } of variants.values()) {
       // Diagonal interactables use interactable geometry with an additional 45-degree turn.
-      const modelType =
-        location.type === OBJECT_TYPE.DIAGONAL_INTERACTABLE ? OBJECT_TYPE.INTERACTABLE : location.type;
+      const modelType = location.type === OBJECT_TYPE.DIAGONAL_INTERACTABLE ? OBJECT_TYPE.INTERACTABLE : location.type;
       const model = await definition?.getModel(cache, modelType, modelOrientation);
       // Some map locations are sound/collision-only definitions. They remain in
       // the recipe for accounting, but have no model and should not become an
@@ -551,11 +559,14 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
       if (!model?.vertexCount) continue;
       if (location.type === OBJECT_TYPE.DIAGONAL_INTERACTABLE) model.method1206(CACHE_ANGLE_45);
       if (needsContour) contourModel(model, location, width, height, terrain, definition.contouredGround);
-      const result = await attachTextures(cache, payload({ getMergedModel: () => model }, undefined, undefined, {
-        ...OBJECT_LIGHTING,
-        ambient: (definition.ambient ?? 0) + 64,
-        contrast: (definition.contrast ?? 0) + 768,
-      }));
+      const result = await attachTextures(
+        cache,
+        payload({ getMergedModel: () => model }, undefined, undefined, {
+          ...OBJECT_LIGHTING,
+          ambient: (definition.ambient ?? 0) + 64,
+          contrast: (definition.contrast ?? 0) + 768,
+        }),
+      );
       assets.push({ id: assetId, payload: result });
     }
     const available = new Set(assets.map((asset) => asset.id));
@@ -613,9 +624,11 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
           animayaGroups.push(model.animayaGroups?.[source] ?? []);
           animayaScales.push(model.animayaScales?.[source] ?? []);
           const brightness = lightBrightness(face, source);
-          colors.push(faceTexture >= 0
-            ? textureBrightnessRgb(brightness)
-            : hslRgb(renderType === 3 ? 128 : adjustModelBrightness(faceColor, brightness)));
+          colors.push(
+            faceTexture >= 0
+              ? textureBrightnessRgb(brightness)
+              : hslRgb(renderType === 3 ? 128 : adjustModelBrightness(faceColor, brightness)),
+          );
           faceColors.push(faceColor);
           alphas.push(model.faceAlphas?.[face] ?? 0);
           uvs.push(
@@ -710,12 +723,9 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
       // precedence when opcodes 9/10 are absent. The reader preserves -1, so
       // normalize it here before serializing the runtime payload.
       const hasInterleave = Boolean(sequence.interleaveLeave?.length || sequence.animMayaMasks?.length);
-      const precedenceAnimating = sequence.precedenceAnimating === -1
-        ? (hasInterleave ? 2 : 0)
-        : sequence.precedenceAnimating;
-      const priority = sequence.priority === -1
-        ? (hasInterleave ? 2 : 0)
-        : sequence.priority;
+      const precedenceAnimating =
+        sequence.precedenceAnimating === -1 ? (hasInterleave ? 2 : 0) : sequence.precedenceAnimating;
+      const priority = sequence.priority === -1 ? (hasInterleave ? 2 : 0) : sequence.priority;
       result[id] = {
         frames: animation.vertexData.map((frame) => frame.flatMap(([x, y, z]) => [x / 128, y / 128, z / 128])),
         lengths: animation.lengths,
@@ -778,11 +788,14 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
     // omits face-label alpha groups, which are required by sequence type-5
     // fade transforms.
     const group = { getMergedModel: () => models.get(definition.modelId) };
-    const result = await attachTextures(cache, payload(group, undefined, definition, {
-      ...ACTOR_LIGHTING,
-      ambient: (definition.ambient ?? 0) + 64,
-      contrast: (definition.contrast ?? 0) + 850,
-    }));
+    const result = await attachTextures(
+      cache,
+      payload(group, undefined, definition, {
+        ...ACTOR_LIGHTING,
+        ambient: (definition.ambient ?? 0) + 64,
+        contrast: (definition.contrast ?? 0) + 850,
+      }),
+    );
     result.animations = definition.animationId >= 0 ? await animations(cache, group, [definition.animationId]) : {};
     result.spotAnim = {
       id,

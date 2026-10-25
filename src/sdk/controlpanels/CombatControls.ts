@@ -71,8 +71,7 @@ export class CombatControls extends BaseControls {
       x < 25 + this.specialAttackBarBackground.width &&
       y < 210 + this.specialAttackBarBackground.height
     ) {
-      const canSpec =
-        Trainer.player.equipment.weapon && Trainer.player.equipment.weapon.hasSpecialAttack();
+      const canSpec = Trainer.player.equipment.weapon && Trainer.player.equipment.weapon.hasSpecialAttack();
       if (canSpec) {
         Trainer.player.useSpecialAttack = !Trainer.player.useSpecialAttack;
       }
@@ -190,8 +189,7 @@ export class CombatControls extends BaseControls {
     context.fillStyle = "#FF9700";
     context.fillText("Auto Retaliate", x + 115 * scale, y + 182 * scale);
 
-    const canSpec =
-      Trainer.player.equipment.weapon && Trainer.player.equipment.weapon.hasSpecialAttack();
+    const canSpec = Trainer.player.equipment.weapon && Trainer.player.equipment.weapon.hasSpecialAttack();
     const isUsingSpec = canSpec && Trainer.player.useSpecialAttack;
 
     if (canSpec) {

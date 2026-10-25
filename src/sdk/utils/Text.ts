@@ -19,14 +19,14 @@ export const parseText = (text: string): TextSegment[] => {
       }
       currentSegment = { text: "", tag: "", inTag: true };
     } else if (text[i] === "/") {
-        // closing tag
-        if (currentSegment.text) {
-          segments.push(currentSegment);
-        }
+      // closing tag
+      if (currentSegment.text) {
+        segments.push(currentSegment);
+      }
     } else if (text[i] === ">") {
       currentSegment.inTag = false;
     } else if (currentSegment.inTag) {
-        currentSegment.tag += text[i];
+      currentSegment.tag += text[i];
     } else {
       currentSegment.text += text[i];
     }
@@ -34,13 +34,13 @@ export const parseText = (text: string): TextSegment[] => {
   if (currentSegment.text) {
     segments.push(currentSegment);
   }
-  return segments.map(({text, tag}) => {
+  return segments.map(({ text, tag }) => {
     const color = parseColor(tag);
     return {
-        text,
-        ...(color && { color })
+      text,
+      ...(color && { color }),
     };
-});
+  });
 };
 
 const parseColor = (tag: string) => (tag?.includes("col=") ? tag.split("=")?.[1] : null);

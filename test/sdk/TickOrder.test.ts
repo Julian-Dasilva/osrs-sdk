@@ -7,7 +7,9 @@ import { World } from "../../src/sdk/World";
 import { Projectile } from "../../src/sdk/weapons/Projectile";
 
 class TurnNpc extends TestNpc {
-  override get attackRange() { return 0; }
+  override get attackRange() {
+    return 0;
+  }
   override attackIfPossible() {}
 }
 
@@ -33,7 +35,10 @@ describe("actor timer and queue ordering", () => {
 
   test("NPC timers precede queues, player queues precede timers, and both precede movement", () => {
     const order: string[] = [];
-    for (const [name, unit] of [["npc", mob], ["player", player]] as const) {
+    for (const [name, unit] of [
+      ["npc", mob],
+      ["player", player],
+    ] as const) {
       for (const stage of ["timerStep", "queueStep", "movementStep", "attackStep"] as const) {
         const original = unit[stage].bind(unit);
         jest.spyOn(unit, stage).mockImplementation(() => {
@@ -44,8 +49,14 @@ describe("actor timer and queue ordering", () => {
     }
     world.tickWorld();
     expect(order).toEqual([
-      "npc.timerStep", "npc.queueStep", "npc.movementStep", "npc.attackStep",
-      "player.queueStep", "player.timerStep", "player.movementStep", "player.attackStep",
+      "npc.timerStep",
+      "npc.queueStep",
+      "npc.movementStep",
+      "npc.attackStep",
+      "player.queueStep",
+      "player.timerStep",
+      "player.movementStep",
+      "player.attackStep",
     ]);
   });
 

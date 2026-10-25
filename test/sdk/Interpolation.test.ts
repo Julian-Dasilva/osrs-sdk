@@ -44,10 +44,14 @@ test("mob movement queues and consumes a visual tile step", () => {
 test("a running mob visually covers a two-tile step in one game tick", () => {
   const region = new TestRegion(20, 20);
   const target = new Player(region, { x: 8, y: 2 });
-  const mob = new class extends Mob {
-    override get canRun() { return true; }
-    override getNextMovementStep() { return { dx: this.location.x + 2, dy: this.location.y }; }
-  }(region, { x: 2, y: 2 }, { aggro: target });
+  const mob = new (class extends Mob {
+    override get canRun() {
+      return true;
+    }
+    override getNextMovementStep() {
+      return { dx: this.location.x + 2, dy: this.location.y };
+    }
+  })(region, { x: 2, y: 2 }, { aggro: target });
 
   mob.movementStep();
 
@@ -74,9 +78,7 @@ test("an active sequence stalls a pre-existing visual path, then catches up", as
   mob.setAnimationListener({
     animationChanged: async () => undefined,
     modelChanged: () => undefined,
-    getActiveAnimationMetadata: () => animationActive
-      ? { precedenceAnimating: 0, priority: 2 }
-      : undefined,
+    getActiveAnimationMetadata: () => (animationActive ? { precedenceAnimating: 0, priority: 2 } : undefined),
   });
 
   await mob.playAnimation(2);

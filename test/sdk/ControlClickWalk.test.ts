@@ -44,8 +44,24 @@ describe("Control-click movement", () => {
   }
 
   test.each([
-    ["a plain click runs two tiles a tick", false, [{ x: 16, y: 14 }, { x: 18, y: 14 }, { x: 20, y: 14 }]],
-    ["a Control-click walks one tile a tick", true, [{ x: 15, y: 14 }, { x: 16, y: 14 }, { x: 17, y: 14 }]],
+    [
+      "a plain click runs two tiles a tick",
+      false,
+      [
+        { x: 16, y: 14 },
+        { x: 18, y: 14 },
+        { x: 20, y: 14 },
+      ],
+    ],
+    [
+      "a Control-click walks one tile a tick",
+      true,
+      [
+        { x: 15, y: 14 },
+        { x: 16, y: 14 },
+        { x: 17, y: 14 },
+      ],
+    ],
   ])("%s with run on", async (_name, ctrlKey, tiles) => {
     await press({ x: 20, y: 14 }, { button: 0, ctrlKey });
 
@@ -57,13 +73,16 @@ describe("Control-click movement", () => {
     ["MacIntel", true, { x: 15, y: 14 }, false],
     ["MacIntel", false, { x: 14, y: 14 }, true],
     ["Win32", true, { x: 14, y: 14 }, true],
-  ])("on %s, a secondary press with Control %p moves to %p and opens the menu: %p", async (platform, ctrlKey, tile, menu) => {
-    jest.spyOn(navigator, "platform", "get").mockReturnValue(platform);
+  ])(
+    "on %s, a secondary press with Control %p moves to %p and opens the menu: %p",
+    async (platform, ctrlKey, tile, menu) => {
+      jest.spyOn(navigator, "platform", "get").mockReturnValue(platform);
 
-    await press({ x: 20, y: 14 }, { button: 2, ctrlKey });
+      await press({ x: 20, y: 14 }, { button: 2, ctrlKey });
 
-    expect([tilesOverTicks(1)[0], Viewport.viewport.contextMenu.isActive]).toEqual([tile, menu]);
-  });
+      expect([tilesOverTicks(1)[0], Viewport.viewport.contextMenu.isActive]).toEqual([tile, menu]);
+    },
+  );
 
   test("an attack after a Control-click walk runs to the target", async () => {
     await press({ x: 20, y: 14 }, { button: 0, ctrlKey: true });

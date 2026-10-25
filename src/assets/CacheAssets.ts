@@ -82,7 +82,7 @@ export const CACHE_ASSETS = {
     masoriChapsF: { id: 27241 },
     masoriMaskF: { id: 27235 },
     necklaceOfAnguish: { id: 19547 },
-    necklaceOfRupture: { id: 19547}, // { id: 33639 }, specifically not available in cache yet sadly
+    necklaceOfRupture: { id: 19547 }, // { id: 33639 }, specifically not available in cache yet sadly
     occultNecklace: { id: 12002 },
     pegasianBoots: { id: 13237 },
     rangerBoots: { id: 2577 },
@@ -184,7 +184,6 @@ export const CACHE_ASSETS = {
     venatorBowAttack: { id: 6797 },
     venatorBowRicochetFirst: { id: 6672 },
     venatorBowRicochetSecond: { id: 6735 },
-
   },
 } as const satisfies CacheAssets;
 

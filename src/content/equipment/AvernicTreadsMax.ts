@@ -5,7 +5,9 @@ import { ItemName } from "../../sdk/ItemName";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
 
 export class AvernicTreadsMax extends Feet {
-  get cacheItemId(): number { return CACHE_ASSETS.items.avernicTreadsMax.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.avernicTreadsMax.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

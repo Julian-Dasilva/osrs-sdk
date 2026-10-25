@@ -5,9 +5,17 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "src/index.d.ts",
-  "bin": { "osrs-sdk-assets": "dist/cli.js" },
-  "files": ["dist", "src/index.d.ts", "README.md"],
-  "engines": { "node": ">=20" },
+  "bin": {
+    "osrs-sdk-assets": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "src/index.d.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "node build.mjs",
     "test": "node --import tsx --test test/*.test.mjs"

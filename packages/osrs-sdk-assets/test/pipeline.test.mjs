@@ -17,9 +17,14 @@ test("loads the selected reader checkout", async () => {
     await assert.rejects(loadReader(root), /Cannot load cache reader/);
     await mkdir(join(root, "src"));
     await writeFile(join(root, "package.json"), '{"type":"module"}');
-    await writeFile(join(root, "src/index.js"), 'export class RSCache {} export const IndexType = { marker: "local" }; export const ConfigType = {}; export class ModelGroup {}');
+    await writeFile(
+      join(root, "src/index.js"),
+      'export class RSCache {} export const IndexType = { marker: "local" }; export const ConfigType = {}; export class ModelGroup {}',
+    );
     assert.equal((await loadReader(root)).IndexType.marker, "local");
-  } finally { await rm(root, { recursive: true, force: true }); }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("merges additional animations without renumbering existing declarations and deduplicates IDs", () => {
@@ -158,7 +163,10 @@ test("loads a CommonJS client's TS config and resolves its own SDK, with paths r
     assert.equal(config.assets.items.baseItem.id, 1);
     assert.equal(config.assets.npcs.clientNpc.id, 123);
     assert.equal(config.outDir, join(root, "public/osrs-assets"));
-    assert.equal((await loadConfig({ cwd: root, readerPath: "./custom-reader" })).readerPath, join(root, "custom-reader"));
+    assert.equal(
+      (await loadConfig({ cwd: root, readerPath: "./custom-reader" })).readerPath,
+      join(root, "custom-reader"),
+    );
     assert.deepEqual(config.semanticPoseMap, { 0: { id: 808 } });
     await assert.rejects(loadConfig({ cwd: root, outDir: root }), /dedicated directory/);
     await writeFile(

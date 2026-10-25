@@ -163,16 +163,18 @@ export class Mob extends Unit {
   }
 
   private isRedXStalled() {
-    return this.aggro?.type === UnitTypes.PLAYER
-      && this.aggro.aggro === this
-      && Collision.collisionMath(
+    return (
+      this.aggro?.type === UnitTypes.PLAYER &&
+      this.aggro.aggro === this &&
+      Collision.collisionMath(
         this.location.x,
         this.location.y,
         this.size,
         this.aggro.location.x,
         this.aggro.location.y,
         1,
-      );
+      )
+    );
   }
 
   override movementStep() {
@@ -217,9 +219,10 @@ export class Mob extends Unit {
       // as long as their destination footprint is clear. Only 1x1 NPCs must
       // also be able to occupy both adjacent cardinal tiles.
       const movingDiagonally = xOff !== 0 && yOff !== 0;
-      const both = movingDiagonally && this.size > 1
-        ? Pathing.canTileBePathedTo(this.region, dx, dy, this.size, this.consumesSpace)
-        : xSpace && ySpace;
+      const both =
+        movingDiagonally && this.size > 1
+          ? Pathing.canTileBePathedTo(this.region, dx, dy, this.size, this.consumesSpace)
+          : xSpace && ySpace;
 
       // if (this.mobName() === EntityName.JAL_AK){
       //   this.tcc =  xTiles; //xTiles.concat(yTiles);
@@ -256,10 +259,8 @@ export class Mob extends Unit {
         this.region.setTileCollisionFlags(this.location.x, this.location.y, this.size);
       }
       if (this.location.x !== previousLocation.x || this.location.y !== previousLocation.y) {
-        const movedMoreThanOneTile = Math.max(
-          Math.abs(this.location.x - previousLocation.x),
-          Math.abs(this.location.y - previousLocation.y),
-        ) > 1;
+        const movedMoreThanOneTile =
+          Math.max(Math.abs(this.location.x - previousLocation.x), Math.abs(this.location.y - previousLocation.y)) > 1;
         this.visualPath.push({ ...this.location, run: this.canRun && movedMoreThanOneTile });
         this.visualMovementActive = true;
         moved = true;

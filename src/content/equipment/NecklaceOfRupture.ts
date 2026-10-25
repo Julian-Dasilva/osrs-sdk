@@ -5,12 +5,20 @@ import { ItemName } from "../../sdk/ItemName";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
 
 export class NecklaceOfRupture extends Necklace {
-  get cacheItemId(): number { return CACHE_ASSETS.items.necklaceOfRupture.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.necklaceOfRupture.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
-  get inventoryImage() { return InventImage; }
-  get itemName(): ItemName { return ItemName.NECKLACE_OF_RUPTURE; }
-  get weight(): number { return 0.01; }
+  get inventoryImage() {
+    return InventImage;
+  }
+  get itemName(): ItemName {
+    return ItemName.NECKLACE_OF_RUPTURE;
+  }
+  get weight(): number {
+    return 0.01;
+  }
 
   constructor() {
     super();

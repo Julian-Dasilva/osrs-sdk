@@ -6,7 +6,6 @@ import { EquipmentTypes } from "../Equipment";
 import { PrayerGroups } from "../BasePrayer";
 
 export class MagicWeapon extends Weapon {
-
   constructor(projectileRules?: ProjectileOptions) {
     super(projectileRules);
   }

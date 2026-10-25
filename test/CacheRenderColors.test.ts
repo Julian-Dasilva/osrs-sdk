@@ -1,8 +1,4 @@
-import {
-  cacheAlphaToOpacity,
-  normalizeCacheAlpha,
-  resolveCacheColor,
-} from "../src/sdk/rendering/utils/colors";
+import { cacheAlphaToOpacity, normalizeCacheAlpha, resolveCacheColor } from "../src/sdk/rendering/utils/colors";
 
 test("normalizes signed cache alpha bytes and clamps animated alpha", () => {
   expect(normalizeCacheAlpha(-1)).toBe(255);

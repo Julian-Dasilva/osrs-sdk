@@ -121,9 +121,11 @@ export abstract class Region {
   }
 
   hasUnit(unit: Unit) {
-    return this.players.some((player) => player === unit)
-      || this.mobs.some((mob) => mob === unit)
-      || this.newMobs.some((mob) => mob === unit);
+    return (
+      this.players.some((player) => player === unit) ||
+      this.mobs.some((mob) => mob === unit) ||
+      this.newMobs.some((mob) => mob === unit)
+    );
   }
 
   /** Assign a fresh order when a unit first appears or crosses a chunk boundary. */
@@ -350,9 +352,7 @@ export abstract class Region {
     if (this.loadoutTemplates.length === 0) return;
 
     const selectedLoadout = this.loadoutTemplates.find(({ name }) => name === Settings.loadout);
-    const customLoadout = Settings.customLoadout?.name === selectedLoadout?.name
-      ? Settings.customLoadout
-      : null;
+    const customLoadout = Settings.customLoadout?.name === selectedLoadout?.name ? Settings.customLoadout : null;
     const loadout = customLoadout ?? selectedLoadout ?? this.loadoutTemplates[0];
     if (loadout) player.setUnitOptions(this.constructLoadout(loadout));
   }

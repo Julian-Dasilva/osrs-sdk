@@ -1054,7 +1054,7 @@ export class Player extends Unit {
         {
           idle: this.getIdlePoseId(),
           walk: this.getWalkPoseId(),
-          run: this.getRunPoseId()
+          run: this.getRunPoseId(),
         },
       ),
     );
@@ -1065,9 +1065,11 @@ export class Player extends Unit {
   }
 
   override get shouldBlendAnimationWithPose() {
-    return this.visualPath.length > 0
-      || this.perceivedLocation.x !== this.location.x
-      || this.perceivedLocation.y !== this.location.y;
+    return (
+      this.visualPath.length > 0 ||
+      this.perceivedLocation.x !== this.location.x ||
+      this.perceivedLocation.y !== this.location.y
+    );
   }
 
   override get drawOutline() {

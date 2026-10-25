@@ -34,7 +34,9 @@ const EXTRA_HIT_LOCATIONS = [
 ];
 
 export class ScytheOfVitur extends MeleeWeapon {
-  get cacheItemId(): number { return CACHE_ASSETS.items.scytheOfVitur.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.scytheOfVitur.id;
+  }
   constructor() {
     super();
 
@@ -132,14 +134,21 @@ export class ScytheOfVitur extends MeleeWeapon {
         CACHE_ASSETS.spotAnims.scytheSouth.id,
         CACHE_ASSETS.spotAnims.scytheWest.id,
       ];
-      const offsetByDirection = [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }];
+      const offsetByDirection = [
+        { x: 0, y: -1 },
+        { x: 1, y: 0 },
+        { x: 0, y: 1 },
+        { x: -1, y: 0 },
+      ];
       const offset = offsetByDirection[direction];
-      region.addEntity(new GraphicsObject(
-        region,
-        { x: from.location.x + offset.x, y: from.location.y + offset.y },
-        spotAnimByDirection[direction],
-        { height: 0.49 + 96 / 128, delay: 20, recolor: { "960": 0xffffff } },
-      ));
+      region.addEntity(
+        new GraphicsObject(
+          region,
+          { x: from.location.x + offset.x, y: from.location.y + offset.y },
+          spotAnimByDirection[direction],
+          { height: 0.49 + 96 / 128, delay: 20, recolor: { "960": 0xffffff } },
+        ),
+      );
     }
     // Full damage attack, but each subsequent hit does half of the last.
     let multiplier = 1.0;

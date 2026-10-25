@@ -38,7 +38,9 @@ function baselineModule(relative, animationHelpers) {
 const oldHelpers = baselineModule("src/sdk/rendering/utils/animations.ts");
 const { CacheRenderModel: BeforeModel } = baselineModule("src/sdk/rendering/CacheRenderModel.ts", oldHelpers);
 if (typeof BeforeModel.prototype.clientTick === "function") {
-  throw new Error("Baseline already uses client-cycle animation. Set ANIMATION_BASELINE_REF to a commit before this change.");
+  throw new Error(
+    "Baseline already uses client-cycle animation. Set ANIMATION_BASELINE_REF to a commit before this change.",
+  );
 }
 const manifest = JSON.parse(fs.readFileSync(path.join(sdk, "cache-render-bundle/manifest.json")));
 function measure(fn) {

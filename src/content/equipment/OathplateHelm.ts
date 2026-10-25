@@ -5,7 +5,9 @@ import { ItemName } from "../../sdk/ItemName";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
 
 export class OathplateHelm extends Helmet {
-  get cacheItemId(): number { return CACHE_ASSETS.items.oathplateHelm.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.oathplateHelm.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

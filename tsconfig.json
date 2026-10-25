@@ -13,20 +13,10 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "paths": {
-      "osrs-sdk": [
-        "src/index.ts"
-      ],
-      "osrs-sdk-react": [
-        "packages/osrs-sdk-react/src/index.ts"
-      ]
+      "osrs-sdk": ["src/index.ts"],
+      "osrs-sdk-react": ["packages/osrs-sdk-react/src/index.ts"]
     },
-    "typeRoots": [
-      "node_modules/@types"
-    ]
+    "typeRoots": ["node_modules/@types"]
   },
-  "exclude": [
-    "scripts",
-    "packages/osrs-sdk-assets",
-    "osrs-assets.config.ts"
-  ]
+  "exclude": ["scripts", "packages/osrs-sdk-assets", "osrs-assets.config.ts"]
 }

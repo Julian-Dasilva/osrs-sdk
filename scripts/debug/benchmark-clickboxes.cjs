@@ -29,7 +29,8 @@ for (const id of ["npc-12812", "npc-12817", "npc-12818", "npc-12821"]) {
   const payload = JSON.parse(zlib.gunzipSync(bytes.subarray(8)));
   const root = new THREE.Group();
   const mesh = new THREE.Mesh(
-    new THREE.BufferGeometry().setAttribute("position", new THREE.Float32BufferAttribute(payload.positions, 3))
+    new THREE.BufferGeometry()
+      .setAttribute("position", new THREE.Float32BufferAttribute(payload.positions, 3))
       .setIndex(payload.indices ?? []),
   );
   root.add(mesh);
@@ -91,12 +92,7 @@ for (const id of ["npc-12812", "npc-12817", "npc-12818", "npc-12821"]) {
     if (hover || screenBoundsContain(screen, pointer, 5)) {
       if (!ray.ray.intersectsBox(bounds)) throw new Error("hover fixture missed the box");
       if (useTriangles)
-        projectedTrianglesContain(
-          clickbox.getVertices().map(clientProject),
-          clickbox.getTriangles(),
-          hoverPoint,
-          5,
-        );
+        projectedTrianglesContain(clickbox.getVertices().map(clientProject), clickbox.getTriangles(), hoverPoint, 5);
       else projectedHullContains(convexHull(clickbox.getVertices().map(project)), hoverPoint, 5);
     }
     boundsDepthRange(clickbox.getBounds(), camera.matrixWorldInverse);

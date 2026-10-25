@@ -36,21 +36,33 @@ export class GraphicsObject extends Entity {
     super(region, location);
   }
 
-  override get collisionType() { return CollisionType.NONE; }
-  override get lineOfSight() { return LineOfSightMask.NONE; }
-  override get drawOutline() { return false; }
-  override get color() { return "#ffffff"; }
-  override shouldDestroy() { return this.finished; }
+  override get collisionType() {
+    return CollisionType.NONE;
+  }
+  override get lineOfSight() {
+    return LineOfSightMask.NONE;
+  }
+  override get drawOutline() {
+    return false;
+  }
+  override get color() {
+    return "#ffffff";
+  }
+  override shouldDestroy() {
+    return this.finished;
+  }
 
   override create3dModel() {
     return CacheRenderInstancedModel.forRenderable(
       this,
       CacheRenderReferences.spotAnim([{ id: this.spotAnimId, ...this.options }]),
-      { onSpotAnimComplete: () => {
-        this.finished = true;
-        // Region cleanup removes entities whose dying counter reaches zero.
-        this.dying = 0;
-      } },
+      {
+        onSpotAnimComplete: () => {
+          this.finished = true;
+          // Region cleanup removes entities whose dying counter reaches zero.
+          this.dying = 0;
+        },
+      },
     );
   }
 

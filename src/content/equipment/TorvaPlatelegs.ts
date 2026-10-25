@@ -6,7 +6,9 @@ import { Legs } from "../../sdk/gear/Legs";
 import { Assets } from "../../sdk/utils/Assets";
 
 export class TorvaPlatelegs extends Legs {
-  get cacheItemId(): number { return CACHE_ASSETS.items.torvaPlatelegs.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.torvaPlatelegs.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get itemName(): ItemName {

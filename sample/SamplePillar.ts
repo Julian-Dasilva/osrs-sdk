@@ -1,9 +1,21 @@
-import { CacheRenderModel, CacheRenderReferences, CollisionType, Entity, LineOfSightMask, Region, Location } from "../src";
+import {
+  CacheRenderModel,
+  CacheRenderReferences,
+  CollisionType,
+  Entity,
+  LineOfSightMask,
+  Region,
+  Location,
+} from "../src";
 import { SAMPLE_ASSETS } from "./assets";
 
 /** Static pillar object based on InfernoTrainer's pillar entity. */
 export class SamplePillar extends Entity {
-  constructor(region: Region, location: Location, private isVisible = true) {
+  constructor(
+    region: Region,
+    location: Location,
+    private isVisible = true,
+  ) {
     super(region, location);
   }
 

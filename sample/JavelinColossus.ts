@@ -36,7 +36,8 @@ export class JavelinColossus extends Mob {
         visuals: {
           startCycleOffset: 60,
           spotAnim: { id: SAMPLE_ASSETS.spotAnims.javelinColossusProjectile.id },
-          projectileSound: new Sound(cacheSound(SAMPLE_ASSETS.sounds.javelinColossusAttack.id), 0.05) },
+          projectileSound: new Sound(cacheSound(SAMPLE_ASSETS.sounds.javelinColossusAttack.id), 0.05),
+        },
       }),
     };
     this.stats = {

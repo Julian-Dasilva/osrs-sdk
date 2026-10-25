@@ -1,6 +1,4 @@
-import {
-  CameraFocalPoint,
-} from "../../src/sdk/utils/camera/CameraFocalPoint";
+import { CameraFocalPoint } from "../../src/sdk/utils/camera/CameraFocalPoint";
 import { CLIENT_UNITS_PER_TILE } from "../../src/sdk/utils/constants";
 
 test("initialises directly over the player", () => {

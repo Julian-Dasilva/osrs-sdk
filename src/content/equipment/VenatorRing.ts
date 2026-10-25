@@ -6,11 +6,19 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 
 /** Venator ring. Its passive effects are intentionally not simulated. */
 export class VenatorRing extends Ring {
-  get cacheItemId(): number { return CACHE_ASSETS.items.venatorRing.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.venatorRing.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
-  get inventoryImage() { return InventImage; }
-  get itemName(): ItemName { return ItemName.VENATOR_RING; }
-  get weight(): number { return 0.01; }
+  get inventoryImage() {
+    return InventImage;
+  }
+  get itemName(): ItemName {
+    return ItemName.VENATOR_RING;
+  }
+  get weight(): number {
+    return 0.01;
+  }
 
   constructor() {
     super();

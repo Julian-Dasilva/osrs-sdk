@@ -6,7 +6,6 @@ import { InvisibleMovementBlocker } from "../../src/content/MovementBlocker";
 import { TestRegion } from "../../src/sdk/testing/TestRegion";
 import { TestNpc } from "../../src/sdk/testing/TestNpc";
 
-
 // check that we accurately drag around pillars in the expected direction
 describe("drag tests", () => {
   let region: TestRegion;
@@ -45,7 +44,7 @@ describe("drag tests", () => {
     region.addEntity(new Wall(region, { x: 29, y: 2 }));
     region.addEntity(new Wall(region, { x: 29, y: 1 }));
     region.addEntity(new Wall(region, { x: 29, y: 0 }));
-  
+
     region.addEntity(new Wall(region, { x: 28, y: 21 }));
     region.addEntity(new Wall(region, { x: 29, y: 21 }));
     region.addEntity(new Wall(region, { x: 30, y: 21 }));

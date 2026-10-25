@@ -45,14 +45,22 @@ describe("hits this tick", () => {
     world.tickWorld();
     hit.damage = 0;
 
-    expect([hitsOverTicks(1), mob.currentStats.hitpoint]).toEqual([[[{ damage: 0, attackStyle: "stab", from: player }]], 125]);
+    expect([hitsOverTicks(1), mob.currentStats.hitpoint]).toEqual([
+      [[{ damage: 0, attackStyle: "stab", from: player }]],
+      125,
+    ]);
   });
 
   test("two hits landing on one tick both appear, in landing order", () => {
     mob.addProjectile(new Projectile(null, 20, player, mob, "stab", { setDelay: 1 }));
     mob.addProjectile(new Projectile(null, 7, player, mob, "range", { setDelay: 1 }));
 
-    expect(hitsOverTicks(1)).toEqual([[{ damage: 20, attackStyle: "stab", from: player }, { damage: 7, attackStyle: "range", from: player }]]);
+    expect(hitsOverTicks(1)).toEqual([
+      [
+        { damage: 20, attackStyle: "stab", from: player },
+        { damage: 7, attackStyle: "range", from: player },
+      ],
+    ]);
   });
 
   test("a hit cancelled because its source died reports nothing, beside one that lands", () => {

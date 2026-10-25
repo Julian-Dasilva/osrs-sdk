@@ -26,7 +26,6 @@ export class InventoryControls extends BaseControls {
   clickedDownLocation: Location = null;
   draggedItem = false;
 
-
   cursorLocation: Location = null;
   // this is the visual representation of the inventory, which updates instantly when items are moved but is refreshed
   // every tick
@@ -47,7 +46,13 @@ export class InventoryControls extends BaseControls {
   cursorMovedto(x: number, y: number) {
     this.cursorLocation = { x, y };
     if (!this.clickedDownLocation) return;
-    this.draggedItem ||= Pathing.dist(this.cursorLocation.x, this.cursorLocation.y, this.clickedDownLocation.x, this.clickedDownLocation.y) > DRAG_RADIUS && this.canDrag();
+    this.draggedItem ||=
+      Pathing.dist(
+        this.cursorLocation.x,
+        this.cursorLocation.y,
+        this.clickedDownLocation.x,
+        this.clickedDownLocation.y,
+      ) > DRAG_RADIUS && this.canDrag();
   }
 
   override hoverAction(x: number, y: number) {

@@ -31,7 +31,9 @@ jest.mock("three", () => ({
 Object.defineProperty(globalThis, "ResizeObserver", {
   configurable: true,
   value: class ResizeObserverMock {
-    constructor(private readonly callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void) {}
+    constructor(
+      private readonly callback: (entries: Array<{ contentRect: { width: number; height: number } }>) => void,
+    ) {}
 
     observe() {
       this.callback([{ contentRect: { width: window.innerWidth, height: window.innerHeight } }]);
@@ -55,7 +57,7 @@ Random.setRandom(() => {
 });
 
 Settings.readFromStorage();
-  
+
 export const forceRandom = (value: number) => {
   nextRandom.push(value);
 };

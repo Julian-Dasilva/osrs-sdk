@@ -51,16 +51,16 @@ export class Button implements Component {
   }
 
   private _isMouseOver(x: number, y: number) {
-    return (x >= this.xOffset &&
+    return (
+      x >= this.xOffset &&
       x <= this.xOffset + this.activeButtonImage.width &&
       y >= this.yOffset &&
-      y <= this.yOffset + this.activeButtonImage.height);
+      y <= this.yOffset + this.activeButtonImage.height
+    );
   }
 
   onPanelClick(x: number, y: number) {
-    if (
-      this._isMouseOver(x, y)
-    ) {
+    if (this._isMouseOver(x, y)) {
       this.onClick();
       return true;
     }

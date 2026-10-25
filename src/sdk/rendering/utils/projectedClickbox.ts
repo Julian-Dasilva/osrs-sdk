@@ -2,21 +2,34 @@ export type ScreenPoint = { x: number; y: number };
 export type ScreenBounds = { minX: number; minY: number; maxX: number; maxY: number };
 
 export function screenBoundsContain(bounds: ScreenBounds, point: ScreenPoint, tolerance = 0) {
-  return point.x >= bounds.minX - tolerance && point.x <= bounds.maxX + tolerance
-    && point.y >= bounds.minY - tolerance && point.y <= bounds.maxY + tolerance;
+  return (
+    point.x >= bounds.minX - tolerance &&
+    point.x <= bounds.maxX + tolerance &&
+    point.y >= bounds.minY - tolerance &&
+    point.y <= bounds.maxY + tolerance
+  );
 }
 
 /** The client's fine hit test is a padded triangle rectangle, not its interior. */
 export function projectedTriangleBounds(a: ScreenPoint, b: ScreenPoint, c: ScreenPoint): ScreenBounds {
-  return { minX: Math.min(a.x, b.x, c.x), maxX: Math.max(a.x, b.x, c.x),
-    minY: Math.min(a.y, b.y, c.y), maxY: Math.max(a.y, b.y, c.y) };
+  return {
+    minX: Math.min(a.x, b.x, c.x),
+    maxX: Math.max(a.x, b.x, c.x),
+    minY: Math.min(a.y, b.y, c.y),
+    maxY: Math.max(a.y, b.y, c.y),
+  };
 }
 
 export function projectedTrianglesContain(
-  vertices: readonly (ScreenPoint | null)[], indices: ArrayLike<number>, point: ScreenPoint, tolerance = 5,
+  vertices: readonly (ScreenPoint | null)[],
+  indices: ArrayLike<number>,
+  point: ScreenPoint,
+  tolerance = 5,
 ) {
   for (let i = 0; i < indices.length; i += 3) {
-    const a = vertices[indices[i]], b = vertices[indices[i + 1]], c = vertices[indices[i + 2]];
+    const a = vertices[indices[i]],
+      b = vertices[indices[i + 1]],
+      c = vertices[indices[i + 2]];
     if (!a || !b || !c) continue;
     // Inline the deob's rejection checks: no allocation and stop on the first hit.
     if (point.y + tolerance < a.y && point.y + tolerance < b.y && point.y + tolerance < c.y) continue;
@@ -36,10 +49,16 @@ export function boundsDepthRange(
   const e = cameraInverse.elements;
   const { min, max } = bounds;
   return {
-    min: e[14] + e[2] * (e[2] >= 0 ? min.x : max.x)
-      + e[6] * (e[6] >= 0 ? min.y : max.y) + e[10] * (e[10] >= 0 ? min.z : max.z),
-    max: e[14] + e[2] * (e[2] >= 0 ? max.x : min.x)
-      + e[6] * (e[6] >= 0 ? max.y : min.y) + e[10] * (e[10] >= 0 ? max.z : min.z),
+    min:
+      e[14] +
+      e[2] * (e[2] >= 0 ? min.x : max.x) +
+      e[6] * (e[6] >= 0 ? min.y : max.y) +
+      e[10] * (e[10] >= 0 ? min.z : max.z),
+    max:
+      e[14] +
+      e[2] * (e[2] >= 0 ? max.x : min.x) +
+      e[6] * (e[6] >= 0 ? max.y : min.y) +
+      e[10] * (e[10] >= 0 ? max.z : min.z),
   };
 }
 
@@ -71,11 +90,11 @@ export function convexHull(points: ScreenPoint[]): ScreenPoint[] {
 }
 
 function distanceToSegment(point: ScreenPoint, a: ScreenPoint, b: ScreenPoint) {
-  const dx = b.x - a.x, dy = b.y - a.y;
+  const dx = b.x - a.x,
+    dy = b.y - a.y;
   const lengthSquared = dx * dx + dy * dy;
-  const amount = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1,
-    ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared,
-  ));
+  const amount =
+    lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared));
   return Math.hypot(point.x - (a.x + amount * dx), point.y - (a.y + amount * dy));
 }
 
@@ -83,10 +102,11 @@ export function projectedHullContains(hull: ScreenPoint[], point: ScreenPoint, t
   if (hull.length < 3) return hull.some((vertex) => Math.hypot(vertex.x - point.x, vertex.y - point.y) <= tolerance);
   let inside = false;
   for (let index = 0, previous = hull.length - 1; index < hull.length; previous = index++) {
-    const a = hull[index], b = hull[previous];
+    const a = hull[index],
+      b = hull[previous];
     if (distanceToSegment(point, a, b) <= tolerance) return true;
-    if ((a.y > point.y) !== (b.y > point.y)
-      && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
+    if (a.y > point.y !== b.y > point.y && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x)
+      inside = !inside;
   }
   return inside;
 }

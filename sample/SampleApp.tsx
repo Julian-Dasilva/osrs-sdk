@@ -1,12 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  ControlPanelController,
-  CACHE_ASSETS,
-  Region,
-  Settings,
-  TrainerInstance,
-  TrainerLoadingState,
-} from "../src";
+import { ControlPanelController, CACHE_ASSETS, Region, Settings, TrainerInstance, TrainerLoadingState } from "../src";
 import type { Loadout as LoadoutData } from "../src";
 import {
   DefaultSidebar,
@@ -130,9 +123,15 @@ function SampleSidebarContents({ onLoadoutToggle }: { onLoadoutToggle: () => voi
 
   return (
     <>
-      <RuneScapeButton type="button" onClick={() => trainer.reset()}>Reset</RuneScapeButton>
-      <RuneScapeButton type="button" onClick={() => ControlPanelController.controller.setActiveControl("SETTINGS")}>Ingame Settings</RuneScapeButton>
-      <RuneScapeButton type="button" onClick={onLoadoutToggle}>Loadout</RuneScapeButton>
+      <RuneScapeButton type="button" onClick={() => trainer.reset()}>
+        Reset
+      </RuneScapeButton>
+      <RuneScapeButton type="button" onClick={() => ControlPanelController.controller.setActiveControl("SETTINGS")}>
+        Ingame Settings
+      </RuneScapeButton>
+      <RuneScapeButton type="button" onClick={onLoadoutToggle}>
+        Loadout
+      </RuneScapeButton>
       <div style={{ paddingBottom: 10, paddingTop: 10, textAlign: "center", width: "100%" }}>
         <div id="gpu_warning" />
       </div>
@@ -163,9 +162,15 @@ function PlayerPositionDebug() {
     <div
       ref={coordinates}
       style={{
-        position: "absolute", top: 8, left: 8, zIndex: 10000,
-        padding: "6px 8px", background: "#000c", color: "#0f0",
-        font: "14px monospace", pointerEvents: "none",
+        position: "absolute",
+        top: 8,
+        left: 8,
+        zIndex: 10000,
+        padding: "6px 8px",
+        background: "#000c",
+        color: "#0f0",
+        font: "14px monospace",
+        pointerEvents: "none",
       }}
     />
   );
@@ -177,20 +182,17 @@ export function SampleApp() {
   const [loadoutOpen, setLoadoutOpen] = useState(false);
 
   return (
-    <TrainerApp
-      trainer={trainer}
-      onLoadingStateChange={setLoading}
-    >
+    <TrainerApp trainer={trainer} onLoadingStateChange={setLoading}>
       <GameOverlay>
         {new URLSearchParams(window.location.search).get("scene-debug") === "1" && <PlayerPositionDebug />}
         <TrainerLoadingSplash state={loading} />
-        <LoadoutManager
-          loadouts={loadoutTemplates}
-          open={loadoutOpen}
-          onClose={() => setLoadoutOpen(false)}
-        />
+        <LoadoutManager loadouts={loadoutTemplates} open={loadoutOpen} onClose={() => setLoadoutOpen(false)} />
       </GameOverlay>
-      <div id="disclaimer_panel">Work in progress.<br />All assets are property of Jagex.</div>
+      <div id="disclaimer_panel">
+        Work in progress.
+        <br />
+        All assets are property of Jagex.
+      </div>
       <DefaultSidebar>
         <SampleSidebarContents onLoadoutToggle={() => setLoadoutOpen((open) => !open)} />
       </DefaultSidebar>

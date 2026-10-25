@@ -8,14 +8,7 @@ export type ProgressBarProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> 
   fillColor: string;
 };
 
-export function ProgressBar({
-  backgroundColor,
-  borderColor,
-  fillColor,
-  progress,
-  style,
-  ...props
-}: ProgressBarProps) {
+export function ProgressBar({ backgroundColor, borderColor, fillColor, progress, style, ...props }: ProgressBarProps) {
   const percentage = Math.max(0, Math.min(1, Number.isFinite(progress) ? progress : 0)) * 100;
 
   return (

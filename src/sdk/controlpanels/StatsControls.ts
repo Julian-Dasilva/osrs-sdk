@@ -126,17 +126,9 @@ export class StatsControls extends BaseControls {
     context.font = 16 * scale + "px Stats_11";
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.currentStats.attack),
-      x + 49 * scale,
-      y + 22 * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.attack), x + 49 * scale, y + 22 * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.currentStats.attack),
-      x + 48 * scale,
-      y + 21 * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.attack), x + 48 * scale, y + 21 * scale);
 
     context.fillStyle = "#000";
     context.fillText(String(Trainer.player.stats.attack), x + 61 * scale, y + 36 * scale);
@@ -144,185 +136,73 @@ export class StatsControls extends BaseControls {
     context.fillText(String(Trainer.player.stats.attack), x + 60 * scale, y + 35 * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.currentStats.strength),
-      x + 49 * scale,
-      y + (22 + 32) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.strength), x + 49 * scale, y + (22 + 32) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.currentStats.strength),
-      x + 48 * scale,
-      y + (21 + 32) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.strength), x + 48 * scale, y + (21 + 32) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.stats.strength),
-      x + 61 * scale,
-      y + (36 + 32) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.strength), x + 61 * scale, y + (36 + 32) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.stats.strength),
-      x + 60 * scale,
-      y + (35 + 32) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.strength), x + 60 * scale, y + (35 + 32) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.currentStats.defence),
-      x + 49 * scale,
-      y + (22 + 64) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.defence), x + 49 * scale, y + (22 + 64) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.currentStats.defence),
-      x + 48 * scale,
-      y + (21 + 64) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.defence), x + 48 * scale, y + (21 + 64) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.stats.defence),
-      x + 61 * scale,
-      y + (36 + 64) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.defence), x + 61 * scale, y + (36 + 64) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.stats.defence),
-      x + 60 * scale,
-      y + (35 + 64) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.defence), x + 60 * scale, y + (35 + 64) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.currentStats.range),
-      x + 49 * scale,
-      y + (22 + 96) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.range), x + 49 * scale, y + (22 + 96) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.currentStats.range),
-      x + 48 * scale,
-      y + (21 + 96) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.range), x + 48 * scale, y + (21 + 96) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.stats.range),
-      x + 61 * scale,
-      y + (36 + 96) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.range), x + 61 * scale, y + (36 + 96) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.stats.range),
-      x + 60 * scale,
-      y + (35 + 96) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.range), x + 60 * scale, y + (35 + 96) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.currentStats.prayer),
-      x + 49 * scale,
-      y + (22 + 128) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.prayer), x + 49 * scale, y + (22 + 128) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.currentStats.prayer),
-      x + 48 * scale,
-      y + (21 + 128) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.prayer), x + 48 * scale, y + (21 + 128) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.stats.prayer),
-      x + 61 * scale,
-      y + (36 + 128) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.prayer), x + 61 * scale, y + (36 + 128) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.stats.prayer),
-      x + 60 * scale,
-      y + (35 + 128) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.prayer), x + 60 * scale, y + (35 + 128) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.currentStats.magic),
-      x + 49 * scale,
-      y + (22 + 160) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.magic), x + 49 * scale, y + (22 + 160) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.currentStats.magic),
-      x + 48 * scale,
-      y + (21 + 160) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.magic), x + 48 * scale, y + (21 + 160) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.stats.magic),
-      x + 61 * scale,
-      y + (36 + 160) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.magic), x + 61 * scale, y + (36 + 160) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.stats.magic),
-      x + 60 * scale,
-      y + (35 + 160) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.magic), x + 60 * scale, y + (35 + 160) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.currentStats.hitpoint),
-      x + (49 + 63) * scale,
-      y + 22 * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.hitpoint), x + (49 + 63) * scale, y + 22 * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.currentStats.hitpoint),
-      x + (48 + 63) * scale,
-      y + 21 * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.hitpoint), x + (48 + 63) * scale, y + 21 * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.stats.hitpoint),
-      x + (61 + 63) * scale,
-      y + 36 * scale,
-    );
+    context.fillText(String(Trainer.player.stats.hitpoint), x + (61 + 63) * scale, y + 36 * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.stats.hitpoint),
-      x + (60 + 63) * scale,
-      y + 35 * scale,
-    );
+    context.fillText(String(Trainer.player.stats.hitpoint), x + (60 + 63) * scale, y + 35 * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.currentStats.agility),
-      x + (49 + 63) * scale,
-      y + (22 + 32) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.agility), x + (49 + 63) * scale, y + (22 + 32) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.currentStats.agility),
-      x + (48 + 63) * scale,
-      y + (21 + 32) * scale,
-    );
+    context.fillText(String(Trainer.player.currentStats.agility), x + (48 + 63) * scale, y + (21 + 32) * scale);
 
     context.fillStyle = "#000";
-    context.fillText(
-      String(Trainer.player.stats.agility),
-      x + (61 + 63) * scale,
-      y + (36 + 32) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.agility), x + (61 + 63) * scale, y + (36 + 32) * scale);
     context.fillStyle = "#FFFF00";
-    context.fillText(
-      String(Trainer.player.stats.agility),
-      x + (60 + 63) * scale,
-      y + (35 + 32) * scale,
-    );
+    context.fillText(String(Trainer.player.stats.agility), x + (60 + 63) * scale, y + (35 + 32) * scale);
   }
 }

@@ -29,7 +29,7 @@ export class ArmadylBrew extends Potion {
     if (this.doses === 4) {
       return 0.035;
     }
-    return 0.03;    
+    return 0.03;
   }
 
   get inventoryImage() {
@@ -61,15 +61,14 @@ export class ArmadylBrew extends Potion {
     const rangedBoost = Math.floor(player.stats.range * 0.1) + 4;
     const maxRangedBoost = Math.floor(player.stats.range * 0.1) + 4;
     player.currentStats.range += rangedBoost;
-    player.currentStats.range = Math.max(
-      1,
-      Math.min(player.currentStats.range, player.stats.range + maxRangedBoost),
-    );
+    player.currentStats.range = Math.max(1, Math.min(player.currentStats.range, player.stats.range + maxRangedBoost));
 
     const defenceNerf = Math.floor(player.currentStats.defence * 0.1) + 2;
     player.currentStats.defence -= defenceNerf;
-    player.currentStats.defence = Math.max(1, Math.min(player.currentStats.defence, player.stats.defence + defenceNerf));
-
+    player.currentStats.defence = Math.max(
+      1,
+      Math.min(player.currentStats.defence, player.stats.defence + defenceNerf),
+    );
 
     const attackNerf = Math.floor(player.currentStats.attack * 0.1) + 2;
     player.currentStats.attack -= attackNerf;

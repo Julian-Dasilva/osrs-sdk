@@ -18,23 +18,24 @@ export type AnimationFrameSample = {
 };
 
 /** Resolve elapsed time to the current and next cache animation frames. */
-export function sampleAnimation(animation: CacheRenderAnimation, elapsed: number, looping: boolean): AnimationFrameSample {
+export function sampleAnimation(
+  animation: CacheRenderAnimation,
+  elapsed: number,
+  looping: boolean,
+): AnimationFrameSample {
   const total = animation.lengths.reduce((sum, length) => sum + length, 0) / CLIENT_CYCLES_PER_SECOND;
   const frameCount = animation.mayaFrames?.length || animation.rawFrames?.length || animation.frames.length;
   if (frameCount <= 0 || elapsed < 0) return { time: elapsed, total, frame: -1, nextFrame: -1, blend: 0 };
 
-  const time = total <= 0
-    ? 0
-    : looping
-      ? elapsed % total
-      : Math.max(0, Math.min(elapsed, Math.max(0, total - Number.EPSILON)));
+  const time =
+    total <= 0 ? 0 : looping ? elapsed % total : Math.max(0, Math.min(elapsed, Math.max(0, total - Number.EPSILON)));
   // Compare integral cache-cycle boundaries to avoid accumulated seconds drift.
   const cycles = time * CLIENT_CYCLES_PER_SECOND;
   let frameStart = 0;
   let frame = 0;
   while (
-    frame < Math.min(animation.lengths.length, frameCount) - 1
-    && cycles + 1e-9 >= frameStart + animation.lengths[frame]
+    frame < Math.min(animation.lengths.length, frameCount) - 1 &&
+    cycles + 1e-9 >= frameStart + animation.lengths[frame]
   ) {
     frameStart += animation.lengths[frame];
     frame++;
@@ -70,12 +71,18 @@ export class RawFrameWorkspace {
   }
 }
 
-const rotationSine = Int32Array.from({ length: 256 }, (_, angle) => Math.floor(65536 * Math.sin(angle * Math.PI / 128)));
-const rotationCosine = Int32Array.from({ length: 256 }, (_, angle) => Math.floor(65536 * Math.cos(angle * Math.PI / 128)));
+const rotationSine = Int32Array.from({ length: 256 }, (_, angle) =>
+  Math.floor(65536 * Math.sin((angle * Math.PI) / 128)),
+);
+const rotationCosine = Int32Array.from({ length: 256 }, (_, angle) =>
+  Math.floor(65536 * Math.cos((angle * Math.PI) / 128)),
+);
 
 /** RuneLite-style transform interpolation: deform once, wrapping rotation deltas. */
 export function interpolateRawFrames(
-  current: CacheRenderRawFrame, next: CacheRenderRawFrame, blend: number,
+  current: CacheRenderRawFrame,
+  next: CacheRenderRawFrame,
+  blend: number,
   output: CacheRenderRawFrame = { types: [], maps: [], indexFrameIds: [], x: [], y: [], z: [] },
   floatingPoint = false,
 ): CacheRenderRawFrame {
@@ -85,7 +92,8 @@ export function interpolateRawFrames(
   output.types = current.types;
   output.maps = current.maps;
   output.indexFrameIds.length = output.x.length = output.y.length = output.z.length = 0;
-  let a = 0, b = 0;
+  let a = 0,
+    b = 0;
   for (let slot = 0; slot < current.types.length; slot++) {
     const hasCurrent = current.indexFrameIds[a] === slot;
     const hasNext = next.indexFrameIds[b] === slot;
@@ -94,14 +102,15 @@ export function interpolateRawFrames(
     const fallback = type === FrameType.Scale ? 128 : 0;
     output.indexFrameIds.push(slot);
     for (const axis of ["x", "y", "z"] as const) {
-      const from = hasCurrent ? current[axis][a] ?? fallback : fallback;
-      const to = hasNext ? next[axis][b] ?? fallback : fallback;
+      const from = hasCurrent ? (current[axis][a] ?? fallback) : fallback;
+      const to = hasNext ? (next[axis][b] ?? fallback) : fallback;
       let value = from;
       if (type === FrameType.Rotate) {
         let delta = (to - from) & 255;
         if (delta >= 128) delta -= 256;
-        value = floatingPoint ? ((from + delta * blend) % 256 + 256) % 256 : (from + Math.trunc(delta * blend)) & 255;
-      } else if (type !== FrameType.Alpha) value = from + (floatingPoint ? (to - from) * blend : Math.trunc((to - from) * blend));
+        value = floatingPoint ? (((from + delta * blend) % 256) + 256) % 256 : (from + Math.trunc(delta * blend)) & 255;
+      } else if (type !== FrameType.Alpha)
+        value = from + (floatingPoint ? (to - from) * blend : Math.trunc((to - from) * blend));
       else if (axis !== "x") value = 0;
       output[axis].push(value);
     }
@@ -192,12 +201,12 @@ export function applyRawFrame(
       continue;
     }
 
-    const sinX = floatingPoint ? Math.sin(deltaX * Math.PI / 128) : rotationSine[deltaX & 255];
-    const cosX = floatingPoint ? Math.cos(deltaX * Math.PI / 128) : rotationCosine[deltaX & 255];
-    const sinY = floatingPoint ? Math.sin(deltaY * Math.PI / 128) : rotationSine[deltaY & 255];
-    const cosY = floatingPoint ? Math.cos(deltaY * Math.PI / 128) : rotationCosine[deltaY & 255];
-    const sinZ = floatingPoint ? Math.sin(deltaZ * Math.PI / 128) : rotationSine[deltaZ & 255];
-    const cosZ = floatingPoint ? Math.cos(deltaZ * Math.PI / 128) : rotationCosine[deltaZ & 255];
+    const sinX = floatingPoint ? Math.sin((deltaX * Math.PI) / 128) : rotationSine[deltaX & 255];
+    const cosX = floatingPoint ? Math.cos((deltaX * Math.PI) / 128) : rotationCosine[deltaX & 255];
+    const sinY = floatingPoint ? Math.sin((deltaY * Math.PI) / 128) : rotationSine[deltaY & 255];
+    const cosY = floatingPoint ? Math.cos((deltaY * Math.PI) / 128) : rotationCosine[deltaY & 255];
+    const sinZ = floatingPoint ? Math.sin((deltaZ * Math.PI) / 128) : rotationSine[deltaZ & 255];
+    const cosZ = floatingPoint ? Math.cos((deltaZ * Math.PI) / 128) : rotationCosine[deltaZ & 255];
     for (const group of map) {
       for (const vertex of groups[group] ?? []) {
         if (type === FrameType.Translate) {
@@ -252,13 +261,20 @@ export function applyRawFrame(
 }
 
 /** Approximate fractional Maya poses from the extracted matrix samples, reusing bone buffers. */
-export function interpolateMayaFrames(current: number[][], next: number[][], blend: number, output: number[][]): number[][] {
+export function interpolateMayaFrames(
+  current: number[][],
+  next: number[][],
+  blend: number,
+  output: number[][],
+): number[][] {
   if (blend <= 0 || current === next) return current;
   output.length = current.length;
   for (let bone = 0; bone < current.length; bone++) {
-    const from = current[bone], to = next[bone] ?? from;
+    const from = current[bone],
+      to = next[bone] ?? from;
     const matrix = output[bone] ?? (output[bone] = new Array<number>(16));
-    for (let component = 0; component < 16; component++) matrix[component] = from[component] + (to[component] - from[component]) * blend;
+    for (let component = 0; component < 16; component++)
+      matrix[component] = from[component] + (to[component] - from[component]) * blend;
   }
   return output;
 }
@@ -296,8 +312,26 @@ export function applyBlendedRawFrames(
   workspace?: RawFrameWorkspace,
 ) {
   const selection = new Set(interleave.filter((index) => index !== 9999999));
-  applyRawFrame(positions, groups, sourceVertices, primary, { indices: selection, include: false }, alphas, alphaGroups, workspace);
-  applyRawFrame(positions, groups, sourceVertices, pose, { indices: selection, include: true }, alphas, alphaGroups, workspace);
+  applyRawFrame(
+    positions,
+    groups,
+    sourceVertices,
+    primary,
+    { indices: selection, include: false },
+    alphas,
+    alphaGroups,
+    workspace,
+  );
+  applyRawFrame(
+    positions,
+    groups,
+    sourceVertices,
+    pose,
+    { indices: selection, include: true },
+    alphas,
+    alphaGroups,
+    workspace,
+  );
 }
 
 /**

@@ -41,11 +41,18 @@ describe("Venator bow", () => {
 
   test("applies both geometry constraints and centre-to-closest-tile LOS", () => {
     const checks: [[number, number], [number, number]][] = [];
-    expect(canVenatorBounce(7, 11, 2, 8, 12, 4, (from, to) => {
-      checks.push([from, to]);
-      return true;
-    })).toBe(true);
-    expect(checks).toEqual([[[7, 11], [8, 11]]]);
+    expect(
+      canVenatorBounce(7, 11, 2, 8, 12, 4, (from, to) => {
+        checks.push([from, to]);
+        return true;
+      }),
+    ).toBe(true);
+    expect(checks).toEqual([
+      [
+        [7, 11],
+        [8, 11],
+      ],
+    ]);
     expect(canVenatorBounce(0, 0, 1, 2, 2, 1, () => false)).toBe(false);
     expect(canVenatorBounce(0, 0, 1, 3, 0, 1)).toBe(false);
   });
@@ -79,7 +86,7 @@ describe("Venator bow", () => {
     const bow = new VenatorBow();
     player.equipment.weapon = bow;
     let randomCall = 0;
-    Random.setRandom(() => randomCall++ % 2 === 0 ? 0 : 0.999999);
+    Random.setRandom(() => (randomCall++ % 2 === 0 ? 0 : 0.999999));
 
     bow.attack(player, primary, { attackStyle: "range" });
 
@@ -98,7 +105,9 @@ describe("Venator bow", () => {
     expect(secondHit.options.sound.src).toBe(cacheSound(CACHE_ASSETS.sounds.venatorBowRicochetFirst.id));
     expect(thirdHit.options.sound.src).toBe(cacheSound(CACHE_ASSETS.sounds.venatorBowRicochetSecond.id));
 
-    const visibleProjectiles = region.projectileGraphics.filter((graphic) => !graphic.projectile.options.visuals.hidden);
+    const visibleProjectiles = region.projectileGraphics.filter(
+      (graphic) => !graphic.projectile.options.visuals.hidden,
+    );
     expect(visibleProjectiles).toHaveLength(3);
     expect(visibleProjectiles.map((graphic) => graphic.projectile.options.visuals.spotAnim?.id)).toEqual([
       CACHE_ASSETS.spotAnims.venatorBowProjectile.id,

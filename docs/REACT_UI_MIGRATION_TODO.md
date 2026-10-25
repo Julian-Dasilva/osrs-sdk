@@ -256,11 +256,11 @@ unit rather than as separate hover and context-menu features.
 - [ ] Add the hover-action label derived from the first ordered action.
 - [ ] Connect default left-click to the same ordered action list.
 - [ ] Add the connected default composition for `TrainerCanvas`, the
-      resizable-modern layout, blank minimap chrome/compass/orbs, tabs, active
-      panel, and overlays.
+  resizable-modern layout, blank minimap chrome/compass/orbs, tabs, active
+  panel, and overlays.
 - [ ] Add immutable, reactive SDK UI snapshots for gameplay state.
 - [ ] Remove legacy canvas UI drawing and UI-region hit testing while
-      preserving world input. There is no legacy/React mode switch.
+  preserving world input. There is no legacy/React mode switch.
 
 ### Existing components requiring behavioral parity
 
@@ -270,14 +270,14 @@ unit rather than as separate hover and context-menu features.
 - [ ] Connect the shared action/context-menu system.
 - [ ] Preserve item selection and selected-item highlighting.
 - [ ] Mirror RuneLite Anti Drag rather than the current React or trainer drag
-      behavior: a drag starts only after both the configured client-tick delay
-      has elapsed and pointer movement leaves the drag dead-zone. Preserve the
-      client default of five 20 ms client ticks when anti-drag is inactive;
-      default the RuneLite-style override to one 600 ms game tick while Shift
-      is held; support the optional Control-key bypass; and reset held-key
-      state and the delay to the client default on focus loss.
+  behavior: a drag starts only after both the configured client-tick delay
+  has elapsed and pointer movement leaves the drag dead-zone. Preserve the
+  client default of five 20 ms client ticks when anti-drag is inactive;
+  default the RuneLite-style override to one 600 ms game tick while Shift
+  is held; support the optional Control-key bypass; and reset held-key
+  state and the delay to the client default on focus loss.
 - [ ] Preserve optimistic drag reordering while the authoritative swap waits
-      for its world tick.
+  for its world tick.
 - [ ] Expose stack or quantity data where item models support it.
 
 #### Equipment
@@ -286,13 +286,13 @@ unit rather than as separate hover and context-menu features.
 - [ ] Connect unequip actions through SDK commands.
 - [ ] Connect the shared action/context-menu system.
 - [ ] Define or disable equipment stats, guide prices, items-kept-on-death,
-      and call-follower actions.
+  and call-follower actions.
 - [ ] Map SDK equipment slot names to React UI slot names in one adapter.
 
 #### Prayer book
 
 - [ ] Preserve the distinction between client-tick lit state and server-tick
-      active state.
+  active state.
 - [ ] Connect quick prayers to the minimap prayer orb.
 - [ ] Add prayer-filter behavior if it remains part of the supported client.
 - [ ] Derive hover/default/context actions from the shared action list.
@@ -307,16 +307,16 @@ unit rather than as separate hover and context-menu features.
 #### Combat options
 
 - [ ] Map weapon name, combat level, available styles, style icons, selected
-      style, auto-retaliate, special-attack availability, state, and energy.
+  style, auto-retaliate, special-attack availability, state, and energy.
 - [ ] Route actions through SDK commands so world-tick/input-delay behavior is
-      retained.
+  retained.
 
 #### Settings
 
 - [ ] Add the SDK custom settings panel connected to the SDK settings store.
 - [ ] Preserve the current settings, their existing division between the tab
-      and advanced settings, and the control that expands/collapses the
-      permanent trainer sidebar.
+  and advanced settings, and the control that expands/collapses the
+  permanent trainer sidebar.
 - [ ] Do not use the faithful OSRS `DisplaySettingsPanel` for the trainer.
 - [ ] Replace canvas key-binding capture with an accessible React flow.
 
@@ -324,13 +324,13 @@ unit rather than as separate hover and context-menu features.
 
 - [ ] Add disabled/unavailable tab support.
 - [ ] Change `@supalosa/osrs-react-ui` side panels to accept sparse stable
-      slots and remove compacting behavior.
+  slots and remove compacting behavior.
 - [ ] Add hotkey-driven tab selection.
 - [ ] Treat mobile UI as a non-goal for the first pass. Avoid accidental
-      breakage where practical, but do not compromise the desktop interface or
-      add a separate mobile layout.
+  breakage where practical, but do not compromise the desktop interface or
+  add a separate mobile layout.
 - [ ] Remove `fixed-classic` from the advertised `InterfaceMode` until an
-      implementation exists.
+  implementation exists.
 - [ ] Use resizable modern as the SDK and sample migration target.
 
 ### Screen-space UI deliberately retained on the canvas
@@ -340,7 +340,7 @@ unit rather than as separate hover and context-menu features.
 - [ ] Retain the boosted-stat panel.
 - [ ] Retain the `GET READY` countdown.
 - [ ] Inventory other feedback or status overlays individually rather than
-      assuming every screen-space drawing must move to React.
+  assuming every screen-space drawing must move to React.
 
 These retained drawings do not constitute a parallel legacy UI mode. They are
 non-DOM renderer features that remain on the canvas while the interactive
@@ -361,15 +361,15 @@ it exposes mutable `Player` and `World` references and is normally notified
 only for lifecycle and settings changes.
 
 - [ ] Introduce a dedicated immutable `TrainerUiSnapshot` or equivalent
-      instance-owned UI store.
+  instance-owned UI store.
 - [ ] Copy UI-relevant primitive values and arrays into snapshots instead of
-      relying on mutations to existing object references.
+  relying on mutations to existing object references.
 - [ ] Expose `subscribe` and `getSnapshot` methods compatible with
-      `useSyncExternalStore`.
+  `useSyncExternalStore`.
 - [ ] Mark UI state dirty when relevant simulation state changes.
 - [ ] Coalesce notifications so React does not render once for every mutation.
 - [ ] Publish after relevant world ticks, relevant client-tick actions,
-      resets, and immediate UI-only changes.
+  resets, and immediate UI-only changes.
 - [ ] Do not publish animation-frame state through the main React tree.
 
 The UI snapshot is expected to include at least:
@@ -408,19 +408,19 @@ is delayed to a client or world tick.
 ## Canvas migration boundary
 
 - [ ] Remove canvas drawing of the control panel and tabs in the same migration
-      that connects their React replacements.
+  that connects their React replacements.
 - [ ] Remove canvas minimap chrome and resource-orb drawing when the connected
-      React minimap is added.
+  React minimap is added.
 - [ ] Do not migrate the canvas minimap map image or map interactions; leave
-      the React minimap's central content area blank while retaining compass
-      rotation and click-to-reset behavior.
+  the React minimap's central content area blank while retaining compass
+  rotation and click-to-reset behavior.
 - [ ] Remove canvas context-menu and hover-label drawing when the shared React
-      action system is connected.
+  action system is connected.
 - [ ] Retain canvas boss health, XP drops, boosts, and ready-countdown drawing
-      in this migration.
+  in this migration.
 - [ ] Remove canvas control-panel/minimap pointer interception.
 - [ ] Preserve world picking, camera controls, tile actions, click animations,
-      and other world-space behavior.
+  and other world-space behavior.
 
 This is a big-bang migration. Do not add or retain parallel legacy and React
 UI modes. Initial parity requires wired combat options, inventory, equipment,
@@ -435,27 +435,27 @@ layout:
 
 - [ ] Keep `TrainerProvider` as the context boundary.
 - [ ] Extract `TrainerCanvas`, owning the renderer sizing element, canvas,
-      mount/load/start/dispose lifecycle, and resize target.
+  mount/load/start/dispose lifecycle, and resize target.
 - [ ] Remove the fixed `TrainerApp` composition rather than retain a legacy
-      compatibility wrapper.
+  compatibility wrapper.
 - [ ] Add `TrainerUI` as the connected default composition for the common
-      interface while keeping the same low-level compound components available
-      for explicit composition.
+  interface while keeping the same low-level compound components available
+  for explicit composition.
 - [ ] Add connected adapters for inventory, equipment, prayer, spellbook,
-      combat options, settings, minimap compass/resource orbs, and overlays.
+  combat options, settings, minimap compass/resource orbs, and overlays.
 - [ ] Add declarative connected tab components plus a generic `InterfaceTab`
-      for custom tab contents.
+  for custom tab contents.
 - [ ] Render ordinary `TrainerUI` children as overlays across its complete
-      interface area. Defer narrower canvas- or panel-specific extension
-      regions until a concrete use case requires them.
+  interface area. Defer narrower canvas- or panel-specific extension
+  regions until a concrete use case requires them.
 - [ ] Migrate duplicate visual primitives in `osrs-sdk-react` to
-      `@supalosa/osrs-react-ui`, then deprecate or re-export the canonical
-      implementations.
+  `@supalosa/osrs-react-ui`, then deprecate or re-export the canonical
+  implementations.
 - [ ] Remove `GameOverlay` and `GameOverlayProvider`; render game-scoped
-      transient UI in the layout's ordinary overlay region and use `Modal`
-      for application-wide modal stacking.
+  transient UI in the layout's ordinary overlay region and use `Modal`
+  for application-wide modal stacking.
 - [ ] Do not add a named SDK outer-layout component. Each trainer's ordinary
-      application CSS composes the OSRS layout and permanent SDK sidebar.
+  application CSS composes the OSRS layout and permanent SDK sidebar.
 
 Proposed composition:
 
@@ -512,14 +512,14 @@ chrome remains owned by `@supalosa/osrs-react-ui`, while gameplay item artwork
 is supplied by the SDK.
 
 - [ ] Add an SDK-neutral item-icon descriptor containing `src`, width, and
-      height.
+  height.
 - [ ] Remove `inventorySprite` once React item descriptors replace its remaining
-      UI uses; world rendering must not depend on this screen-space image.
+  UI uses; world rendering must not depend on this screen-space image.
 - [ ] Add optional quantity/stack information to the UI item descriptor.
 - [ ] Use an item's serial number as the inventory-instance identity.
 - [ ] Centralize the SDK-to-React equipment slot-name mapping.
 - [ ] Verify that item icons resolve from production SDK bundles and from local
-      linked builds.
+  linked builds.
 
 ## Webpack and deployment
 
@@ -532,9 +532,9 @@ Recommended initial deployment approach:
 - [ ] Add an exact dependency on `@supalosa/osrs-react-ui`.
 - [ ] Add `style-loader` and `css-loader` to trainer development dependencies.
 - [ ] Add a `test: /\.css$/i` webpack rule using `style-loader` and
-      `css-loader`.
+  `css-loader`.
 - [ ] Import `@supalosa/osrs-react-ui/styles.css` once from the application
-      entry point.
+  entry point.
 - [ ] Confirm that only one React runtime is bundled.
 
 The UI package's current production stylesheet embeds its fonts and visual
@@ -557,7 +557,7 @@ Development and beta workflows also need updates:
 
 - [ ] Extend the local link command to build/link the UI package.
 - [ ] Make beta builds install an exact published UI version or a packed
-      sibling UI tarball.
+  sibling UI tarball.
 - [ ] Include the UI package version in build diagnostics.
 
 ## Deferred `ColosseumTrainer` changes
@@ -568,18 +568,18 @@ Do not change `ColosseumTrainer` as part of the initial migration. Revisit these
 items after the SDK sample is the working reference implementation.
 
 - [ ] Replace the current `TrainerApp` composition with the connected default
-      interface and permanent SDK sidebar composition.
+  interface and permanent SDK sidebar composition.
 - [ ] Keep `WaveStartModal`, boss/wave-specific settings, loadout selection,
-      credits, branding, and external links in the trainer.
+  credits, branding, and external links in the trainer.
 - [ ] Pass trainer-specific controls through an auxiliary-panel or overlay
-      slot.
+  slot.
 - [ ] Replace calls to `ControlPanelController.setActiveControl()` with the new
-      instance-shaped UI command.
+  instance-shaped UI command.
 - [ ] Reuse the shared SDK `LoadoutManager` and `AdvancedSettings` components.
 - [ ] Scope or remove the global HTML button styles so they do not override the
-      OSRS React UI.
+  OSRS React UI.
 - [ ] Remove redundant remote font declarations after all consumers use the
-      packaged UI fonts.
+  packaged UI fonts.
 
 ## Rollout phases
 
@@ -587,7 +587,7 @@ items after the SDK sample is the working reference implementation.
 
 - [ ] Add the UI snapshot/store and command facade.
 - [ ] Add `TrainerCanvas`, compound layout regions, and the connected default
-      interface composition.
+  interface composition.
 - [ ] Add package and webpack CSS integration.
 
 ### Phase 2: core side panel
@@ -600,51 +600,51 @@ items after the SDK sample is the working reference implementation.
 ### Phase 3: unified action system and minimap chrome
 
 - [ ] Migrate action resolution, hover label, default click, and context menu
-      together.
+  together.
 - [ ] Support world, inventory, equipment, prayer, and spell targets.
 - [ ] Connect the existing React minimap frame, functional compass, and
-      resource orbs with a blank central map area.
+  resource orbs with a blank central map area.
 - [ ] Remove canvas panel/minimap drawing and interception.
 
 ### Phase 4: remaining overlays
 
 - [ ] Verify that retained canvas boss health, XP drops, boosted stats, and
-      ready countdown remain correctly positioned beneath the React interface.
+  ready countdown remain correctly positioned beneath the React interface.
 - [ ] Verify their canvas rendering uses the world rectangle allocated by the
-      selected layout rather than the complete application width.
+  selected layout rather than the complete application width.
 
 ### Phase 5: client adoption and cleanup
 
 - [ ] Migrate the SDK sample first so it becomes the reference trainer
-      template.
+  template.
 - [ ] Verify the six in-scope tabs and shared interactions in the SDK sample.
 - [ ] Remove the remaining legacy canvas UI code once the sample reaches
-      parity.
+  parity.
 - [ ] Plan `ColosseumTrainer` adoption as a separate follow-up.
 
 ## Acceptance criteria
 
 - [ ] UI chrome is not copied or derived from `osrs-sdk` assets.
 - [ ] Inventory and equipment icons update when equipment changes, consumables
-      change state, or items move.
+  change state, or items move.
 - [ ] Hover text, default left-click, and context-menu ordering always derive
-      from the same action list.
+  from the same action list.
 - [ ] Input delay, prayer client ticks, equipment swaps, combat styles, and
-      special attacks retain existing timing.
+  special attacks retain existing timing.
 - [ ] Context menus work over world, inventory, equipment, prayer, and spell
-      targets and remain within the viewport.
+  targets and remain within the viewport.
 - [ ] Canvas world picking remains correct under every supported layout and UI
-      scale.
+  scale.
 - [ ] Trainer clients contain no generic OSRS panel adapters.
 - [ ] Production asset URLs work for published packages and local linked
-      builds.
+  builds.
 - [ ] Production deployment remains a static `dist` deployment.
 
 ## Settled disabled-tab treatment
 
 - [ ] Add `disabled?: boolean` to the `@supalosa/osrs-react-ui` tab model and
-      render disabled tabs as native disabled buttons.
+  render disabled tabs as native disabled buttons.
 - [ ] Apply CSS `filter: grayscale(1)` to the complete disabled tab button so
-      both its background sprite and nested icon become grayscale together.
+  both its background sprite and nested icon become grayscale together.
 - [ ] Retain canonical icons for known unsupported tabs, including Stats, but
-      prevent selection and expose the disabled state to assistive technology.
+  prevent selection and expose the disabled state to assistive technology.

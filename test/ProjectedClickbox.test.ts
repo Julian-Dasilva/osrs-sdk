@@ -1,13 +1,13 @@
-import {
-  convexHull,
-  isInFrontOfNearPlane,
-  projectedHullContains,
-} from "../src/sdk/rendering/utils/projectedClickbox";
+import { convexHull, isInFrontOfNearPlane, projectedHullContains } from "../src/sdk/rendering/utils/projectedClickbox";
 
 test("builds a projected hull and applies pointer tolerance", () => {
   const hull = convexHull([
-    { x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 },
-    { x: 5, y: 5 }, { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 10, y: 0 },
+    { x: 10, y: 10 },
+    { x: 0, y: 10 },
+    { x: 5, y: 5 },
+    { x: 0, y: 0 },
   ]);
   expect(hull).toHaveLength(4);
   expect(projectedHullContains(hull, { x: 5, y: 5 })).toBe(true);

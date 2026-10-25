@@ -32,8 +32,11 @@ describe("region turn", () => {
   afterEach(() => jest.restoreAllMocks());
 
   function callOrder(spies: Readonly<Record<string, jest.SpyInstance>>) {
-    const calls = Object.entries(spies).map(([name, spy]) => spy.mock.invocationCallOrder.map((at) => [at, name] as const));
-    return ([] as (readonly [number, string])[]).concat(...calls)
+    const calls = Object.entries(spies).map(([name, spy]) =>
+      spy.mock.invocationCallOrder.map((at) => [at, name] as const),
+    );
+    return ([] as (readonly [number, string])[])
+      .concat(...calls)
       .sort(([a], [b]) => a - b)
       .map(([, name]) => name);
   }
@@ -49,13 +52,24 @@ describe("region turn", () => {
       "region.postTick": jest.spyOn(region, "postTick"),
     };
     world.tickWorld(2);
-    const tick = ["player.pretick", "entity.tick", "region.beforeNpcTurns", "npc.timerStep", "npc.queueStep", "player.queueStep", "region.postTick"];
+    const tick = [
+      "player.pretick",
+      "entity.tick",
+      "region.beforeNpcTurns",
+      "npc.timerStep",
+      "npc.queueStep",
+      "player.queueStep",
+      "region.postTick",
+    ];
     expect(callOrder(spies)).toEqual([...tick, ...tick]);
   });
 
   test("GET READY holds the region turn with the NPC turns", () => {
     world.getReadyTimer = 3;
-    const spies = { "region.beforeNpcTurns": jest.spyOn(region, "beforeNpcTurns"), "npc.queueStep": jest.spyOn(mob, "queueStep") };
+    const spies = {
+      "region.beforeNpcTurns": jest.spyOn(region, "beforeNpcTurns"),
+      "npc.queueStep": jest.spyOn(mob, "queueStep"),
+    };
     const perTick = Array.from({ length: 4 }, () => {
       jest.clearAllMocks();
       world.tickWorld();

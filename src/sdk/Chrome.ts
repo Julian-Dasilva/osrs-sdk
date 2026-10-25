@@ -6,8 +6,10 @@ export class Chrome {
     // and they should be reading the size from Viewport instead.
     const canvas = document.getElementById("world");
     const bounds = canvas?.getBoundingClientRect();
-    const width = bounds?.width || window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-    const height = bounds?.height || window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    const width =
+      bounds?.width || window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    const height =
+      bounds?.height || window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
     return { width, height };
   }
 }

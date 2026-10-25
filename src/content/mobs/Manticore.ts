@@ -25,8 +25,8 @@ export enum ManticoreAnimations {
 enum Orbs {
   Range,
   Mage,
-  Melee
-};
+  Melee,
+}
 
 const ORB_TO_SPOTANIM = {
   [Orbs.Range]: 2683,
@@ -163,14 +163,18 @@ export class Manticore extends Mob {
     // The first projectile is launched on the attack tick.
     this.fireProjectile(0);
     this.clearSpotAnim("first-orb");
-    DelayedAction.registerDelayedNpcAction(new DelayedAction(() => {
-      this.fireProjectile(1);
-      this.clearSpotAnim("second-orb");
-    }, 1));
-    DelayedAction.registerDelayedNpcAction(new DelayedAction(() => {
-      this.fireProjectile(2);
-      this.clearSpotAnim("third-orb");
-    }, 2));
+    DelayedAction.registerDelayedNpcAction(
+      new DelayedAction(() => {
+        this.fireProjectile(1);
+        this.clearSpotAnim("second-orb");
+      }, 1),
+    );
+    DelayedAction.registerDelayedNpcAction(
+      new DelayedAction(() => {
+        this.fireProjectile(2);
+        this.clearSpotAnim("third-orb");
+      }, 2),
+    );
     this.hasAttacked = true;
   }
 
@@ -182,12 +186,13 @@ export class Manticore extends Mob {
       this.attackStyles = [...this.preselectedAttackStyles];
       return this.attackStyles;
     }
-    const coordinatedManticore = this.region.mobs.find((mob) =>
-      mob instanceof Manticore
-      && mob !== this
-      && mob.dying < 0
-      && mob.currentStats.hitpoint > 0
-      && mob.attackStyles !== null
+    const coordinatedManticore = this.region.mobs.find(
+      (mob) =>
+        mob instanceof Manticore &&
+        mob !== this &&
+        mob.dying < 0 &&
+        mob.currentStats.hitpoint > 0 &&
+        mob.attackStyles !== null,
     ) as Manticore | undefined;
     if (coordinatedManticore?.attackStyles) {
       this.attackStyles = [...coordinatedManticore.attackStyles];

@@ -16,7 +16,8 @@
     "build:react": "npm run build --workspace osrs-sdk-react",
     "lint": "oxlint --fix .",
     "lint:check": "oxlint .",
-    "prettier": "npx prettier --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
     "start": "npx webpack serve --config webpack.dev.js",
     "watch": "npx webpack --config webpack.production.js --watch",
     "extract:cache-render": "tsx scripts/cache-render/extract.mts",
@@ -46,6 +47,7 @@
   ],
   "homepage": "https://github.com/OldSchoolSDK/osrs-sdk#readme",
   "devDependencies": {
+    "@biomejs/biome": "^2.6.3",
     "@types/jest": "^27.5.2",
     "@types/lodash": "^4.14.171",
     "@types/three": "^0.163.0",

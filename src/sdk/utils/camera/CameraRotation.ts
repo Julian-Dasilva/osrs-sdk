@@ -37,15 +37,11 @@ export class ClientCameraRotation {
     if (this.middleMouseDown) {
       const pitchDelta = this.mouseY - this.anchorY;
       this.pitchVelocity = pitchDelta * 2;
-      this.anchorY = pitchDelta !== -1 && pitchDelta !== 1
-        ? Math.trunc((this.anchorY + this.mouseY) / 2)
-        : this.mouseY;
+      this.anchorY = pitchDelta !== -1 && pitchDelta !== 1 ? Math.trunc((this.anchorY + this.mouseY) / 2) : this.mouseY;
 
       const yawDelta = this.anchorX - this.mouseX;
       this.yawVelocity = yawDelta * 2;
-      this.anchorX = yawDelta !== -1 && yawDelta !== 1
-        ? Math.trunc((this.anchorX + this.mouseX) / 2)
-        : this.mouseX;
+      this.anchorX = yawDelta !== -1 && yawDelta !== 1 ? Math.trunc((this.anchorX + this.mouseX) / 2) : this.mouseX;
     } else {
       this.yawVelocity = Math.trunc(this.yawVelocity / 2);
       this.pitchVelocity = Math.trunc(this.pitchVelocity / 2);

@@ -25,11 +25,11 @@ export class SettingsStore<T extends object> {
 
   constructor(options: SettingsStoreOptions<T>) {
     this.defaults = options.defaults;
-    this.storage = options.storage ?? (
-      options.storageKey
+    this.storage =
+      options.storage ??
+      (options.storageKey
         ? createJsonSettingsStorage<T>(options.storageKey, options.version, options.migrate)
-        : undefined
-    );
+        : undefined);
     this.snapshot = this.freeze(this.createDefaults());
   }
 
@@ -101,9 +101,7 @@ export class SettingsStore<T extends object> {
   }
 
   private createDefaults() {
-    const defaults = typeof this.defaults === "function"
-      ? (this.defaults as () => T)()
-      : this.defaults;
+    const defaults = typeof this.defaults === "function" ? (this.defaults as () => T)() : this.defaults;
     return { ...defaults };
   }
 
@@ -136,10 +134,7 @@ export function createJsonSettingsStorage<T extends object>(
 
       try {
         const parsed = JSON.parse(raw) as StoredSettings | Partial<T>;
-        const isEnvelope = parsed
-          && typeof parsed === "object"
-          && "values" in parsed
-          && "version" in parsed;
+        const isEnvelope = parsed && typeof parsed === "object" && "values" in parsed && "version" in parsed;
         const storedVersion = isEnvelope ? Number((parsed as StoredSettings).version) : 0;
         const stored = isEnvelope ? (parsed as StoredSettings).values : parsed;
         const values = migrate ? migrate(stored, storedVersion) : stored;

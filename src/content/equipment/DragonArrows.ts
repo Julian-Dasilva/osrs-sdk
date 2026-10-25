@@ -10,7 +10,9 @@ export class DragonArrows extends Ammo {
   }
 
   // Dragon arrows have no character mesh; the cache item ID is still explicit.
-  get cacheItemId(): number { return CACHE_ASSETS.items.dragonArrows.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.dragonArrows.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

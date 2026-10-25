@@ -160,20 +160,12 @@ export class EquipmentControls extends BaseControls {
     this.drawEquipment(context, x, y, 84, 169, scale, EquipmentTypes.FEET);
     this.drawEquipment(context, x, y, 140, 169, scale, EquipmentTypes.RING);
 
-    const weight = `Weight: ${Trainer.player.weight.toFixed(3)}kg`
+    const weight = `Weight: ${Trainer.player.weight.toFixed(3)}kg`;
 
     context.font = 16 * scale + "px Stats_11";
     context.fillStyle = "#000";
-    context.fillText(
-      weight,
-      x + 56 * scale,
-      y + 268 * scale,
-    );
+    context.fillText(weight, x + 56 * scale, y + 268 * scale);
     context.fillStyle = "#FFFFff";
-    context.fillText(
-      weight,
-      x + 55 * scale,
-      y + 267 * scale,
-    );
+    context.fillText(weight, x + 55 * scale, y + 267 * scale);
   }
 }

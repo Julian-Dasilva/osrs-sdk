@@ -123,7 +123,8 @@ test("client pixel projection truncates offsets before adding the viewport centr
   const vertex = new THREE.Vector3(-0.015, 1, 0);
   const projected = vertex.clone().project(viewport.camera);
   expect(viewport.projectToClientScreen(vertex)).toEqual({
-    x: 400 + Math.trunc(projected.x * 400), y: 300 + Math.trunc(-projected.y * 300),
+    x: 400 + Math.trunc(projected.x * 400),
+    y: 300 + Math.trunc(-projected.y * 300),
   });
   expect(viewport.projectToClientScreen(vertex).x).toBe(400);
   expect(viewport.projectToScreen(vertex).x).toBe(399);
@@ -327,7 +328,7 @@ test("cache models reuse vertex objects and update bounds for animation and acto
     expect(model.getClickboxTriangles()).toEqual([0, 1, 2, 3, 4, 5]);
     const vertexObject = vertices[0];
     const bounds = model.getClickboxBounds()!.clone();
-    expect(bounds.max.x - bounds.min.x).toBeCloseTo(2 * (32 + 8) / 128);
+    expect(bounds.max.x - bounds.min.x).toBeCloseTo((2 * (32 + 8)) / 128);
     for (const vertex of vertices) expect(bounds.containsPoint(vertex)).toBe(true);
     expect(model.getClickboxVertices()).toBe(vertices);
 
@@ -346,11 +347,13 @@ test("cache models reuse vertex objects and update bounds for animation and acto
   }
 });
 
-
 test("reconfiguring a clickbox drops cached geometry and an old authored mesh", () => {
-  const makeMesh = (height: number) => new THREE.Mesh(new THREE.BufferGeometry()
-    .setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0, 1, 0, 0, 0, height, 0], 3))
-    .setIndex([0, 1, 2]));
+  const makeMesh = (height: number) =>
+    new THREE.Mesh(
+      new THREE.BufferGeometry()
+        .setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0, 1, 0, 0, 0, height, 0], 3))
+        .setIndex([0, 1, 2]),
+    );
   const clickbox = new ClickboxController(() => 2);
   expect(clickbox.getBounds()).toBeNull();
   expect(clickbox.getVertices()).toEqual([]);

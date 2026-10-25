@@ -91,11 +91,14 @@ export interface ProjectileOptions {
 }
 
 export function mergeProjectileOptions(...sources: ProjectileOptions[]): ProjectileOptions {
-  return sources.reduce<ProjectileOptions>((merged, source) => ({
-    ...merged,
-    ...source,
-    visuals: { ...merged.visuals, ...source.visuals },
-  }), {});
+  return sources.reduce<ProjectileOptions>(
+    (merged, source) => ({
+      ...merged,
+      ...source,
+      visuals: { ...merged.visuals, ...source.visuals },
+    }),
+    {},
+  );
 }
 
 const targetIsLocation = (x: Unit | Location): x is Location => (x as Location).x !== undefined;
@@ -256,11 +259,11 @@ export class ProjectileGraphic extends Renderable {
     this.interpolator = visuals.motionInterpolator ?? new LinearProjectileMotionInterpolator();
     this.image = projectile.weapon?.image;
     const clientTicksPerGameTick = Math.max(1, Math.round(Settings.tickMs / CLIENT_CYCLE_MS));
-    this.startCycle = visuals.startCycleOffset
-      ?? visuals.visualDelayTicks * clientTicksPerGameTick;
-    this.endCycle = visuals.endCycleOffset
-      ?? projectile.totalDelay * clientTicksPerGameTick
-        - (visuals.hitEarlyCycleOffset ?? visuals.visualHitEarlyTicks * clientTicksPerGameTick);
+    this.startCycle = visuals.startCycleOffset ?? visuals.visualDelayTicks * clientTicksPerGameTick;
+    this.endCycle =
+      visuals.endCycleOffset ??
+      projectile.totalDelay * clientTicksPerGameTick -
+        (visuals.hitEarlyCycleOffset ?? visuals.visualHitEarlyTicks * clientTicksPerGameTick);
     this.playProjectileSound();
   }
 
@@ -274,9 +277,10 @@ export class ProjectileGraphic extends Renderable {
     if (this.projectileSoundPlayed || this.elapsedCycles < this.startCycle || !Settings.playsAudio || !sound) return;
     this.projectileSoundPlayed = true;
     const player = Trainer.player;
-    let volumeRatio = this.projectile.from === player || this.projectile.to === player
-      ? 1
-      : 1 / Pathing.dist(player.location.x, player.location.y, this.startLocation.x, this.startLocation.y);
+    let volumeRatio =
+      this.projectile.from === player || this.projectile.to === player
+        ? 1
+        : 1 / Pathing.dist(player.location.x, player.location.y, this.startLocation.x, this.startLocation.y);
     volumeRatio = Math.min(1, Math.max(0, Math.sqrt(volumeRatio)));
     SoundCache.play({ src: sound.src, volume: volumeRatio * sound.volume, delayMs: 0 });
   }
@@ -329,8 +333,12 @@ export class ProjectileGraphic extends Renderable {
     );
   }
 
-  getTrueLocation() { return this.getPerceivedLocation(0); }
-  get size() { return this.projectile.options.visuals.size || 0.5; }
+  getTrueLocation() {
+    return this.getPerceivedLocation(0);
+  }
+  get size() {
+    return this.projectile.options.visuals.size || 0.5;
+  }
   get color() {
     if (this.projectile.options.visuals.color) return this.projectile.options.visuals.color;
     if (this.projectile.isMeleeStyle()) return "#FF0000";
@@ -339,14 +347,22 @@ export class ProjectileGraphic extends Renderable {
     if (this.projectile.attackStyle === "heal") return "#9813aa";
     return "#000000";
   }
-  get drawOutline() { return false; }
-  visible() {
-    return !this.projectile.options.visuals.hidden
-      && this.elapsedCycles > this.startCycle
-      && this.elapsedCycles <= this.endCycle;
+  get drawOutline() {
+    return false;
   }
-  shouldDestroy() { return this.elapsedCycles > Math.max(this.startCycle, this.endCycle); }
-  get animationIndex() { return 0; }
+  visible() {
+    return (
+      !this.projectile.options.visuals.hidden &&
+      this.elapsedCycles > this.startCycle &&
+      this.elapsedCycles <= this.endCycle
+    );
+  }
+  shouldDestroy() {
+    return this.elapsedCycles > Math.max(this.startCycle, this.endCycle);
+  }
+  get animationIndex() {
+    return 0;
+  }
 
   override draw(
     _tickPercent: number,
@@ -375,11 +391,10 @@ export class ProjectileGraphic extends Renderable {
     if (options.models) return GLTFModel.forRenderableMulti(this, options.models, { scale: options.modelScale });
     if (options.spotAnim) {
       const spotAnim = { ...options.spotAnim, delay: (options.spotAnim.delay ?? 0) + this.startCycle };
-      return CacheRenderModel.forRenderable(
-        this,
-        CacheRenderReferences.spotAnim([spotAnim]),
-        { basisRotation: Math.PI / 2, loopSpotAnims: true },
-      );
+      return CacheRenderModel.forRenderable(this, CacheRenderReferences.spotAnim([spotAnim]), {
+        basisRotation: Math.PI / 2,
+        loopSpotAnims: true,
+      });
     }
     if (options.model) return GLTFModel.forRenderable(this, options.model, { scale: options.modelScale });
     return BasicModel.sphereForRenderable(this);

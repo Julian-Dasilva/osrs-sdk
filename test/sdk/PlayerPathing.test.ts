@@ -5,23 +5,54 @@ import { TestRegion } from "../../src/sdk/testing/TestRegion";
 import { World } from "../../src/sdk/World";
 
 class PathingNpc extends TestNpc {
-  override get attackRange() { return 0; }
+  override get attackRange() {
+    return 0;
+  }
 }
 
 class ThreeTileMovementBlocker extends InvisibleMovementBlocker {
-  override get size() { return 3; }
+  override get size() {
+    return 3;
+  }
 }
 
 test.each([
-  [{ x: 5, y: 5 }, { x: 4, y: 5 }],
-  [{ x: 5, y: 4 }, { x: 4, y: 4 }],
-  [{ x: 5, y: 3 }, { x: 4, y: 3 }],
-  [{ x: 6, y: 5 }, { x: 6, y: 6 }],
-  [{ x: 6, y: 4 }, { x: 4, y: 4 }],
-  [{ x: 6, y: 3 }, { x: 6, y: 2 }],
-  [{ x: 7, y: 5 }, { x: 8, y: 5 }],
-  [{ x: 7, y: 4 }, { x: 8, y: 4 }],
-  [{ x: 7, y: 3 }, { x: 8, y: 3 }],
+  [
+    { x: 5, y: 5 },
+    { x: 4, y: 5 },
+  ],
+  [
+    { x: 5, y: 4 },
+    { x: 4, y: 4 },
+  ],
+  [
+    { x: 5, y: 3 },
+    { x: 4, y: 3 },
+  ],
+  [
+    { x: 6, y: 5 },
+    { x: 6, y: 6 },
+  ],
+  [
+    { x: 6, y: 4 },
+    { x: 4, y: 4 },
+  ],
+  [
+    { x: 6, y: 3 },
+    { x: 6, y: 2 },
+  ],
+  [
+    { x: 7, y: 5 },
+    { x: 8, y: 5 },
+  ],
+  [
+    { x: 7, y: 4 },
+    { x: 8, y: 4 },
+  ],
+  [
+    { x: 7, y: 3 },
+    { x: 8, y: 3 },
+  ],
 ])("player underneath a 3x3 NPC at %p chooses %p", (playerLocation, expectedDestination) => {
   const region = new TestRegion(20, 20);
   region.world = new World();

@@ -39,11 +39,21 @@ export class SampleAnimayaNpc extends Mob {
     this.autoRetaliate = false;
   }
 
-  override mobName() { return "Sol Heredit (Animaya)"; }
-  override get size() { return 5; }
-  override get height() { return 6; }
-  override canAttack() { return false; }
-  override get attackRange() { return 10; }
+  override mobName() {
+    return "Sol Heredit (Animaya)";
+  }
+  override get size() {
+    return 5;
+  }
+  override get height() {
+    return 6;
+  }
+  override canAttack() {
+    return false;
+  }
+  override get attackRange() {
+    return 10;
+  }
 
   override timerStep() {
     return;
@@ -56,19 +66,19 @@ export class SampleAnimayaNpc extends Mob {
         animation: ACTIVE_SOL_ATTACK.animation,
         height: 0,
       });
-      DelayedAction.registerDelayedAction(
-        new DelayedAction(() => this.spawnDamageDustClouds(), 3),
-      );
+      DelayedAction.registerDelayedAction(new DelayedAction(() => this.spawnDamageDustClouds(), 3));
     }
 
     const damage = ACTIVE_SOL_ATTACK.hits.get(this.attackTick);
     if (damage !== undefined) {
       // timerStep runs immediately before incoming attacks are processed, so
       // this one-tick hidden projectile creates the hitsplat on this boundary.
-      this.addProjectile(new Projectile(null, damage, this, this, "stab", {
-        visuals: { hidden: true },
-        setDelay: 1,
-      }));
+      this.addProjectile(
+        new Projectile(null, damage, this, this, "stab", {
+          visuals: { hidden: true },
+          setDelay: 1,
+        }),
+      );
     }
 
     this.attackTick = (this.attackTick + 1) % ACTIVE_SOL_ATTACK.ticks;
@@ -119,16 +129,17 @@ export class SampleAnimayaNpc extends Mob {
     // one-shot removal (64 objects per hit).
     for (let ring = 1; ring <= 4; ring++) {
       for (let direction = 0; direction < 16; direction++) {
-        const angle = direction * Math.PI / 8;
+        const angle = (direction * Math.PI) / 8;
         const x = Math.round(centreX + Math.cos(angle) * (2 + ring));
         const y = Math.round(centreY + Math.sin(angle) * (2 + ring));
-        const rotation = angle * 1024 / (Math.PI * 2);
-        this.region.addEntity(new GraphicsObject(
-          this.region,
-          { x, y },
-          SAMPLE_ASSETS.spotAnims.solDust.id,
-          { rotation, delay: ring * 2, height: 0 },
-        ));
+        const rotation = (angle * 1024) / (Math.PI * 2);
+        this.region.addEntity(
+          new GraphicsObject(this.region, { x, y }, SAMPLE_ASSETS.spotAnims.solDust.id, {
+            rotation,
+            delay: ring * 2,
+            height: 0,
+          }),
+        );
       }
     }
   }
@@ -140,10 +151,8 @@ export class SampleAnimayaNpc extends Mob {
   }
 
   override create3dModel() {
-    return CacheRenderModel.forRenderable(
-      this,
-      CacheRenderReferences.npc(SAMPLE_ASSETS.npcs.solHeredit.id),
-      { frameSoundDelayMs: SOL_FRAME_SOUND_DELAY_MS },
-    );
+    return CacheRenderModel.forRenderable(this, CacheRenderReferences.npc(SAMPLE_ASSETS.npcs.solHeredit.id), {
+      frameSoundDelayMs: SOL_FRAME_SOUND_DELAY_MS,
+    });
   }
 }

@@ -87,7 +87,8 @@ export class MeleeWeapon extends Weapon {
       bonuses.styleStrengthBonus = 0;
     }
     return Math.floor(
-      (Math.floor(from.currentStats.strength * prayerMultiplier) + bonuses.styleStrengthBonus + 8) * bonuses.voidMultiplier,
+      (Math.floor(from.currentStats.strength * prayerMultiplier) + bonuses.styleStrengthBonus + 8) *
+        bonuses.voidMultiplier,
     );
   }
 

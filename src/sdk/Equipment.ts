@@ -21,8 +21,8 @@ export enum EquipmentTypes {
 }
 
 // maybe we ought to rename the values instead?
-export const EQUIPMENT_TYPE_TO_SLOT: {[equipmentType in EquipmentTypes]: keyof UnitEquipment} = {
-  [EquipmentTypes.HELMET]: 'helmet',
+export const EQUIPMENT_TYPE_TO_SLOT: { [equipmentType in EquipmentTypes]: keyof UnitEquipment } = {
+  [EquipmentTypes.HELMET]: "helmet",
   [EquipmentTypes.CHEST]: "chest",
   [EquipmentTypes.LEGS]: "legs",
   [EquipmentTypes.FEET]: "feet",
@@ -32,7 +32,7 @@ export const EQUIPMENT_TYPE_TO_SLOT: {[equipmentType in EquipmentTypes]: keyof U
   [EquipmentTypes.AMMO]: "ammo",
   [EquipmentTypes.BACK]: "cape",
   [EquipmentTypes.NECK]: "necklace",
-  [EquipmentTypes.RING]: "ring"
+  [EquipmentTypes.RING]: "ring",
 };
 
 export class Equipment extends Item {

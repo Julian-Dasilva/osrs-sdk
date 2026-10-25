@@ -1,5 +1,9 @@
 import type { CacheRenderAnimation, CacheRenderFrameSound } from "../src/cache-render-format";
-import { AnimationFrameSoundPlayer, chooseFrameSound, frameSoundsBetween } from "../src/sdk/rendering/AnimationFrameSounds";
+import {
+  AnimationFrameSoundPlayer,
+  chooseFrameSound,
+  frameSoundsBetween,
+} from "../src/sdk/rendering/AnimationFrameSounds";
 import { cacheSound } from "../src/sdk/audio/CacheSoundEffects";
 import { SoundCache } from "../src/sdk/utils/SoundCache";
 

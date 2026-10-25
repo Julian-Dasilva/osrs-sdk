@@ -49,8 +49,7 @@ export class PrayerControls extends BaseControls {
     const gridX = x - 14;
     const gridY = y - 22;
 
-    const clickedPrayer =
-      Trainer.player.prayerController.prayers[Math.floor(gridY / 35) * 5 + Math.floor(gridX / 35)];
+    const clickedPrayer = Trainer.player.prayerController.prayers[Math.floor(gridY / 35) * 5 + Math.floor(gridX / 35)];
     if (clickedPrayer && Trainer.player.currentStats.prayer > 0) {
       InputController.controller.queueClientAction(() => {
         if (Trainer.player.currentStats.prayer <= 0 || !clickedPrayer.toggleClient(Trainer.player)) return;

@@ -93,12 +93,7 @@ export class ContextMenu {
 
       context.lineWidth = 1;
       context.strokeStyle = "black";
-      context.strokeRect(
-        this.location.x - this.width / 2 + 2,
-        this.location.y + 20,
-        this.width - 4,
-        this.height - 22,
-      );
+      context.strokeRect(this.location.x - this.width / 2 + 2, this.location.y + 20, this.width - 4, this.height - 22);
 
       for (let i = 0; i < this.linesOfText.length; i++) {
         this.drawLineOfText(context, this.linesOfText[i].text, this.width, i * 20);

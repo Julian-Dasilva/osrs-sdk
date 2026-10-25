@@ -58,10 +58,15 @@ export class VenatorBow extends RangedWeapon {
   }
 
   override attack(from: Unit, to: Unit, bonuses: AttackBonuses = {}, options: ProjectileOptions = {}): boolean {
-    const didAttack = super.attack(from, to, bonuses, mergeProjectileOptions(options, {
-      setDelay: 1,
-      visuals: { endCycleOffset: PRIMARY_END_CYCLE },
-    }));
+    const didAttack = super.attack(
+      from,
+      to,
+      bonuses,
+      mergeProjectileOptions(options, {
+        setDelay: 1,
+        visuals: { endCycleOffset: PRIMARY_END_CYCLE },
+      }),
+    );
     if (!didAttack || !(to instanceof Mob)) return didAttack;
 
     const firstBounce = getNextVenatorBounceTarget(to);

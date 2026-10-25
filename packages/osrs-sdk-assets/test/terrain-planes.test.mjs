@@ -10,10 +10,18 @@ const grid = (size, make) => Array.from({ length: size }, () => Array.from({ len
 async function extractTerrain(tiles, heights) {
   class TestCache {
     onload = Promise.resolve();
-    getMap() { return { tiles, getHeights: () => heights }; }
-    getLoc() { return { locations: [] }; }
-    getAllDefs() { return []; }
-    getDef() { return { hue: 16, saturation: 64, lightness: 112 }; }
+    getMap() {
+      return { tiles, getHeights: () => heights };
+    }
+    getLoc() {
+      return { locations: [] };
+    }
+    getAllDefs() {
+      return [];
+    }
+    getDef() {
+      return { hue: 16, saturation: 64, lightness: 112 };
+    }
     getFile(_index, _archive, id) {
       return {
         def: { color: 4000 },
@@ -31,8 +39,8 @@ async function extractTerrain(tiles, heights) {
     semanticPoseMap: {},
     revision: 236,
   });
-  const terrain = result.assets.find(asset => asset.id === "scene-7216-compiled-terrain");
-  return terrain?.payload.chunks.flatMap(chunk => chunk.positions) ?? [];
+  const terrain = result.assets.find((asset) => asset.id === "scene-7216-compiled-terrain");
+  return terrain?.payload.chunks.flatMap((chunk) => chunk.positions) ?? [];
 }
 
 for (const fixture of reference.cases) {

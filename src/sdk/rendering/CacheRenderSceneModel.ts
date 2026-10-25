@@ -18,11 +18,15 @@ export class CacheRenderSceneModel implements Model {
   private root = new THREE.Group();
   private worldPosition = new THREE.Vector3();
   private destroyed = false;
-  constructor(private readonly sceneId: string, private readonly options: CacheRenderSceneModelOptions = {}) {}
+  constructor(
+    private readonly sceneId: string,
+    private readonly options: CacheRenderSceneModelOptions = {},
+  ) {}
   private async ensureLoaded() {
     if (this.ready) return this.ready;
     this.ready = (async () => {
-      const bundle = await CacheRender.bundle(); const recipe = bundle.manifest.scenes?.[this.sceneId];
+      const bundle = await CacheRender.bundle();
+      const recipe = bundle.manifest.scenes?.[this.sceneId];
       if (!recipe) throw new Error(`Bundle has no static scene recipe for ${this.sceneId}`);
       for (const [kind, assetId] of Object.entries(recipe.compiledAssets)) {
         if (!assetId) continue;
@@ -35,22 +39,60 @@ export class CacheRenderSceneModel implements Model {
           alphaTest: 0.01,
         });
         chunks.forEach((chunk) => {
-          const geometry = new THREE.BufferGeometry(); geometry.setAttribute("position", new THREE.Float32BufferAttribute(chunk.positions, 3));
+          const geometry = new THREE.BufferGeometry();
+          geometry.setAttribute("position", new THREE.Float32BufferAttribute(chunk.positions, 3));
           // The Kotlin scene exporter writes its terrain palette bytes directly
           // into glTF vertex colours. Retain that convention so compiled terrain
           // matches the static arena GLBs.
           const alphas = chunk.alphas.map(normalizeCacheAlpha);
           const colors = cacheColorsToRgba(chunk.colors, alphas);
-          geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 4)); geometry.setIndex(chunk.indices); geometry.computeVertexNormals();
+          geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 4));
+          geometry.setIndex(chunk.indices);
+          geometry.computeVertexNormals();
           this.root.add(new THREE.Mesh(geometry, material));
         });
       }
-    })(); return this.ready;
+    })();
+    return this.ready;
   }
-  draw(scene: THREE.Scene, _clockDelta: number, _tickPercent: number, location: Location3, _angleRadians: number, _pitchRadians: number, visible: boolean, _modelOffsets: Location3[]) {
-    this.ensureLoaded().then(() => { if (this.destroyed) return; if (this.root.parent !== scene) scene.add(this.root); this.root.position.set(location.x + .5 + (this.options.originOffset?.x ?? 0), location.z - .49 + (this.options.elevation ?? 0), location.y - .5 + (this.options.originOffset?.y ?? 0)); this.root.visible = visible; this.worldPosition.set(location.x, location.z, location.y); }).catch((error) => console.error("[osrs-sdk] Compiled cache scene failed", error));
+  draw(
+    scene: THREE.Scene,
+    _clockDelta: number,
+    _tickPercent: number,
+    location: Location3,
+    _angleRadians: number,
+    _pitchRadians: number,
+    visible: boolean,
+    _modelOffsets: Location3[],
+  ) {
+    this.ensureLoaded()
+      .then(() => {
+        if (this.destroyed) return;
+        if (this.root.parent !== scene) scene.add(this.root);
+        this.root.position.set(
+          location.x + 0.5 + (this.options.originOffset?.x ?? 0),
+          location.z - 0.49 + (this.options.elevation ?? 0),
+          location.y - 0.5 + (this.options.originOffset?.y ?? 0),
+        );
+        this.root.visible = visible;
+        this.worldPosition.set(location.x, location.z, location.y);
+      })
+      .catch((error) => console.error("[osrs-sdk] Compiled cache scene failed", error));
   }
-  destroy(scene: THREE.Scene) { this.destroyed = true; scene.remove(this.root); this.root.traverse((object: any) => { if (object.isMesh) { object.geometry.dispose(); object.material.dispose(); } }); }
-  getWorldPosition() { return this.worldPosition; }
-  async preload() { await this.ensureLoaded(); }
+  destroy(scene: THREE.Scene) {
+    this.destroyed = true;
+    scene.remove(this.root);
+    this.root.traverse((object: any) => {
+      if (object.isMesh) {
+        object.geometry.dispose();
+        object.material.dispose();
+      }
+    });
+  }
+  getWorldPosition() {
+    return this.worldPosition;
+  }
+  async preload() {
+    await this.ensureLoaded();
+  }
 }

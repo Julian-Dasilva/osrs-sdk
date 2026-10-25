@@ -12,7 +12,9 @@ import { cacheSound } from "../../sdk/audio/CacheSoundEffects";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
 
 export class ZombieAxe extends MeleeWeapon {
-  get cacheItemId(): number { return CACHE_ASSETS.items.zombieAxe.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.zombieAxe.id;
+  }
   constructor() {
     super();
 
@@ -85,10 +87,15 @@ export class ZombieAxe extends MeleeWeapon {
   }
 
   override attack(from: Unit, to: Unit, bonuses: AttackBonuses = {}, options: ProjectileOptions = {}) {
-    return super.attack(from, to, {
-      ...bonuses,
-      attackStyle: bonuses.attackStyle ?? (this.attackStyle() === AttackStyle.AGGRESSIVECRUSH ? "crush" : "slash"),
-    }, options);
+    return super.attack(
+      from,
+      to,
+      {
+        ...bonuses,
+        attackStyle: bonuses.attackStyle ?? (this.attackStyle() === AttackStyle.AGGRESSIVECRUSH ? "crush" : "slash"),
+      },
+      options,
+    );
   }
 
   override _attackLevel(from: Unit, to: Unit, bonuses: AttackBonuses) {
@@ -118,9 +125,10 @@ export class ZombieAxe extends MeleeWeapon {
 
   get attackSound() {
     // Slash retains the generic melee fallback until its sound is confirmed.
-    const soundId = this.attackStyle() === AttackStyle.AGGRESSIVECRUSH
-      ? CACHE_ASSETS.sounds.baxeCrush.id
-      : CACHE_ASSETS.sounds.meleeAttack.id;
+    const soundId =
+      this.attackStyle() === AttackStyle.AGGRESSIVECRUSH
+        ? CACHE_ASSETS.sounds.baxeCrush.id
+        : CACHE_ASSETS.sounds.meleeAttack.id;
     return new Sound(cacheSound(soundId), 0.1);
   }
 }

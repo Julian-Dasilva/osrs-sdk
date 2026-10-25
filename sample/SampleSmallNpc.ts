@@ -55,7 +55,7 @@ export class SampleSmallNpc extends Mob {
   override get attackSpeed() {
     return 4;
   }
-  
+
   attackStyleForNewAttack() {
     return "slash";
   }

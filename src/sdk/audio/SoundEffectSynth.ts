@@ -168,8 +168,7 @@ class SoundFilter {
       );
       for (let other = pair * 2 - 1; other >= 2; other--) {
         coefficients[other] = f32(
-          coefficients[other] +
-            f32(f32(coefficients[other - 1] * phase) + f32(coefficients[other - 2] * coefficient)),
+          coefficients[other] + f32(f32(coefficients[other - 1] * phase) + f32(coefficients[other - 2] * coefficient)),
         );
       }
       coefficients[1] = f32(coefficients[1] + f32(f32(coefficients[0] * phase) + coefficient));

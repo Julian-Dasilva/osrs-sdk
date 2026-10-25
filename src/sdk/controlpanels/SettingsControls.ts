@@ -126,7 +126,7 @@ export class SettingsControls extends BaseControls {
       this.combatImage,
     ),
 
-    // Menu   
+    // Menu
     new ToggleButton(
       "Menu",
       142,
