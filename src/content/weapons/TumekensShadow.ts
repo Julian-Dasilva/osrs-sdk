@@ -107,7 +107,7 @@ export class TumekensShadow extends PoweredStaff {
   override _equipmentBonus(from: Unit, to: Unit, bonuses: AttackBonuses) {
     return from.bonuses.attack.magic * TUMEKEN_MULTIPLIER;
   }
-  
+
   override _magicDamageBonusMultiplier(from: Unit, to: Unit, bonuses: AttackBonuses) {
     return (from.bonuses.other.magicDamage - 1.0) * TUMEKEN_MULTIPLIER + 1.0;
   }

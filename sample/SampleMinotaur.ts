@@ -1,10 +1,4 @@
-import {
-  CacheRenderModel,
-  CacheRenderReferences,
-  MeleeWeapon,
-  Mob,
-  UnitBonuses,
-} from "../src";
+import { CacheRenderModel, CacheRenderReferences, MeleeWeapon, Mob, UnitBonuses } from "../src";
 import { SAMPLE_ASSETS } from "./assets";
 
 enum MinotaurAnimations {
@@ -18,12 +12,24 @@ enum MinotaurAnimations {
 export class SampleMinotaur extends Mob {
   static readonly NPC_ID = SAMPLE_ASSETS.npcs.minotaur.id;
 
-  override mobName() { return "Minotaur"; }
-  override get combatLevel() { return 318; }
-  override get attackSpeed() { return 5; }
-  override get attackRange() { return 1; }
-  override get size() { return 3; }
-  override get deathAnimationLength() { return 4; }
+  override mobName() {
+    return "Minotaur";
+  }
+  override get combatLevel() {
+    return 318;
+  }
+  override get attackSpeed() {
+    return 5;
+  }
+  override get attackRange() {
+    return 1;
+  }
+  override get size() {
+    return 3;
+  }
+  override get deathAnimationLength() {
+    return 4;
+  }
 
   override setStats() {
     this.weapons = { crush: new MeleeWeapon({ setDelay: 2 }) };
@@ -46,11 +52,21 @@ export class SampleMinotaur extends Mob {
     };
   }
 
-  override attackStyleForNewAttack() { return "crush"; }
-  override get idlePoseId() { return MinotaurAnimations.Idle; }
-  override get walkingPoseId() { return MinotaurAnimations.Walk; }
-  override get attackAnimationId() { return MinotaurAnimations.Attack; }
-  override get deathAnimationId() { return MinotaurAnimations.Death; }
+  override attackStyleForNewAttack() {
+    return "crush";
+  }
+  override get idlePoseId() {
+    return MinotaurAnimations.Idle;
+  }
+  override get walkingPoseId() {
+    return MinotaurAnimations.Walk;
+  }
+  override get attackAnimationId() {
+    return MinotaurAnimations.Attack;
+  }
+  override get deathAnimationId() {
+    return MinotaurAnimations.Death;
+  }
 
   override create3dModel() {
     return CacheRenderModel.forRenderable(this, CacheRenderReferences.npc(SampleMinotaur.NPC_ID));

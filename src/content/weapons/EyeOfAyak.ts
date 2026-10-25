@@ -7,8 +7,9 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 
 export class EyeOfAyak extends PoweredStaff {
-
-  get cacheItemId(): number { return CACHE_ASSETS.items.eyeOfAyak.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.eyeOfAyak.id;
+  }
 
   constructor() {
     // The exact cache projectile graphic and client-cycle offsets still need

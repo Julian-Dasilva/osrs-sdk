@@ -88,10 +88,7 @@ export class CanvasSpriteModel implements Model {
 
     const outlineColor = Settings.entityIndicatorColor;
     this.outlineMaterial.color.set(outlineColor);
-    drawLineOnTop(
-      this.outline,
-      this.renderable.outlineRenderOrder ?? GroundOverlayRenderOrder.ENTITY_INDICATOR,
-    );
+    drawLineOnTop(this.outline, this.renderable.outlineRenderOrder ?? GroundOverlayRenderOrder.ENTITY_INDICATOR);
     this.sprite.visible = visible;
     this.outline.visible = visible && this.renderable.drawOutline && Settings.entityIndicatorEnabled;
 

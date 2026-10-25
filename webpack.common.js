@@ -11,7 +11,7 @@ module.exports = {
     },
   },
   optimization: {
-    minimize: false
+    minimize: false,
   },
   plugins: [
     new webpack.DefinePlugin({
@@ -34,5 +34,5 @@ module.exports = {
         loader: "html-loader",
       },
     ],
-  }
+  },
 };

@@ -141,9 +141,7 @@ export class ClickController {
         hoveredOn.groundItems,
         hoveredOn.location,
       )[0];
-      this.hoverTooltip = firstAction
-        ? { text: firstAction.text, x: e.offsetX, y: e.offsetY + 10 }
-        : null;
+      this.hoverTooltip = firstAction ? { text: firstAction.text, x: e.offsetX, y: e.offsetY + 10 } : null;
     } else {
       this.hoverTooltip = null;
     }
@@ -174,13 +172,21 @@ export class ClickController {
     context.restore();
   }
 
-  private contextActionsFor(region: Region, mobs: Mob[], players: Player[], groundItems: Item[], location: Location | null) {
+  private contextActionsFor(
+    region: Region,
+    mobs: Mob[],
+    players: Player[],
+    groundItems: Item[],
+    location: Location | null,
+  ) {
     const x = location?.x ?? null;
     const y = location?.y ?? null;
     let menuOptions: MenuOption[] = [];
-    mobs.filter((mob) => mob.visible()).forEach((mob) => {
-      menuOptions = menuOptions.concat(mob.contextActions(region, x, y));
-    });
+    mobs
+      .filter((mob) => mob.visible())
+      .forEach((mob) => {
+        menuOptions = menuOptions.concat(mob.contextActions(region, x, y));
+      });
     players.forEach((player) => {
       if (player !== Trainer.player) {
         menuOptions = menuOptions.concat(player.contextActions(region, x, y));

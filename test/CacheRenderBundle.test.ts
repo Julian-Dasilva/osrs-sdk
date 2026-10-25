@@ -10,19 +10,54 @@ import { gzipSync } from "fflate";
 
 const checksum = "1234abcd";
 test("validates a versioned bundle manifest", () => {
-  expect(validateCacheRenderBundleManifest({ schemaVersion: 3, bundleVersion: "test", cache: { revision: 1, source: "fixture", contentHash: checksum }, assets: { body: { file: "body.bin", crc32: checksum } }, references: { "npc:1": ["body"] } }).bundleVersion).toBe("test");
+  expect(
+    validateCacheRenderBundleManifest({
+      schemaVersion: 3,
+      bundleVersion: "test",
+      cache: { revision: 1, source: "fixture", contentHash: checksum },
+      assets: { body: { file: "body.bin", crc32: checksum } },
+      references: { "npc:1": ["body"] },
+    }).bundleVersion,
+  ).toBe("test");
 });
 test("validates shared animation asset mappings", () => {
-  expect(validateCacheRenderBundleManifest({ schemaVersion: 3, bundleVersion: "test", cache: { revision: 1, source: "fixture", contentHash: checksum }, assets: { animations: { file: "animations.bin", crc32: checksum } }, references: {}, sharedAssets: { playerAnimations: "animations" } }).sharedAssets?.playerAnimations).toBe("animations");
+  expect(
+    validateCacheRenderBundleManifest({
+      schemaVersion: 3,
+      bundleVersion: "test",
+      cache: { revision: 1, source: "fixture", contentHash: checksum },
+      assets: { animations: { file: "animations.bin", crc32: checksum } },
+      references: {},
+      sharedAssets: { playerAnimations: "animations" },
+    }).sharedAssets?.playerAnimations,
+  ).toBe("animations");
 });
 test("validates a cache sound-effect pack", () => {
-  expect(validateCacheRenderBundleManifest({ schemaVersion: 3, bundleVersion: "test", cache: { revision: 1, source: "fixture", contentHash: checksum }, assets: {}, references: {}, soundEffects: { file: "cache-sound-effects.fixture.soundpack", crc32: checksum, bytes: 42 } }).soundEffects?.bytes).toBe(42);
+  expect(
+    validateCacheRenderBundleManifest({
+      schemaVersion: 3,
+      bundleVersion: "test",
+      cache: { revision: 1, source: "fixture", contentHash: checksum },
+      assets: {},
+      references: {},
+      soundEffects: { file: "cache-sound-effects.fixture.soundpack", crc32: checksum, bytes: 42 },
+    }).soundEffects?.bytes,
+  ).toBe(42);
 });
 test("validates a compiled scene recipe with reusable object assets", () => {
   const manifest = validateCacheRenderBundleManifest({
-    schemaVersion: 3, bundleVersion: "test", cache: { revision: 236, source: "openrs2:2437", contentHash: checksum },
-    assets: { wall: { file: "wall.bin", crc32: checksum } }, references: {},
-    scenes: { "region:9043": { regionId: 9043, compiledAssets: { opaque: "wall" }, placements: [{ assetId: "wall", x: 27, y: 52, plane: 0 }] } },
+    schemaVersion: 3,
+    bundleVersion: "test",
+    cache: { revision: 236, source: "openrs2:2437", contentHash: checksum },
+    assets: { wall: { file: "wall.bin", crc32: checksum } },
+    references: {},
+    scenes: {
+      "region:9043": {
+        regionId: 9043,
+        compiledAssets: { opaque: "wall" },
+        placements: [{ assetId: "wall", x: 27, y: 52, plane: 0 }],
+      },
+    },
   });
   expect(manifest.scenes?.["region:9043"].compiledAssets.opaque).toBe("wall");
 });
@@ -31,19 +66,29 @@ test("calculates standard CRC-32 checksums", () => {
 });
 test("decodes binary render payloads", () => {
   const json = new TextEncoder().encode(JSON.stringify({ version: 2, positions: [0, 0, 0] }));
-  const bytes = new Uint8Array(8 + json.length); bytes.set([79, 83, 82, 66]); new DataView(bytes.buffer).setUint32(4, json.length, true); bytes.set(json, 8);
+  const bytes = new Uint8Array(8 + json.length);
+  bytes.set([79, 83, 82, 66]);
+  new DataView(bytes.buffer).setUint32(4, json.length, true);
+  bytes.set(json, 8);
   expect(decodeCacheRenderPayload(bytes.buffer).positions).toEqual([0, 0, 0]);
 });
 test("decodes gzip-compressed binary render payloads", () => {
   const json = new TextEncoder().encode(JSON.stringify({ version: 2, positions: [0, 0, 0] }));
   const compressed = gzipSync(json);
-  const bytes = new Uint8Array(8 + compressed.length); bytes.set([79, 83, 82, 66]); new DataView(bytes.buffer).setUint32(4, compressed.length, true); bytes.set(compressed, 8);
+  const bytes = new Uint8Array(8 + compressed.length);
+  bytes.set([79, 83, 82, 66]);
+  new DataView(bytes.buffer).setUint32(4, compressed.length, true);
+  bytes.set(compressed, 8);
   expect(decodeCacheRenderPayload(bytes.buffer).positions).toEqual([0, 0, 0]);
 });
 
 test("retains an authored geometry clickbox when composing cache payloads", () => {
   const merged = mergePayloads([
-    { version: 2, positions: [0, 0, 0], geometryClickbox: { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], indices: [0, 1, 2] } },
+    {
+      version: 2,
+      positions: [0, 0, 0],
+      geometryClickbox: { positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], indices: [0, 1, 2] },
+    },
     { version: 2, positions: [1, 0, 0] },
   ]);
   expect(merged.geometryClickbox).toEqual({ positions: [0, 0, 0, 1, 0, 0, 0, 1, 0], indices: [0, 1, 2] });
@@ -59,16 +104,19 @@ test("retains sequence movement metadata when composing cache payloads", () => {
       },
     },
   ]);
-  expect(merged.animations?.[123]).toEqual(
-    expect.objectContaining({ precedenceAnimating: 0, priority: 2 }),
-  );
+  expect(merged.animations?.[123]).toEqual(expect.objectContaining({ precedenceAnimating: 0, priority: 2 }));
 });
 
 test("resolves animation metadata through a cache model pose map", () => {
   const model = Object.create(CacheRenderModel.prototype) as CacheRenderModel;
-  (model as any).animations = { 456: {
-    frames: [[]], lengths: [1], precedenceAnimating: 0, priority: 2,
-  } };
+  (model as any).animations = {
+    456: {
+      frames: [[]],
+      lengths: [1],
+      precedenceAnimating: 0,
+      priority: 2,
+    },
+  };
   (model as any).poseMap = { 2: 456 };
 
   expect(model.getAnimationMetadata(2)).toEqual({ precedenceAnimating: 0, priority: 2 });
@@ -76,12 +124,26 @@ test("resolves animation metadata through a cache model pose map", () => {
 
 test("calculates animation pivots from cache vertices rather than expanded render vertices", () => {
   const positions = new Float32Array([
-    0, 0, 0, 0, 0, 0, 0, 0, 0, // three face corners from source vertex 0
-    2, 0, 0, // one face corner from source vertex 1
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // three face corners from source vertex 0
+    2,
+    0,
+    0, // one face corner from source vertex 1
   ]);
   applyRawFrame(positions, [[0, 1, 2, 3]], [0, 0, 0, 1], {
-    types: [0, 3], maps: [[0], [0]], indexFrameIds: [0, 1],
-    x: [0, 0], y: [0, 128], z: [0, 128],
+    types: [0, 3],
+    maps: [[0], [0]],
+    indexFrameIds: [0, 1],
+    x: [0, 0],
+    y: [0, 128],
+    z: [0, 128],
   });
   expect(Array.from(positions.filter((_value, index) => index % 3 === 0))).toEqual([1, 1, 1, 1]);
 });
@@ -101,7 +163,13 @@ type FetchOutcome = "network-error" | number;
 // fetch is the network boundary.
 function serveBundle(bodyOutcomes: FetchOutcome[]) {
   const body = new TextEncoder().encode("123456789");
-  const manifest = { schemaVersion: 3, bundleVersion: "test", cache: { revision: 1, source: "fixture", contentHash: checksum }, assets: { body: { file: "body.bin", crc32: "cbf43926", bytes: 9 } }, references: {} };
+  const manifest = {
+    schemaVersion: 3,
+    bundleVersion: "test",
+    cache: { revision: 1, source: "fixture", contentHash: checksum },
+    assets: { body: { file: "body.bin", crc32: "cbf43926", bytes: 9 } },
+    references: {},
+  };
   const requests: string[] = [];
   (global as any).fetch = async (url: string) => {
     requests.push(url);
@@ -114,12 +182,15 @@ function serveBundle(bodyOutcomes: FetchOutcome[]) {
   return { bodyRequests: () => requests.filter((request) => request.endsWith("body.bin")).length };
 }
 
-test.each<FetchOutcome>(["network-error", 503, 429])("loads a cache render asset after one transient %s failure", async (failure) => {
-  const server = serveBundle([failure, 200]);
-  const bundle = await CacheRenderBundle.load("http://localhost/assets/manifest.json");
-  expect(new TextDecoder().decode(await bundle.fetchAsset("body"))).toBe("123456789");
-  expect(server.bodyRequests()).toBe(2);
-});
+test.each<FetchOutcome>(["network-error", 503, 429])(
+  "loads a cache render asset after one transient %s failure",
+  async (failure) => {
+    const server = serveBundle([failure, 200]);
+    const bundle = await CacheRenderBundle.load("http://localhost/assets/manifest.json");
+    expect(new TextDecoder().decode(await bundle.fetchAsset("body"))).toBe("123456789");
+    expect(server.bodyRequests()).toBe(2);
+  },
+);
 
 test("guard: fails a missing cache render asset on its first 404", async () => {
   const server = serveBundle([404, 200]);

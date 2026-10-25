@@ -204,9 +204,14 @@ export class Weapon extends Equipment {
 
     this.grantXp(from, to);
     const modifiers = to.incomingAttackRollModifiers({ attacker: from, weapon: this, bonuses });
-    this.registerProjectile(from, to, bonuses, mergeProjectileOptions(options, {
-      consumeTargetMaxDamageRoll: modifiers.maxDamage && modifiers.consumeAfterDamage,
-    }));
+    this.registerProjectile(
+      from,
+      to,
+      bonuses,
+      mergeProjectileOptions(options, {
+        consumeTargetMaxDamageRoll: modifiers.maxDamage && modifiers.consumeAfterDamage,
+      }),
+    );
     const attackSpotAnim = this.attackSpotAnim;
     if (attackSpotAnim) {
       from.addSpotAnim({
@@ -269,11 +274,18 @@ export class Weapon extends Equipment {
 
   registerProjectile(from: Unit, to: Unit, bonuses: AttackBonuses, options: ProjectileOptions = {}) {
     to.addProjectile(
-      new Projectile(this, this.damage, from, to, bonuses.attackStyle, mergeProjectileOptions(
-        { sound: this.attackSound, hitSound: this.attackLandingSound, visuals: { model: this.projectileModel } },
-        this.projectileOptions,
-        options,
-      )),
+      new Projectile(
+        this,
+        this.damage,
+        from,
+        to,
+        bonuses.attackStyle,
+        mergeProjectileOptions(
+          { sound: this.attackSound, hitSound: this.attackLandingSound, visuals: { model: this.projectileModel } },
+          this.projectileOptions,
+          options,
+        ),
+      ),
     );
   }
 

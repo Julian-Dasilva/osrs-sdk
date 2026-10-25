@@ -51,16 +51,16 @@ export function canVenatorBounce(
 ): boolean {
   const sourceCenter = getVenatorCenterTile(sourceX, sourceY, sourceSize);
   const targetCenter = getVenatorCenterTile(targetX, targetY, targetSize);
-  const sourceScanTiles = sourceSize % 2 === 1
-    ? [sourceCenter]
-    : getAllTiles(sourceX, sourceY, sourceSize);
+  const sourceScanTiles = sourceSize % 2 === 1 ? [sourceCenter] : getAllTiles(sourceX, sourceY, sourceSize);
   const targetTiles = getAllTiles(targetX, targetY, targetSize);
   const targetClosestTile = getClosestTile(sourceCenter, targetX, targetY, targetSize);
 
-  return sourceScanTiles.some((tile) => isInRadius(tile, targetCenter, BOUNCE_RADIUS))
-    && targetTiles.some((tile) => isInRadius(sourceCenter, tile, TARGET_TILE_RADIUS))
-    && ((sourceCenter[0] === targetClosestTile[0] && sourceCenter[1] === targetClosestTile[1])
-      || hasLineOfSight(sourceCenter, targetClosestTile));
+  return (
+    sourceScanTiles.some((tile) => isInRadius(tile, targetCenter, BOUNCE_RADIUS)) &&
+    targetTiles.some((tile) => isInRadius(sourceCenter, tile, TARGET_TILE_RADIUS)) &&
+    ((sourceCenter[0] === targetClosestTile[0] && sourceCenter[1] === targetClosestTile[1]) ||
+      hasLineOfSight(sourceCenter, targetClosestTile))
+  );
 }
 
 export function canVenatorBounceBetween(source: Mob, target: Mob): boolean {
@@ -72,16 +72,8 @@ export function canVenatorBounceBetween(source: Mob, target: Mob): boolean {
     target.location.x,
     target.location.y,
     target.size,
-    ([fromX, fromY], [toX, toY]) => LineOfSight.hasLineOfSight(
-      source.region,
-      fromX,
-      fromY,
-      toX,
-      toY,
-      1,
-      TARGET_TILE_RADIUS,
-      false,
-    ),
+    ([fromX, fromY], [toX, toY]) =>
+      LineOfSight.hasLineOfSight(source.region, fromX, fromY, toX, toY, 1, TARGET_TILE_RADIUS, false),
   );
 }
 

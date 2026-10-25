@@ -15,7 +15,10 @@ test("running keeps both straight-line tile steps in the visual queue", () => {
   player.moveTowardsDestination();
 
   expect(player.location).toEqual({ x: 4, y: 2 });
-  expect(player.visualPath.map(({ x, y }) => ({ x, y }))).toEqual([{ x: 3, y: 2 }, { x: 4, y: 2 }]);
+  expect(player.visualPath.map(({ x, y }) => ({ x, y }))).toEqual([
+    { x: 3, y: 2 },
+    { x: 4, y: 2 },
+  ]);
 });
 
 test("walking enqueues only the authoritative one-tile step", () => {
@@ -49,9 +52,15 @@ test("a run steps one tile on the tick its run energy runs out", () => {
 
 test("uses movement poses supplied by the equipped weapon", () => {
   class CustomPoseWeapon extends Weapon {
-    override get idleAnimationId() { return 101; }
-    override get walkAnimationId() { return 102; }
-    override get runAnimationId() { return 103; }
+    override get idleAnimationId() {
+      return 101;
+    }
+    override get walkAnimationId() {
+      return 102;
+    }
+    override get runAnimationId() {
+      return 103;
+    }
   }
 
   const region = new TestRegion(20, 20);
@@ -191,7 +200,10 @@ test("keeps diagonal running continuous across visual waypoints", () => {
   const player = new Player(region, { x: 2, y: 2 });
   player.running = true;
   player.destinationLocation = { x: 8, y: 8 };
-  player.visualPath = [{ x: 3, y: 3, run: true }, { x: 4, y: 4, run: true }];
+  player.visualPath = [
+    { x: 3, y: 3, run: true },
+    { x: 4, y: 4, run: true },
+  ];
   const heading = -Math.PI / 4;
   (player as any)._angle = heading;
   (player as any).nextAngle = heading;
@@ -226,7 +238,6 @@ test("keeps the run pose stable while diagonally approaching an aggro target", (
       poses.push(player.animationIndex);
     }
   }
-
 
   expect(poses.filter((pose) => pose === PlayerAnimationIndices.Run).length).toBeGreaterThan(poses.length / 2);
   expect(poses).not.toContain(PlayerAnimationIndices.Idle);
@@ -278,7 +289,7 @@ test("uses the client forty-five-degree threshold for strafing", () => {
   const region = new TestRegion(20, 20);
   const player = new Player(region, { x: 2, y: 2 });
   player.visualPath = [{ x: 3, y: 2, run: false }];
-  (player as any)._angle = -Math.PI * 50 / 180;
+  (player as any)._angle = (-Math.PI * 50) / 180;
   (player as any).nextAngle = 0;
 
   player.clientTick(0, 20);
@@ -434,8 +445,12 @@ test("a coincident server and client boundary processes the server first", () =>
   world.tickTimer = 0;
   world.nextTickTimer = 600;
   world.clientTickTimer = 580;
-  world.tickWorld = jest.fn(() => { order.push("server"); });
-  world.tickClient = jest.fn(() => { order.push("client"); });
+  world.tickWorld = jest.fn(() => {
+    order.push("server");
+  });
+  world.tickClient = jest.fn(() => {
+    order.push("client");
+  });
   Viewport.viewport = { draw: jest.fn() } as never;
   const requestFrame = jest.spyOn(window, "requestAnimationFrame").mockImplementation(() => 0);
 

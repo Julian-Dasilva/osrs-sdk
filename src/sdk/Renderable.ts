@@ -136,7 +136,7 @@ export abstract class Renderable {
   set selected(selected: boolean) {
     this._selected = selected;
   }
-  
+
   drawUILayer(
     tickPercent: number,
     projector: UILayerProjector,

@@ -10,20 +10,14 @@ import MagicXpDropImage from "../assets/images/xpdrops/magic.png";
 import { ImageLoader } from "./utils/ImageLoader";
 import { Trainer } from "./Trainer";
 
-const BOOST_VISIBLE_STATS: (keyof PlayerStats)[] = [
-  "attack",
-  "strength",
-  "defence",
-  "range",
-  "magic",
-];
+const BOOST_VISIBLE_STATS: (keyof PlayerStats)[] = ["attack", "strength", "defence", "range", "magic"];
 
-const BOOST_IMAGE_SRC: {[type in keyof PlayerStats]?: string} = {
-  "attack": AttackXpDropImage,
-  "strength": StrengthXpDropImage,
-  "defence": DefenceXpDropImage,
-  "range": RangeXpDropImage,
-  "magic": MagicXpDropImage,
+const BOOST_IMAGE_SRC: { [type in keyof PlayerStats]?: string } = {
+  attack: AttackXpDropImage,
+  strength: StrengthXpDropImage,
+  defence: DefenceXpDropImage,
+  range: RangeXpDropImage,
+  magic: MagicXpDropImage,
 };
 
 const BOOST_IMAGES = {};
@@ -33,8 +27,6 @@ Object.entries(BOOST_IMAGE_SRC).forEach(([skill, src]) => {
 });
 
 export class BoostPanel {
-  
-
   draw(context: CanvasRenderingContext2D, scale: number, xLeft: number, yBottom: number) {
     const player = Trainer.player;
     if (!player) {
@@ -47,7 +39,7 @@ export class BoostPanel {
     const CELL_SIZE = 24;
     const width = scale * CELL_SIZE;
     const height = scale * CELL_SIZE * boostedStats.length;
-    context.fillRect(xLeft, yBottom - height, width, height)
+    context.fillRect(xLeft, yBottom - height, width, height);
     context.globalAlpha = 1;
     let y = yBottom - scale * CELL_SIZE;
     context.font = `${scale * 12}px OSRS`;
@@ -56,13 +48,7 @@ export class BoostPanel {
     for (const boostedStat of boostedStats) {
       const current = player.currentStats[boostedStat];
       const target = player.stats[boostedStat];
-      context.drawImage(
-        BOOST_IMAGES[boostedStat],
-        xLeft,
-        y,
-        scale * CELL_SIZE,
-        scale * CELL_SIZE,
-      );
+      context.drawImage(BOOST_IMAGES[boostedStat], xLeft, y, scale * CELL_SIZE, scale * CELL_SIZE);
       context.fillStyle = "black";
       context.fillText(`${current}`, xLeft + (scale * CELL_SIZE) / 2 + 1, y + (scale * CELL_SIZE) / 2 + 1);
       if (current < target) {

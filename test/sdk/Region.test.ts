@@ -9,8 +9,12 @@ import { DelayedAction } from "../../src/sdk/DelayedAction";
 import { Settings } from "../../src/sdk/Settings";
 
 class DeathAnimationNpc extends TestNpc {
-  override get deathAnimationId() { return 123; }
-  override async playAnimation() { return Promise.resolve(); }
+  override get deathAnimationId() {
+    return 123;
+  }
+  override async playAnimation() {
+    return Promise.resolve();
+  }
 }
 
 class ResettableRegion extends TestRegion {

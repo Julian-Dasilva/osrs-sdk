@@ -39,7 +39,11 @@ export function decodeCacheRenderPayload(bytes: ArrayBuffer): CacheRenderPayload
   if (encoded[0] === 0x1f && encoded[1] === 0x8b) encoded = decompressSync(encoded);
 
   const payload = JSON.parse(new TextDecoder().decode(encoded));
-  if (payload.version !== CACHE_RENDER_PAYLOAD_VERSION || !Array.isArray(payload.positions) || payload.positions.length % 3) {
+  if (
+    payload.version !== CACHE_RENDER_PAYLOAD_VERSION ||
+    !Array.isArray(payload.positions) ||
+    payload.positions.length % 3
+  ) {
     throw new CacheRenderBundleError("manifest", "Unsupported cache render payload schema");
   }
   return payload;
@@ -66,19 +70,43 @@ export function mergePayloads(payloads: CacheRenderPayload[]): CacheRenderPayloa
   // Animation metadata may live in a geometry-free shared payload. Collect it
   // independently of the geometry merge so shared player sequences compose
   // with whatever equipment is currently selected.
-  payloads.forEach((payload) => Object.entries(payload.animations ?? {}).forEach(([id, animation]) => {
-    const existing = animations[id];
-    if (!existing) {
-      animations[id] = { frames: animation.frames.map((frame) => frame.slice()), lengths: animation.lengths.slice(), precedenceAnimating: animation.precedenceAnimating, priority: animation.priority, rawFrames: animation.rawFrames, interleaveLeave: animation.interleaveLeave, mayaFrames: animation.mayaFrames, frameSounds: animation.frameSounds, soundsCrossWorldView: animation.soundsCrossWorldView };
-    } else if (animation.rawFrames?.length && !existing.rawFrames?.length) {
-      // Prefer the shared frame-map representation when it is available.
-      animations[id] = { frames: animation.frames.map((frame) => frame.slice()), lengths: animation.lengths.slice(), precedenceAnimating: animation.precedenceAnimating, priority: animation.priority, rawFrames: animation.rawFrames, interleaveLeave: animation.interleaveLeave, mayaFrames: animation.mayaFrames, frameSounds: animation.frameSounds, soundsCrossWorldView: animation.soundsCrossWorldView };
-    } else if (!existing.rawFrames?.length && !animation.rawFrames?.length) {
-      // Legacy bundles stored baked frames in every item; retain their old
-      // composition behavior for those bundles.
-      animation.frames.forEach((frame, index) => { if (existing.frames[index]) existing.frames[index].push(...frame); });
-    }
-  }));
+  payloads.forEach((payload) =>
+    Object.entries(payload.animations ?? {}).forEach(([id, animation]) => {
+      const existing = animations[id];
+      if (!existing) {
+        animations[id] = {
+          frames: animation.frames.map((frame) => frame.slice()),
+          lengths: animation.lengths.slice(),
+          precedenceAnimating: animation.precedenceAnimating,
+          priority: animation.priority,
+          rawFrames: animation.rawFrames,
+          interleaveLeave: animation.interleaveLeave,
+          mayaFrames: animation.mayaFrames,
+          frameSounds: animation.frameSounds,
+          soundsCrossWorldView: animation.soundsCrossWorldView,
+        };
+      } else if (animation.rawFrames?.length && !existing.rawFrames?.length) {
+        // Prefer the shared frame-map representation when it is available.
+        animations[id] = {
+          frames: animation.frames.map((frame) => frame.slice()),
+          lengths: animation.lengths.slice(),
+          precedenceAnimating: animation.precedenceAnimating,
+          priority: animation.priority,
+          rawFrames: animation.rawFrames,
+          interleaveLeave: animation.interleaveLeave,
+          mayaFrames: animation.mayaFrames,
+          frameSounds: animation.frameSounds,
+          soundsCrossWorldView: animation.soundsCrossWorldView,
+        };
+      } else if (!existing.rawFrames?.length && !animation.rawFrames?.length) {
+        // Legacy bundles stored baked frames in every item; retain their old
+        // composition behavior for those bundles.
+        animation.frames.forEach((frame, index) => {
+          if (existing.frames[index]) existing.frames[index].push(...frame);
+        });
+      }
+    }),
+  );
 
   let vertexOffset = 0;
   let sourceVertexOffset = 0;
@@ -92,27 +120,39 @@ export function mergePayloads(payloads: CacheRenderPayload[]): CacheRenderPayloa
     if (payload.textureIds) textureIds = textureIds.concat(payload.textureIds);
     Object.assign(textures, payload.textures ?? {});
 
-    const localSources = payload.sourceVertices?.length === localVertexCount
-      ? payload.sourceVertices
-      : (() => {
-        // Bundles extracted before sourceVertices existed can only recover
-        // identity from bind-pose coordinates. Keep that recovery local to an
-        // equipment payload so coincident vertices in separate items are never
-        // accidentally treated as one animation vertex.
-        const ids: number[] = [], byPosition = new Map<string, number>();
-        for (let index = 0; index < localVertexCount; index++) {
-          const key = `${payload.positions[index * 3]},${payload.positions[index * 3 + 1]},${payload.positions[index * 3 + 2]}`;
-          let source = byPosition.get(key);
-          if (source == null) { source = byPosition.size; byPosition.set(key, source); }
-          ids.push(source);
-        }
-        return ids;
-      })();
+    const localSources =
+      payload.sourceVertices?.length === localVertexCount
+        ? payload.sourceVertices
+        : (() => {
+            // Bundles extracted before sourceVertices existed can only recover
+            // identity from bind-pose coordinates. Keep that recovery local to an
+            // equipment payload so coincident vertices in separate items are never
+            // accidentally treated as one animation vertex.
+            const ids: number[] = [],
+              byPosition = new Map<string, number>();
+            for (let index = 0; index < localVertexCount; index++) {
+              const key = `${payload.positions[index * 3]},${payload.positions[index * 3 + 1]},${payload.positions[index * 3 + 2]}`;
+              let source = byPosition.get(key);
+              if (source == null) {
+                source = byPosition.size;
+                byPosition.set(key, source);
+              }
+              ids.push(source);
+            }
+            return ids;
+          })();
 
     sourceVertices = sourceVertices.concat(localSources.map((index) => index + sourceVertexOffset));
-    animayaGroups = animayaGroups.concat(Array.from({ length: localVertexCount }, (_, index) => payload.animayaGroups?.[index] ?? []));
-    animayaScales = animayaScales.concat(Array.from({ length: localVertexCount }, (_, index) => payload.animayaScales?.[index] ?? []));
-    sourceVertexOffset += Math.max(localVertexCount, localSources.reduce((max, index) => Math.max(max, index + 1), 0));
+    animayaGroups = animayaGroups.concat(
+      Array.from({ length: localVertexCount }, (_, index) => payload.animayaGroups?.[index] ?? []),
+    );
+    animayaScales = animayaScales.concat(
+      Array.from({ length: localVertexCount }, (_, index) => payload.animayaScales?.[index] ?? []),
+    );
+    sourceVertexOffset += Math.max(
+      localVertexCount,
+      localSources.reduce((max, index) => Math.max(max, index + 1), 0),
+    );
     const localIndices = payload.indices ?? Array.from({ length: payload.positions.length / 3 }, (_, index) => index);
     indices = indices.concat(localIndices.map((index) => index + vertexOffset));
     vertexOffset += payload.positions.length / 3;

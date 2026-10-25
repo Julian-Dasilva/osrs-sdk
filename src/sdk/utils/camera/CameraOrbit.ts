@@ -8,6 +8,6 @@ export const CAMERA_ORBIT_CLIENT_UNITS_PER_PITCH = 3;
 export function cameraOrbitDistance(pitchRadians: number) {
   const pitchClientUnits = -pitchRadians / CLIENT_ANGLE_RADIANS;
   return (
-    CAMERA_ORBIT_BASE_CLIENT_UNITS + pitchClientUnits * CAMERA_ORBIT_CLIENT_UNITS_PER_PITCH
-  ) / CLIENT_UNITS_PER_TILE;
+    (CAMERA_ORBIT_BASE_CLIENT_UNITS + pitchClientUnits * CAMERA_ORBIT_CLIENT_UNITS_PER_PITCH) / CLIENT_UNITS_PER_TILE
+  );
 }

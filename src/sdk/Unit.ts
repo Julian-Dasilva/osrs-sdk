@@ -172,9 +172,7 @@ export abstract class Unit extends Renderable {
 
   /** Remove the temporary cache-derived graphic currently occupying a channel. */
   clearSpotAnim(channel: string) {
-    const next = this.cacheRenderSpotAnims.filter(
-      (existing) => (existing.channel ?? String(existing.id)) !== channel,
-    );
+    const next = this.cacheRenderSpotAnims.filter((existing) => (existing.channel ?? String(existing.id)) !== channel);
     if (next.length === this.cacheRenderSpotAnims.length) return;
     this.cacheRenderSpotAnims = next;
     this.notifySpotAnimChanged(this.cacheRenderSpotAnims);
@@ -343,9 +341,8 @@ export abstract class Unit extends Renderable {
     }
 
     const animation = this.getActiveAnimationMetadata();
-    const movementPrecedence = this.visualPathLengthAtAnimationStart > 0
-      ? animation?.precedenceAnimating
-      : animation?.priority;
+    const movementPrecedence =
+      this.visualPathLengthAtAnimationStart > 0 ? animation?.precedenceAnimating : animation?.priority;
     if (movementPrecedence === 0) {
       this.delayedMovementTicks++;
       return null;
@@ -363,7 +360,7 @@ export abstract class Unit extends Renderable {
     this.renderFromLocation = { ...this.perceivedLocation };
     this.perceivedLocation = interpolation.location;
     this.renderPositionTimestamp = tickTimestamp;
-    return interpolation.reachedStep ? this.visualPath.shift() ?? null : null;
+    return interpolation.reachedStep ? (this.visualPath.shift() ?? null) : null;
   }
 
   override async playAnimation(index: number, blend = false) {
@@ -949,11 +946,7 @@ export abstract class Unit extends Renderable {
     context.fillRect(-width / 2, verticalOffset, healthRatio * width, 5);
   }
 
-  drawHitsplats(
-    context: OffscreenCanvasRenderingContext2D,
-    scale: number,
-    verticalOffset = 0,
-  ) {
+  drawHitsplats(context: OffscreenCanvasRenderingContext2D, scale: number, verticalOffset = 0) {
     let projectileOffsets = [
       [0, 10],
       [0, 30],

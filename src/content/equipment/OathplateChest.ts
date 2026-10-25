@@ -6,7 +6,9 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 
 /** The OSRS item is named "Oathplate chest"; it occupies the body slot. */
 export class OathplateChest extends Chest {
-  get cacheItemId(): number { return CACHE_ASSETS.items.oathplateChest.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.oathplateChest.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

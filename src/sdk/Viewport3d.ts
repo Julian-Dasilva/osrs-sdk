@@ -92,16 +92,19 @@ export class Viewport3d implements ViewportDelegate {
   private stats = new Stats();
 
   private knownActors: Map<Renderable, Actor> = new Map();
-  private projectedClickboxes = new Map<Mob, {
-    model: Model;
-    worldBounds?: THREE.Box3;
-    bounds?: ScreenBounds;
-    hull?: ScreenPoint[];
-    vertices?: (ScreenPoint | null)[];
-    triangles?: ArrayLike<number>;
-    refined?: boolean;
-    tolerance: number;
-  }>();
+  private projectedClickboxes = new Map<
+    Mob,
+    {
+      model: Model;
+      worldBounds?: THREE.Box3;
+      bounds?: ScreenBounds;
+      hull?: ScreenPoint[];
+      vertices?: (ScreenPoint | null)[];
+      triangles?: ArrayLike<number>;
+      refined?: boolean;
+      tolerance: number;
+    }
+  >();
   private pickingPointer: ScreenPoint | null = null;
 
   private selectedTile: Location | null = null;
@@ -201,8 +204,8 @@ export class Viewport3d implements ViewportDelegate {
       }
       if (gpuInfo === "none" || gpuInfo.includes("google") || gpuInfo.includes("apple") || gpuInfo.includes("intel")) {
         const warning = document.getElementById("gpu_warning");
-        if (warning) warning.innerHTML =
-          `<span style="color: #FF6666">Software rendering detected. Framerate may be low. Turn on Hardware Acceleration in your browser if you have a GPU.<br />${gpuInfo}</span>`;
+        if (warning)
+          warning.innerHTML = `<span style="color: #FF6666">Software rendering detected. Framerate may be low. Turn on Hardware Acceleration in your browser if you have a GPU.<br />${gpuInfo}</span>`;
       }
     } catch (err) {
       console.warn("error trying to detect gpu", err);
@@ -261,8 +264,18 @@ export class Viewport3d implements ViewportDelegate {
       this.touchStart = e.touches[0];
     } else if (e.touches.length === 2 && this.touchStart2 !== null) {
       // pinch - zoom
-      const oldDist = Pathing.dist(this.touchStart.clientX, this.touchStart.clientY, this.touchStart2.clientX, this.touchStart2.clientY);
-      const currentDist = Pathing.dist(e.touches[0].clientX, e.touches[0].clientY, e.touches[1].clientX, e.touches[1].clientY);
+      const oldDist = Pathing.dist(
+        this.touchStart.clientX,
+        this.touchStart.clientY,
+        this.touchStart2.clientX,
+        this.touchStart2.clientY,
+      );
+      const currentDist = Pathing.dist(
+        e.touches[0].clientX,
+        e.touches[0].clientY,
+        e.touches[1].clientX,
+        e.touches[1].clientY,
+      );
       const delta = (oldDist - currentDist) * TOUCH_MULT;
       const v = this.camera.position.z + delta * ZOOM_MULT;
       if (v >= 2 && v <= 20) {
@@ -338,7 +351,13 @@ export class Viewport3d implements ViewportDelegate {
 
   initCameraEvents(canvas) {
     canvas.addEventListener("mousemove", this.onDocumentMouseMove.bind(this), false);
-    canvas.addEventListener("mouseleave", () => { this.pickingPointer = null; }, false);
+    canvas.addEventListener(
+      "mouseleave",
+      () => {
+        this.pickingPointer = null;
+      },
+      false,
+    );
     canvas.addEventListener("mousedown", this.onDocumentMouseDown.bind(this), false);
     window.addEventListener("mouseup", this.onDocumentMouseUp.bind(this), false);
     window.addEventListener("blur", this.onWindowBlur.bind(this), false);
@@ -382,7 +401,8 @@ export class Viewport3d implements ViewportDelegate {
       this.render();
       this.stats.update();
       this.lastRenderTime = now;
-      this.nextRenderTime = frameInterval === 0 ? now : (this.nextRenderTime > 0 ? this.nextRenderTime + frameInterval : now + frameInterval);
+      this.nextRenderTime =
+        frameInterval === 0 ? now : this.nextRenderTime > 0 ? this.nextRenderTime + frameInterval : now + frameInterval;
       if (this.nextRenderTime < now - frameInterval * 2) this.nextRenderTime = now + frameInterval;
     }
   }
@@ -500,10 +520,14 @@ export class Viewport3d implements ViewportDelegate {
       Math.min(this.pitch.rotation.x + this.pitchDelta * delta, this.maximumCameraPitch),
       this.minimumCameraPitch,
     );
-    const angles = this.clientCameraRotation.frame({
-      yaw: this.yaw.rotation.y,
-      pitch: this.pitch.rotation.x,
-    }, delta, Settings.relaxCameraPitch);
+    const angles = this.clientCameraRotation.frame(
+      {
+        yaw: this.yaw.rotation.y,
+        pitch: this.pitch.rotation.x,
+      },
+      delta,
+      Settings.relaxCameraPitch,
+    );
     this.yaw.rotation.y = angles.yaw;
     this.pitch.rotation.x = angles.pitch;
     this.camera.position.z = Math.max(
@@ -599,7 +623,9 @@ export class Viewport3d implements ViewportDelegate {
         if (!vertices.length || !vertices.every((vertex) => this.isInFrontOfCameraNearPlane(vertex))) return;
       }
       this.projectedClickboxes.set(renderable, {
-        model, worldBounds: bounds ?? undefined, bounds: screenBounds,
+        model,
+        worldBounds: bounds ?? undefined,
+        bounds: screenBounds,
         tolerance: renderable.size === 1 && model.getClickboxTriangles ? 0 : renderable.size === 1 ? 20 : 5,
       });
     });
@@ -612,7 +638,7 @@ export class Viewport3d implements ViewportDelegate {
   private getProjectedMobsAt(point: ScreenPoint): Mob[] {
     const mobs: Mob[] = [];
     const { width, height } = this.canvasDimensions;
-    this.raycaster.setFromCamera(new THREE.Vector2(point.x / width * 2 - 1, 1 - point.y / height * 2), this.camera);
+    this.raycaster.setFromCamera(new THREE.Vector2((point.x / width) * 2 - 1, 1 - (point.y / height) * 2), this.camera);
     this.projectedClickboxes.forEach((clickbox, mob) => {
       const { bounds, tolerance, worldBounds, model } = clickbox;
       if (bounds && !screenBoundsContain(bounds, point, tolerance + 1)) return;
@@ -628,8 +654,9 @@ export class Viewport3d implements ViewportDelegate {
       }
       if (model.getClickboxTriangles) {
         if (!clickbox.vertices) {
-          clickbox.vertices = (model.getClickboxVertices?.() ?? []).map(vertex =>
-            this.isInFrontOfCameraNearPlane(vertex) ? this.projectToClientScreen(vertex) : null);
+          clickbox.vertices = (model.getClickboxVertices?.() ?? []).map((vertex) =>
+            this.isInFrontOfCameraNearPlane(vertex) ? this.projectToClientScreen(vertex) : null,
+          );
           clickbox.triangles = model.getClickboxTriangles();
         }
         clickbox.refined = true;
@@ -648,8 +675,9 @@ export class Viewport3d implements ViewportDelegate {
     const clickbox = this.projectedClickboxes.get(mob);
     if (!clickbox) return [];
     if (!clickbox.hull) {
-      clickbox.hull = convexHull((clickbox.model.getClickboxVertices?.() ?? [])
-        .map((vertex) => this.projectToScreen(vertex)));
+      clickbox.hull = convexHull(
+        (clickbox.model.getClickboxVertices?.() ?? []).map((vertex) => this.projectToScreen(vertex)),
+      );
       if (clickbox.hull.length < 3) this.projectedClickboxes.delete(mob);
     }
     return clickbox.hull;
@@ -658,8 +686,10 @@ export class Viewport3d implements ViewportDelegate {
   private projectBoundsToScreen(bounds: THREE.Box3): ScreenBounds {
     const result = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
     for (const point of this.projectBoxCorners(bounds)) {
-      result.minX = Math.min(result.minX, point.x); result.maxX = Math.max(result.maxX, point.x);
-      result.minY = Math.min(result.minY, point.y); result.maxY = Math.max(result.maxY, point.y);
+      result.minX = Math.min(result.minX, point.x);
+      result.maxX = Math.max(result.maxX, point.x);
+      result.minY = Math.min(result.minY, point.y);
+      result.maxY = Math.max(result.maxY, point.y);
     }
     return result;
   }
@@ -668,8 +698,11 @@ export class Viewport3d implements ViewportDelegate {
     const points: ScreenPoint[] = [];
     const corner = new THREE.Vector3();
     for (let i = 0; i < 8; i++) {
-      corner.set(i & 1 ? bounds.max.x : bounds.min.x,
-        i & 2 ? bounds.max.y : bounds.min.y, i & 4 ? bounds.max.z : bounds.min.z);
+      corner.set(
+        i & 1 ? bounds.max.x : bounds.min.x,
+        i & 2 ? bounds.max.y : bounds.min.y,
+        i & 4 ? bounds.max.z : bounds.min.z,
+      );
       points.push(this.projectToScreen(corner));
     }
     return points;
@@ -712,17 +745,21 @@ export class Viewport3d implements ViewportDelegate {
       // bounds instead of transforming every model vertex again for UI.
       const boundsVisible = depth && isInFrontOfNearPlane(depth.max, this.camera.near);
       const boundsHidden = depth && !isInFrontOfNearPlane(depth.min, this.camera.near);
-      const modelVertices = boundsVisible || boundsHidden ? [] : model?.getClickboxVertices?.() ?? [];
-      const visibilityPoints = modelVertices.length > 0
-        ? modelVertices
-        : [
-          new THREE.Vector3(center.x, perceivedLocation.z, center.y),
-          new THREE.Vector3(center.x, perceivedLocation.z + logicalHeight, center.y),
-        ];
+      const modelVertices = boundsVisible || boundsHidden ? [] : (model?.getClickboxVertices?.() ?? []);
+      const visibilityPoints =
+        modelVertices.length > 0
+          ? modelVertices
+          : [
+              new THREE.Vector3(center.x, perceivedLocation.z, center.y),
+              new THREE.Vector3(center.x, perceivedLocation.z + logicalHeight, center.y),
+            ];
       return {
         logicalHeight,
-        visible: boundsVisible ? true : boundsHidden ? false
-          : visibilityPoints.every((point) => this.isInFrontOfCameraNearPlane(point)),
+        visible: boundsVisible
+          ? true
+          : boundsHidden
+            ? false
+            : visibilityPoints.every((point) => this.isInFrontOfCameraNearPlane(point)),
         atHeight: (height) => translator(center, perceivedLocation.z + height),
       };
     };
@@ -744,19 +781,24 @@ export class Viewport3d implements ViewportDelegate {
           // Display the union of the actual padded face rectangles. These
           // projections already exist from picking; never project for debug.
           for (let i = 0; i < triangles.length; i += 3) {
-            const a = vertices[triangles[i]], b = vertices[triangles[i + 1]], c = vertices[triangles[i + 2]];
+            const a = vertices[triangles[i]],
+              b = vertices[triangles[i + 1]],
+              c = vertices[triangles[i + 2]];
             if (!a || !b || !c) continue;
             const face = projectedTriangleBounds(a, b, c);
-            this.uiCanvasContext.rect(face.minX - 5, face.minY - 5,
-              face.maxX - face.minX + 10, face.maxY - face.minY + 10);
+            this.uiCanvasContext.rect(
+              face.minX - 5,
+              face.minY - 5,
+              face.maxX - face.minX + 10,
+              face.maxY - face.minY + 10,
+            );
           }
         } else if (refined && hull && hull.length >= 3) {
           this.uiCanvasContext.moveTo(hull[0].x, hull[0].y);
           hull.slice(1).forEach((point) => this.uiCanvasContext.lineTo(point.x, point.y));
         } else {
           // Amber is the conservative pointer-rejection rectangle.
-          this.uiCanvasContext.rect(bounds.minX, bounds.minY,
-            bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+          this.uiCanvasContext.rect(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
         }
         this.uiCanvasContext.closePath();
         this.uiCanvasContext.fillStyle = refined ? "rgba(0, 255, 255, 0.12)" : "rgba(255, 180, 0, 0.08)";
@@ -795,8 +837,10 @@ export class Viewport3d implements ViewportDelegate {
     const { width, height } = this.canvasDimensions;
     // The client adds an integer viewport centre to an integer-divided offset.
     // Truncate the offset toward zero, rather than rounding the final pixel.
-    return { x: Math.floor(width / 2) + Math.trunc(projected.x * width / 2),
-      y: Math.floor(height / 2) + Math.trunc(-projected.y * height / 2) };
+    return {
+      x: Math.floor(width / 2) + Math.trunc((projected.x * width) / 2),
+      y: Math.floor(height / 2) + Math.trunc((-projected.y * height) / 2),
+    };
   }
 
   // return intersection with world object or world coordinates from canvas coordinates
@@ -808,8 +852,8 @@ export class Viewport3d implements ViewportDelegate {
     const projectedMobs = this.getProjectedMobsAt(point);
 
     const intersections = this.raycaster.intersectObjects(
-      this.scene.children.filter((child) =>
-        child.userData.clickable === true && !this.projectedClickboxes.has(child.userData.unit),
+      this.scene.children.filter(
+        (child) => child.userData.clickable === true && !this.projectedClickboxes.has(child.userData.unit),
       ),
       true,
     );
@@ -839,8 +883,11 @@ export class Viewport3d implements ViewportDelegate {
 
   private floorTileAt(point: ScreenPoint): Location | null {
     const { width, height } = this.canvasDimensions;
-    this.raycaster.setFromCamera(new THREE.Vector2(point.x / width * 2 - 1, 1 - point.y / height * 2), this.camera);
-    const floor = this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, -1, 0), FLOOR_Y_POS), new THREE.Vector3());
+    this.raycaster.setFromCamera(new THREE.Vector2((point.x / width) * 2 - 1, 1 - (point.y / height) * 2), this.camera);
+    const floor = this.raycaster.ray.intersectPlane(
+      new THREE.Plane(new THREE.Vector3(0, -1, 0), FLOOR_Y_POS),
+      new THREE.Vector3(),
+    );
     return floor && { x: Math.floor(floor.x), y: Math.floor(floor.z) + 1 };
   }
 
@@ -861,7 +908,12 @@ export class Viewport3d implements ViewportDelegate {
 
   projectTile(tile: Location): ScreenPoint | null {
     const visible = this.clipToNearPlane(
-      [[0, -1], [1, -1], [1, 0], [0, 0]].map(([dx, dz]) => new THREE.Vector3(tile.x + dx, FLOOR_Y_POS, tile.y + dz)),
+      [
+        [0, -1],
+        [1, -1],
+        [1, 0],
+        [0, 0],
+      ].map(([dx, dz]) => new THREE.Vector3(tile.x + dx, FLOOR_Y_POS, tile.y + dz)),
     );
     if (visible.length === 0) return null;
     const projected = visible.map((vertex) => this.projectToScreen(vertex));
@@ -880,7 +932,12 @@ export class Viewport3d implements ViewportDelegate {
       x: Math.min(Math.max(centre.x, footprint.minX), footprint.maxX),
       y: Math.min(Math.max(centre.y, footprint.minY), footprint.maxY),
     };
-    const reach = Math.max(start.x - footprint.minX, footprint.maxX - start.x, start.y - footprint.minY, footprint.maxY - start.y);
+    const reach = Math.max(
+      start.x - footprint.minX,
+      footprint.maxX - start.x,
+      start.y - footprint.minY,
+      footprint.maxY - start.y,
+    );
     for (let distance = 0; distance <= reach; distance++) {
       const point = squareRing(start, distance).find((candidate) => {
         if (!screenBoundsContain(footprint, candidate)) return false;

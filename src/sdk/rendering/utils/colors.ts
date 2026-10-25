@@ -20,7 +20,7 @@ export function cacheColorToRgb(value: number): [number, number, number] {
 
 /** Resolve a spot-animation recolour before colour-space conversion. */
 export function resolveCacheColor(baseColor: number, faceColor?: number, recolor?: CacheRecolorMap) {
-  return faceColor == null ? baseColor : recolor?.[String(faceColor)] ?? baseColor;
+  return faceColor == null ? baseColor : (recolor?.[String(faceColor)] ?? baseColor);
 }
 
 export function cacheColorsToRgb(colors: number[]) {

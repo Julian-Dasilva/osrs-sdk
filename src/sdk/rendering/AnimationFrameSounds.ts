@@ -47,7 +47,11 @@ export function frameSoundsBetween(
   const crossed: Array<TimedFrameSounds & { absoluteTime: number }> = [];
   for (const event of events) {
     let cycle = Math.max(0, Math.floor((from - event.at) / total) + 1);
-    for (let absoluteTime = cycle * total + event.at; absoluteTime <= elapsed; absoluteTime = ++cycle * total + event.at) {
+    for (
+      let absoluteTime = cycle * total + event.at;
+      absoluteTime <= elapsed;
+      absoluteTime = ++cycle * total + event.at
+    ) {
       crossed.push({ ...event, absoluteTime });
     }
   }
@@ -93,19 +97,23 @@ export class AnimationFrameSoundPlayer {
     this.elapsed = null;
   }
 
-  advance(animationId: number, animation: CacheRenderAnimation, elapsed: number, looping: boolean, sourceLocation?: Location) {
+  advance(
+    animationId: number,
+    animation: CacheRenderAnimation,
+    elapsed: number,
+    looping: boolean,
+    sourceLocation?: Location,
+  ) {
     const previous = this.animationId === animationId ? this.elapsed : null;
     for (const variants of frameSoundsBetween(animation, previous, elapsed, looping)) {
       const sound = chooseFrameSound(variants);
       if (sound) {
         const isAreaSound = (sound.location & 31) > 0;
-        const area = isAreaSound && sourceLocation
-          ? { location: sourceLocation, range: sound.location & 255, retain: sound.retain & 31 }
-          : undefined;
-        SoundCache.play(
-          new Sound(cacheSound(sound.id), CACHE_ANIMATION_SOUND_VOLUME, this.delayMs, area),
-          isAreaSound,
-        );
+        const area =
+          isAreaSound && sourceLocation
+            ? { location: sourceLocation, range: sound.location & 255, retain: sound.retain & 31 }
+            : undefined;
+        SoundCache.play(new Sound(cacheSound(sound.id), CACHE_ANIMATION_SOUND_VOLUME, this.delayMs, area), isAreaSound);
       }
     }
     this.animationId = animationId;

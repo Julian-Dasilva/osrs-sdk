@@ -3,7 +3,6 @@ import * as THREE from "three";
 import { Location3 } from "../Location";
 
 export interface Model {
-
   draw(
     scene: THREE.Scene,
     clockDelta: number,
@@ -32,7 +31,7 @@ export interface Model {
   /**
    * Conservative world bounds of those vertices. Used for early filtering to avoid computing expensive clickbox bounds unless
    * the mouse is near the model.
-  */
+   */
   getClickboxBounds?(): THREE.Box3 | null;
 
   /** Triangle indices into getClickboxVertices(), excluding client-hidden faces. */

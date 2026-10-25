@@ -15,7 +15,9 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { ArcProjectileMotionInterpolator } from "../../sdk/weapons/Projectile";
 
 export class TwistedBow extends RangedWeapon {
-  get cacheItemId(): number { return CACHE_ASSETS.items.twistedBow.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.twistedBow.id;
+  }
   constructor(geno = false) {
     super({
       visuals: {

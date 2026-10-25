@@ -12,7 +12,10 @@ export class TileMarkerModel implements Model {
   private outline: THREE.Mesh;
   private material: THREE.MeshBasicMaterial;
 
-  constructor(private renderable: Renderable, renderOrder: number | null) {
+  constructor(
+    private renderable: Renderable,
+    renderOrder: number | null,
+  ) {
     const { size } = renderable;
     this.outline = createTileIndicator(size, renderable.colorHex, renderOrder);
     this.material = this.outline.material as THREE.MeshBasicMaterial;

@@ -18,7 +18,6 @@ export interface Locatable {
 }
 
 export class LocationUtils {
-  
   static closestPointTo(x: number, y: number, mob: Locatable) {
     const corners = [];
     for (let xx = 0; xx < mob.size; xx++) {

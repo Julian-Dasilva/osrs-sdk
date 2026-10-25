@@ -49,7 +49,10 @@ describe("clicks queued for the world tick", () => {
     press({ x: 20, y: 14 });
     press({ x: 14, y: 20 });
 
-    expect(tilesOverTicks(2)).toEqual([{ x: 14, y: 16 }, { x: 14, y: 18 }]);
+    expect(tilesOverTicks(2)).toEqual([
+      { x: 14, y: 16 },
+      { x: 14, y: 18 },
+    ]);
   });
 
   test("a click after a tick has run waits for the next tick", () => {
@@ -58,7 +61,11 @@ describe("clicks queued for the world tick", () => {
     press({ x: 16, y: 20 });
     const beforeTheNextTick = { ...player.location };
 
-    expect([beforeTheNextTick, ...tilesOverTicks(2)]).toEqual([{ x: 16, y: 14 }, { x: 16, y: 16 }, { x: 16, y: 18 }]);
+    expect([beforeTheNextTick, ...tilesOverTicks(2)]).toEqual([
+      { x: 16, y: 14 },
+      { x: 16, y: 16 },
+      { x: 16, y: 18 },
+    ]);
   });
 
   test("with an input delay, each click registers on the first tick after its delay", () => {
@@ -73,7 +80,11 @@ describe("clicks queued for the world tick", () => {
     jest.advanceTimersByTime(20);
     const at100 = tilesOverTicks(1)[0];
 
-    expect([at79, at80, at100]).toEqual([{ x: 14, y: 14 }, { x: 16, y: 14 }, { x: 16, y: 16 }]);
+    expect([at79, at80, at100]).toEqual([
+      { x: 14, y: 14 },
+      { x: 16, y: 14 },
+      { x: 16, y: 16 },
+    ]);
   });
 
   test("a correction registers while eight earlier clicks still wait out the input delay", () => {

@@ -46,7 +46,7 @@ export class BaseControls {
   panelClickUp(x: number, y: number) {
     //
   }
-  
+
   // called when the mouse is released, even outside the panel
   onMouseUp() {
     //

@@ -6,7 +6,9 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { Assets } from "../../sdk/utils/Assets";
 
 export class FerociousGloves extends Gloves {
-  get cacheItemId(): number { return CACHE_ASSETS.items.ferociousGloves.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.ferociousGloves.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

@@ -6,19 +6,27 @@ import { TestRegion } from "../../src/sdk/testing/TestRegion";
 import { World } from "../../src/sdk/World";
 
 class PathingNpc extends TestNpc {
-  override get attackRange() { return 0; }
+  override get attackRange() {
+    return 0;
+  }
 }
 
 class OneTilePathingNpc extends PathingNpc {
-  override get size() { return 1; }
+  override get size() {
+    return 1;
+  }
 }
 
 class MeleePathingNpc extends TestNpc {
-  override get attackRange() { return 1; }
+  override get attackRange() {
+    return 1;
+  }
 }
 
 class ThreeTilePillar extends InvisibleMovementBlocker {
-  override get size() { return 3; }
+  override get size() {
+    return 3;
+  }
 }
 
 test("large NPCs can cut diagonal corners when their destination footprint is clear", () => {

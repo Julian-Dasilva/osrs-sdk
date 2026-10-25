@@ -6,7 +6,9 @@ import { Assets } from "../../sdk/utils/Assets";
 import { Cape } from "../../sdk/gear/Cape";
 
 export class InfernalCape extends Cape {
-  get cacheItemId(): number { return CACHE_ASSETS.items.infernalCape.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.infernalCape.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get itemName(): ItemName {

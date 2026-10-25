@@ -52,9 +52,14 @@ export class BarrageSpell extends MagicWeapon {
             return;
           }
           alreadyCastedOn.push(mob);
-          this.attack(from, mob, { magicBaseSpellDamage: 30, attackStyle: "magic" }, {
-            visuals: { hidden: true },
-          });
+          this.attack(
+            from,
+            mob,
+            { magicBaseSpellDamage: 30, attackStyle: "magic" },
+            {
+              visuals: { hidden: true },
+            },
+          );
         });
       });
     } else {

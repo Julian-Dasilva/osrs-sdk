@@ -1,27 +1,27 @@
 const path = require("path");
 const webpack = require("webpack");
-const { merge } = require('webpack-merge');
+const { merge } = require("webpack-merge");
 const CopyPlugin = require("copy-webpack-plugin");
 
-const common = require('./webpack.common.js');
+const common = require("./webpack.common.js");
 
 // used for dev mode only
 module.exports = merge(common, {
-  mode: 'development',
-  devtool: 'inline-source-map',
-  entry: './sample/index.ts',
+  mode: "development",
+  devtool: "inline-source-map",
+  entry: "./sample/index.ts",
   output: {
     filename: "sample.js",
     path: path.resolve(__dirname, "dist"),
-    publicPath: '',
+    publicPath: "",
   },
   devServer: {
     contentBase: path.join(__dirname, "_bundles"),
     compress: true,
     port: 8000,
-    host: '0.0.0.0',
+    host: "0.0.0.0",
     disableHostCheck: true,
-    openPage: 'http://localhost:8000/'
+    openPage: "http://localhost:8000/",
   },
   plugins: [
     // Bake the deployment URL into the sample bundle when supplied by the

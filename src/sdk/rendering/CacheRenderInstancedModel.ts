@@ -16,14 +16,24 @@ import { cacheColorsToRgba, normalizeCacheAlpha } from "./utils/colors";
 // instances move between frame buckets while retaining their own clock.
 const DEFAULT_MAX_INSTANCES = 256;
 let hiddenMatrixValue: THREE.Matrix4 | undefined;
-const hiddenMatrix = () => hiddenMatrixValue ??= new THREE.Matrix4().makeScale(0, 0, 0);
+const hiddenMatrix = () => (hiddenMatrixValue ??= new THREE.Matrix4().makeScale(0, 0, 0));
 
 type AnimationFrameMesh = { mesh: THREE.InstancedMesh; active: Set<number> };
 type Pool = {
-  ready: Promise<void>; capacity: number; next: number; free: number[]; active: Set<number>;
-  frames: AnimationFrameMesh[]; scaleX: number; scaleY: number;
-  animationId: number; animation?: CacheRenderAnimation; animationTotal: number; loopElapsed: number;
-  frameSoundPlayer: AnimationFrameSoundPlayer; frameSoundsReady: Promise<void>;
+  ready: Promise<void>;
+  capacity: number;
+  next: number;
+  free: number[];
+  active: Set<number>;
+  frames: AnimationFrameMesh[];
+  scaleX: number;
+  scaleY: number;
+  animationId: number;
+  animation?: CacheRenderAnimation;
+  animationTotal: number;
+  loopElapsed: number;
+  frameSoundPlayer: AnimationFrameSoundPlayer;
+  frameSoundsReady: Promise<void>;
 };
 
 export type CacheRenderInstancedModelOptions = {
@@ -62,7 +72,15 @@ function posedFrames(
     const posedPositions = new Float32Array(positions);
     const posedAlphas = new Float32Array(baseAlphas);
     if (rawFrames[frame]) {
-      applyRawFrame(posedPositions, vertexGroups, sourceVertices, rawFrames[frame], undefined, posedAlphas, alphaGroups);
+      applyRawFrame(
+        posedPositions,
+        vertexGroups,
+        sourceVertices,
+        rawFrames[frame],
+        undefined,
+        posedAlphas,
+        alphaGroups,
+      );
     } else if (mayaFrames[frame]) {
       applyMayaFrame(posedPositions, mayaFrames[frame], animayaGroups, animayaScales);
     } else if (expandedFrames[frame]?.length === posedPositions.length) {
@@ -91,44 +109,60 @@ export class CacheRenderInstancedModel implements Model {
     private options: CacheRenderInstancedModelOptions = {},
   ) {}
 
-  static forRenderable(renderable: Renderable, reference: CacheRenderReference, options?: CacheRenderInstancedModelOptions) {
+  static forRenderable(
+    renderable: Renderable,
+    reference: CacheRenderReference,
+    options?: CacheRenderInstancedModelOptions,
+  ) {
     return new CacheRenderInstancedModel(renderable, reference, DEFAULT_MAX_INSTANCES, options);
   }
 
   private async ensurePool() {
     if (this.pool) return this.pool;
     const bundle = await CacheRender.bundle();
-    const ids = this.reference.kind === "spotAnim"
-      ? bundle.spotAnimIds(this.reference)
-      : [...bundle.assetIds(this.reference), ...bundle.sharedAssetIds(this.reference)];
+    const ids =
+      this.reference.kind === "spotAnim"
+        ? bundle.spotAnimIds(this.reference)
+        : [...bundle.assetIds(this.reference), ...bundle.sharedAssetIds(this.reference)];
     const key = poolKey(this.reference, ids, bundle.manifest.bundleVersion);
     let pool = pools.get(key);
     if (!pool) {
       const placement = this.reference.kind === "spotAnim" ? this.reference.spotAnims[0] : undefined;
       pool = {
-        ready: Promise.resolve(), capacity: this.maxInstances, next: 0, free: [], active: new Set(), frames: [],
-        scaleX: 1, scaleY: 1, animationId: -1, animationTotal: 0, loopElapsed: 0,
-        frameSoundPlayer: new AnimationFrameSoundPlayer(), frameSoundsReady: Promise.resolve(),
+        ready: Promise.resolve(),
+        capacity: this.maxInstances,
+        next: 0,
+        free: [],
+        active: new Set(),
+        frames: [],
+        scaleX: 1,
+        scaleY: 1,
+        animationId: -1,
+        animationTotal: 0,
+        loopElapsed: 0,
+        frameSoundPlayer: new AnimationFrameSoundPlayer(),
+        frameSoundsReady: Promise.resolve(),
       };
       pool.ready = Promise.all(ids.map((id) => cachedPayload(bundle, id))).then((payloads) => {
         const payload = mergePayloads(payloads);
         const spotPayload = payloads[0];
         const metadata = spotPayload?.spotAnim ?? payload.spotAnim ?? {};
-        pool!.scaleX = (payload.scale ?? 1) * (metadata.resizeX ?? 128) / 128;
-        pool!.scaleY = (payload.scale ?? 1) * (metadata.resizeY ?? 128) / 128;
+        pool!.scaleX = ((payload.scale ?? 1) * (metadata.resizeX ?? 128)) / 128;
+        pool!.scaleY = ((payload.scale ?? 1) * (metadata.resizeY ?? 128)) / 128;
         const groups = payload.vertexGroups ?? [];
         const sources = payload.sourceVertices ?? [];
         const baseAlphas = new Float32Array(
           payload.alphas?.map(normalizeCacheAlpha) ?? Array(payload.positions.length / 3).fill(0),
         );
         const alphaGroups = payload.alphaGroups ?? [];
-        const animationId = this.reference.kind === "spotAnim" ? metadata.animationId : payload.poseMap?.["0"] ?? 0;
+        const animationId = this.reference.kind === "spotAnim" ? metadata.animationId : (payload.poseMap?.["0"] ?? 0);
         const animation = payload.animations?.[String(animationId)];
         pool!.animationId = animationId;
         pool!.animation = animation;
         pool!.animationTotal = animation ? sampleAnimation(animation, 0, false).total : 0;
-        pool!.frameSoundsReady = preloadAnimationFrameSounds(animation ? [animation] : [])
-          .catch((error) => console.error("[osrs-sdk] Cache animation sound preload failed", error));
+        pool!.frameSoundsReady = preloadAnimationFrameSounds(animation ? [animation] : []).catch((error) =>
+          console.error("[osrs-sdk] Cache animation sound preload failed", error),
+        );
 
         const terrain = this.reference.kind === "asset" && this.reference.assetId.endsWith("-terrain");
         const materialOptions = {
@@ -208,59 +242,91 @@ export class CacheRenderInstancedModel implements Model {
     bucket.mesh.instanceMatrix.needsUpdate = true;
   }
 
-  draw(scene: THREE.Scene, clockDelta: number, _tickPercent: number, location: Location3, rotation: number, pitch: number, visible: boolean, modelOffsets: Location3[]) {
-    this.ensurePool().then((pool) => {
-      if (this.destroyed || this.slot < 0 || !pool.frames.length) return;
-      const oneShot = this.reference.kind === "spotAnim";
-      if (oneShot && visible) {
-        if (this.started) this.elapsed += Math.max(0, clockDelta);
-        else this.started = true;
-      } else {
-        let leader = pool.capacity;
-        pool.active.forEach((slot) => { leader = Math.min(leader, slot); });
-        if (this.slot === leader && visible) pool.loopElapsed += Math.max(0, clockDelta);
-      }
-
-      const placement = this.reference.kind === "spotAnim" ? this.reference.spotAnims[0] : undefined;
-      const animationTime = (oneShot ? this.elapsed : pool.loopElapsed) - (placement?.delay ?? 0) / CLIENT_CYCLES_PER_SECOND;
-      const hasAnimation = Boolean(pool.animation && (pool.animation.rawFrames?.length || pool.animation.frames.length || pool.animation.mayaFrames?.length));
-      const animationSample = pool.animation ? sampleAnimation(pool.animation, animationTime, !oneShot) : undefined;
-      const animationEnded = oneShot && animationTime >= 0 && (!hasAnimation || pool.animationTotal <= 0 || animationTime >= pool.animationTotal);
-      if (animationEnded && !this.completionNotified) {
-        this.completionNotified = true;
-        this.options.onSpotAnimComplete?.();
-      }
-
-      const soundLocation = {
-        x: location.x + (this.renderable.size - 1) / 2,
-        y: location.y - (this.renderable.size - 1) / 2,
-      };
-      if (pool.animation && animationTime >= 0) {
-        if (oneShot) this.frameSoundPlayer.advance(pool.animationId, pool.animation, Math.min(animationTime, pool.animationTotal), false, soundLocation);
-        else {
+  draw(
+    scene: THREE.Scene,
+    clockDelta: number,
+    _tickPercent: number,
+    location: Location3,
+    rotation: number,
+    pitch: number,
+    visible: boolean,
+    modelOffsets: Location3[],
+  ) {
+    this.ensurePool()
+      .then((pool) => {
+        if (this.destroyed || this.slot < 0 || !pool.frames.length) return;
+        const oneShot = this.reference.kind === "spotAnim";
+        if (oneShot && visible) {
+          if (this.started) this.elapsed += Math.max(0, clockDelta);
+          else this.started = true;
+        } else {
           let leader = pool.capacity;
-          pool.active.forEach((slot) => { leader = Math.min(leader, slot); });
-          if (this.slot === leader) pool.frameSoundPlayer.advance(pool.animationId, pool.animation, pool.loopElapsed, true, soundLocation);
+          pool.active.forEach((slot) => {
+            leader = Math.min(leader, slot);
+          });
+          if (this.slot === leader && visible) pool.loopElapsed += Math.max(0, clockDelta);
         }
-      }
 
-      const offset = modelOffsets[0];
-      const size = this.renderable.size;
-      this.worldPosition.set(location.x + size / 2 + (offset?.x ?? 0), location.z - 0.49 + (offset?.z ?? 0), location.y - size / 2 + (offset?.y ?? 0));
-      this.transform.position.copy(this.worldPosition);
-      this.transform.position.y += placement?.height ?? 0;
-      this.transform.rotation.order = "YXZ";
-      const basisRotation = oneShot ? 0 : Math.PI / 2;
-      this.transform.rotation.set(pitch, rotation + basisRotation + (placement?.rotation ?? 0) * Math.PI / 1024, 0);
-      this.transform.scale.set(pool.scaleX, pool.scaleY, pool.scaleX);
-      this.transform.updateMatrix();
+        const placement = this.reference.kind === "spotAnim" ? this.reference.spotAnims[0] : undefined;
+        const animationTime =
+          (oneShot ? this.elapsed : pool.loopElapsed) - (placement?.delay ?? 0) / CLIENT_CYCLES_PER_SECOND;
+        const hasAnimation = Boolean(
+          pool.animation &&
+            (pool.animation.rawFrames?.length || pool.animation.frames.length || pool.animation.mayaFrames?.length),
+        );
+        const animationSample = pool.animation ? sampleAnimation(pool.animation, animationTime, !oneShot) : undefined;
+        const animationEnded =
+          oneShot &&
+          animationTime >= 0 &&
+          (!hasAnimation || pool.animationTotal <= 0 || animationTime >= pool.animationTotal);
+        if (animationEnded && !this.completionNotified) {
+          this.completionNotified = true;
+          this.options.onSpotAnimComplete?.();
+        }
 
-      const shown = visible && animationTime >= 0 && !animationEnded;
-      const frame = shown
-        ? (hasAnimation ? animationSample!.frame : 0)
-        : -1;
-      this.setFrame(scene, pool, frame, this.transform.matrix);
-    }).catch((error) => console.error("[osrs-sdk] Cache render instance preload failed", error));
+        const soundLocation = {
+          x: location.x + (this.renderable.size - 1) / 2,
+          y: location.y - (this.renderable.size - 1) / 2,
+        };
+        if (pool.animation && animationTime >= 0) {
+          if (oneShot)
+            this.frameSoundPlayer.advance(
+              pool.animationId,
+              pool.animation,
+              Math.min(animationTime, pool.animationTotal),
+              false,
+              soundLocation,
+            );
+          else {
+            let leader = pool.capacity;
+            pool.active.forEach((slot) => {
+              leader = Math.min(leader, slot);
+            });
+            if (this.slot === leader)
+              pool.frameSoundPlayer.advance(pool.animationId, pool.animation, pool.loopElapsed, true, soundLocation);
+          }
+        }
+
+        const offset = modelOffsets[0];
+        const size = this.renderable.size;
+        this.worldPosition.set(
+          location.x + size / 2 + (offset?.x ?? 0),
+          location.z - 0.49 + (offset?.z ?? 0),
+          location.y - size / 2 + (offset?.y ?? 0),
+        );
+        this.transform.position.copy(this.worldPosition);
+        this.transform.position.y += placement?.height ?? 0;
+        this.transform.rotation.order = "YXZ";
+        const basisRotation = oneShot ? 0 : Math.PI / 2;
+        this.transform.rotation.set(pitch, rotation + basisRotation + ((placement?.rotation ?? 0) * Math.PI) / 1024, 0);
+        this.transform.scale.set(pool.scaleX, pool.scaleY, pool.scaleX);
+        this.transform.updateMatrix();
+
+        const shown = visible && animationTime >= 0 && !animationEnded;
+        const frame = shown ? (hasAnimation ? animationSample!.frame : 0) : -1;
+        this.setFrame(scene, pool, frame, this.transform.matrix);
+      })
+      .catch((error) => console.error("[osrs-sdk] Cache render instance preload failed", error));
   }
 
   destroy(scene: THREE.Scene) {
@@ -273,7 +339,9 @@ export class CacheRenderInstancedModel implements Model {
     }
   }
 
-  getWorldPosition() { return this.worldPosition; }
+  getWorldPosition() {
+    return this.worldPosition;
+  }
 
   async preload() {
     const pool = await this.ensurePool();

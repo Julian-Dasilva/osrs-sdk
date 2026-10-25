@@ -38,11 +38,7 @@ export class KeyBindingButton implements Component {
     context.font = 16 * scale + "px OSRS";
     context.textBaseline = "middle";
     context.textAlign = "center";
-    context.fillText(
-      this.label(),
-      panelX + (this.xOffset + 30) * scale,
-      panelY + (this.yOffset + 30) * scale,
-    );
+    context.fillText(this.label(), panelX + (this.xOffset + 30) * scale, panelY + (this.yOffset + 30) * scale);
     context.restore();
   }
 

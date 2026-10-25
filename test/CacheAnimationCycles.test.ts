@@ -67,16 +67,14 @@ async function fixture(
     bytes.set(json, 8);
     return bytes.buffer;
   };
-  jest
-    .spyOn(CacheRender, "bundle")
-    .mockResolvedValue({
-      manifest: { bundleVersion: `animation-cycle-${fixtureId++}` },
-      assetIds: () => ["body"],
-      sharedAssetIds: () => [],
-      spotAnimIds: () => [],
-      allSpotAnimIds: () => (effect ? ["effect"] : []),
-      fetchAsset: async (id: string) => encode(id === "effect" ? effect : payload),
-    } as any);
+  jest.spyOn(CacheRender, "bundle").mockResolvedValue({
+    manifest: { bundleVersion: `animation-cycle-${fixtureId++}` },
+    assetIds: () => ["body"],
+    sharedAssetIds: () => [],
+    spotAnimIds: () => [],
+    allSpotAnimIds: () => (effect ? ["effect"] : []),
+    fetchAsset: async (id: string) => encode(id === "effect" ? effect : payload),
+  } as any);
   const renderable = {
     size: 1,
     selectable: false,
@@ -92,7 +90,10 @@ async function fixture(
   await model.preload();
   const scene = new THREE.Scene();
   const draw = (fraction = 0) => model.draw(scene, 1 / 120, 0, { x: 0, y: 0, z: 0 }, 0, 0, true, [], fraction);
-  const cycle = () => { model.clientTick(); draw(); };
+  const cycle = () => {
+    model.clientTick();
+    draw();
+  };
   const position = (model as any).mesh.geometry.getAttribute("position") as THREE.BufferAttribute;
   const sound = jest.spyOn((model as any).frameSoundPlayer, "advance");
   return { model, draw, cycle, position, sound, renderable };
@@ -389,7 +390,9 @@ test("attached effects smooth between ticks without changing their delay or life
   const effect: CacheRenderPayload = {
     version: 2,
     positions: [1, 0, 0, 1, 0, 0, 1, 0, 0],
-    indices: [0, 1, 2], vertexGroups: [[0, 1, 2]], sourceVertices: [0, 1, 2],
+    indices: [0, 1, 2],
+    vertexGroups: [[0, 1, 2]],
+    sourceVertices: [0, 1, 2],
     spotAnim: { id: 5, animationId: 300 },
     animations: { 300: animation([translation(0), translation(128)], [1, 1]) },
   };
@@ -413,7 +416,8 @@ test("baked effect frames interpolate and placement changes invalidate presentat
   const positions = (x: number) => [x, 0, 0, x, 0, 0, x, 0, 0];
   const effect: CacheRenderPayload = {
     version: 2,
-    positions: positions(1), indices: [0, 1, 2],
+    positions: positions(1),
+    indices: [0, 1, 2],
     spotAnim: { id: 5, animationId: 300 },
     animations: { 300: { frames: [positions(1), positions(3)], lengths: [1, 1] } },
   };
@@ -431,7 +435,6 @@ test("baked effect frames interpolate and placement changes invalidate presentat
   draw(0.5); // the fraction remains zero with smoothing disabled
   expect(spot.mesh.visible).toBe(false);
 });
-
 
 test("the world exposes fractional client time after catch-up without extra ticks", () => {
   const world = new World();

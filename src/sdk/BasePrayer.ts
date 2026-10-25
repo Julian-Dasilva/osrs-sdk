@@ -120,11 +120,12 @@ export class BasePrayer {
     this.nextActiveState = !activeState;
     this.handleConflicts(player);
   }
-  
+
   private handleConflicts(player: Player) {
-    const conflictingPrayers = player.prayerController.prayers
-      .filter(it => it !== this && this.groups.some(group => it?.groups.includes(group)));
-    conflictingPrayers.forEach(prayer => {
+    const conflictingPrayers = player.prayerController.prayers.filter(
+      (it) => it !== this && this.groups.some((group) => it?.groups.includes(group)),
+    );
+    conflictingPrayers.forEach((prayer) => {
       prayer.nextActiveState = false;
     });
   }

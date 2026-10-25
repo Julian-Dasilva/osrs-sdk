@@ -1,47 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
     <!-- <link rel="manifest" href="/manifest.json" /> -->
-    <link rel="apple-touch-icon" href="/webappicon.png">
-    <meta name="application-name" content="Inferno Trainer">
-    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/webappicon.png" />
+    <meta name="application-name" content="Inferno Trainer" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <script src="//wurfl.io/wurfl.js" crossorigin></script>
     <title>OSRS SDK Trainer</title>
     <style>
       @font-face {
-        font-family: 'OSRS';
+        font-family: "OSRS";
         src: url(/assets/fonts/RuneScape-UF.woff) format("woff");
         src: url(/assets/fonts/RuneScape-UF.woff2) format("woff2");
       }
 
       @font-face {
-        font-family: 'Stats_11';
+        font-family: "Stats_11";
         src: url(/assets/fonts/RuneScape-Plain-11.woff) format("woff");
         src: url(/assets/fonts/RuneScape-Plain-11.woff2) format("woff2");
       }
 
       @font-face {
-        font-family: 'Stats_12';
+        font-family: "Stats_12";
         src: url(/assets/fonts/RuneScape-Plain-12.woff) format("woff");
         src: url(/assets/fonts/RuneScape-Plain-12.woff2) format("woff2");
       }
       body {
-          overscroll-behavior: contain;
-          overscroll-behavior-y: none;
+        overscroll-behavior: contain;
+        overscroll-behavior-y: none;
       }
 
-      #world{
+      #world {
         position: absolute;
       }
       .hidden {
-        display: none !important; 
+        display: none !important;
       }
       body {
-        font-family: 'OSRS';
+        font-family: "OSRS";
         background: black;
         font-weight: normal;
         font-style: normal;
@@ -55,7 +55,10 @@
         border-bottom: 0;
       }
 
-      button, input[type="text"], #right_panel a, select {
+      button,
+      input[type="text"],
+      #right_panel a,
+      select {
         border: 1px #6b5b3e solid;
         background-color: #211a12;
         padding: 10px 0;
@@ -65,7 +68,7 @@
         font-size: 16px;
         margin: 4px 2px;
         cursor: pointer;
-        font-family: 'OSRS';
+        font-family: "OSRS";
         color: white;
         width: 100%;
       }
@@ -80,14 +83,13 @@
         width: 30px;
       }
 
-
       .stats-font-11 {
-        font-family: 'Stats 11'; 
+        font-family: "Stats 11";
         font-size: 11;
       }
 
       .stats-font-12 {
-        font-family: 'Stats 12'; 
+        font-family: "Stats 12";
         font-size: 12;
       }
 
@@ -100,8 +102,9 @@
         pointer-events: none;
       }
 
-      #disclaimer_panel a, a:visited {
-        color: #AAAAFF;
+      #disclaimer_panel a,
+      a:visited {
+        color: #aaaaff;
         pointer-events: all;
       }
 
@@ -114,13 +117,12 @@
         font-size: 60px;
       }
       #set_timer button {
-        width: 96%
+        width: 96%;
       }
 
       canvas {
-        image-rendering: pixelated
+        image-rendering: pixelated;
       }
-
     </style>
   </head>
   <body>
@@ -135,7 +137,7 @@
             this.canvas.height = height;
 
             this.canvas.convertToBlob = () => {
-              return new Promise(resolve => {
+              return new Promise((resolve) => {
                 this.canvas.toBlob(resolve);
               });
             };
@@ -143,9 +145,9 @@
             return this.canvas;
           }
         };
-      }      
+      }
     </script>
-    
+
     <script src="./sample.js"></script>
   </body>
 </html>

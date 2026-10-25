@@ -14,14 +14,7 @@
     "browser": true,
     "es2021": true
   },
-  "ignorePatterns": [
-    "node_modules",
-    "dist",
-    "**/*.js",
-    "**/*.jsx",
-    "**/*.mjs",
-    "**/*.cjs"
-  ],
+  "ignorePatterns": ["node_modules", "dist", "**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"],
   "rules": {
     "typescript/adjacent-overload-signatures": "error",
     "typescript/ban-ts-comment": "error",

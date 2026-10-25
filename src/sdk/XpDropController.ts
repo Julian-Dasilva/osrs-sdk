@@ -123,9 +123,8 @@ export class XpDropController {
       }
       const offsetY = (index - tickPercent) * imageSize + 85;
       const xpString = String(Math.floor(drop.xp));
-      const damageString = Settings.showPredictedHit && drop.damage && drop.skill !== 'hitpoint'
-        ? ` (${drop.damage})`
-        : '';
+      const damageString =
+        Settings.showPredictedHit && drop.damage && drop.skill !== "hitpoint" ? ` (${drop.damage})` : "";
       const xpWidth = this.ctx.measureText(xpString).width;
       const damageWidth = this.ctx.measureText(damageString).width;
       // left-most: predicted damage string
@@ -141,7 +140,7 @@ export class XpDropController {
       if (skillInfo.image) {
         this.ctx.drawImage(
           skillInfo.image,
-          offsetX - xpWidth - damageWidth - imageSize - (2 * scale),
+          offsetX - xpWidth - damageWidth - imageSize - 2 * scale,
           offsetY,
           imageSize,
           imageSize,

@@ -6,7 +6,9 @@ import { Viewport } from "../../src/sdk/Viewport";
 import { World } from "../../src/sdk/World";
 
 class WalkingNpc extends TestNpc {
-  override get attackRange() { return 0; }
+  override get attackRange() {
+    return 0;
+  }
 }
 
 class CountdownRegion extends TestRegion {
@@ -28,7 +30,13 @@ describe("GET READY countdown", () => {
     world = new World();
     region.world = world;
     world.addRegion(region);
-    Viewport.viewport = { reset: jest.fn(), setPlayer: jest.fn(), tick: jest.fn(), draw: jest.fn(), clientTick: jest.fn() } as never;
+    Viewport.viewport = {
+      reset: jest.fn(),
+      setPlayer: jest.fn(),
+      tick: jest.fn(),
+      draw: jest.fn(),
+      clientTick: jest.fn(),
+    } as never;
     jest.spyOn(window, "requestAnimationFrame").mockReturnValue(0);
   });
 
@@ -46,19 +54,31 @@ describe("GET READY countdown", () => {
   test.each([
     ["tickWorld", false, () => world.tickWorld()],
     ["the browser loop", true, () => world.browserLoop(world.nextTickTimer + 1)],
-  ] as const)("after a reset, %s holds units through five ticks of GET READY, steps them from the sixth and stays at 0", (_driver, startWorld, advance) => {
-    const { player, mob } = startFight(startWorld);
+  ] as const)(
+    "after a reset, %s holds units through five ticks of GET READY, steps them from the sixth and stays at 0",
+    (_driver, startWorld, advance) => {
+      const { player, mob } = startFight(startWorld);
 
-    const trace = Array.from({ length: 8 }, () => {
-      advance();
-      return [world.getReadyTimer, mob.location.x, player.attackDelay];
-    });
+      const trace = Array.from({ length: 8 }, () => {
+        advance();
+        return [world.getReadyTimer, mob.location.x, player.attackDelay];
+      });
 
-    expect([world.globalTickCounter, trace]).toEqual([8, [
-      [5, 10, 3], [4, 10, 3], [3, 10, 3], [2, 10, 3], [1, 10, 3],
-      [0, 11, 2], [0, 12, 1], [0, 13, 0],
-    ]]);
-  });
+      expect([world.globalTickCounter, trace]).toEqual([
+        8,
+        [
+          [5, 10, 3],
+          [4, 10, 3],
+          [3, 10, 3],
+          [2, 10, 3],
+          [1, 10, 3],
+          [0, 11, 2],
+          [0, 12, 1],
+          [0, 13, 0],
+        ],
+      ]);
+    },
+  );
 
   test("tickWorld(n) counts GET READY down once for each of its n ticks", () => {
     const { mob } = startFight(false);
@@ -67,6 +87,9 @@ describe("GET READY countdown", () => {
     const afterThree = [world.getReadyTimer, mob.location.x];
     world.tickWorld(3);
 
-    expect([afterThree, [world.getReadyTimer, mob.location.x]]).toEqual([[3, 10], [0, 11]]);
+    expect([afterThree, [world.getReadyTimer, mob.location.x]]).toEqual([
+      [3, 10],
+      [0, 11],
+    ]);
   });
 });

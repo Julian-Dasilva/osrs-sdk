@@ -18,7 +18,9 @@ export class BowOfFaerdhinen extends RangedWeapon {
     return CACHE_ASSETS.sounds.equipFun.id;
   }
 
-  get cacheItemId(): number { return CACHE_ASSETS.items.bowOfFaerdhinen.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.bowOfFaerdhinen.id;
+  }
   constructor() {
     super();
     this.bonuses = {

@@ -4,14 +4,9 @@ import type { Item, Loadout as LoadoutData, LoadoutItemId, UnitEquipment } from 
 
 export type LoadoutRegistry = Map<number, Item>;
 
-export type LoadoutSlot =
-  | { kind: "equipment"; slot: keyof UnitEquipment }
-  | { index: number; kind: "inventory" };
+export type LoadoutSlot = { kind: "equipment"; slot: keyof UnitEquipment } | { index: number; kind: "inventory" };
 
-export type GetLoadoutSubstitutes = (
-  slot: keyof UnitEquipment | null,
-  registry?: LoadoutRegistry,
-) => number[];
+export type GetLoadoutSubstitutes = (slot: keyof UnitEquipment | null, registry?: LoadoutRegistry) => number[];
 
 export type LoadoutProps = {
   loadout: LoadoutData;
@@ -54,13 +49,7 @@ const equipmentWidth = Math.max(...equipmentSlots.map((slot) => slot.left + slot
 const equipmentHeight = Math.max(...equipmentSlots.map((slot) => slot.top + slotSize));
 
 // We currently do not have empty models for these slots, so prevent naked characters for now.
-const equipmentSlotsRequiringItems = new Set<keyof UnitEquipment>([
-  "helmet",
-  "chest",
-  "legs",
-  "gloves",
-  "feet",
-]);
+const equipmentSlotsRequiringItems = new Set<keyof UnitEquipment>(["helmet", "chest", "legs", "gloves", "feet"]);
 
 const slotStyle: React.CSSProperties = {
   alignItems: "center",

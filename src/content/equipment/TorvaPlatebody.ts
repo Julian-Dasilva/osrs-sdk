@@ -6,7 +6,9 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { Assets } from "../../sdk/utils/Assets";
 
 export class TorvaPlatebody extends Chest {
-  get cacheItemId(): number { return CACHE_ASSETS.items.torvaPlatebody.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.torvaPlatebody.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get itemName(): ItemName {

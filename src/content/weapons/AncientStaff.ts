@@ -70,7 +70,6 @@ export class AncientStaff extends MeleeWeapon {
     return [AttackStyle.ACCURATE, AttackStyle.AGGRESSIVECRUSH, AttackStyle.DEFENSIVE, AttackStyle.AUTOCAST];
   }
 
-
   attackStyleCategory(): AttackStyleTypes {
     return AttackStyleTypes.STAFF;
   }

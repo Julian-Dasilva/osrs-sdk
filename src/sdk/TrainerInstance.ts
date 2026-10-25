@@ -60,7 +60,10 @@ export class TrainerInstance {
     viewportReady: false,
   });
 
-  constructor(readonly region: Region, private readonly options: TrainerInstanceOptions = {}) {
+  constructor(
+    readonly region: Region,
+    private readonly options: TrainerInstanceOptions = {},
+  ) {
     this.world.getReadyTimer = options.readyTimer ?? 6;
     region.world = this.world;
     this.world.addRegion(region);

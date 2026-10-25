@@ -15,9 +15,7 @@ export class Assets {
    * Returns the appropriate URL for an asset and also schedules it for preloading.
    */
   static getAssetUrl(asset: string) {
-    const configuredBaseUrl = typeof __OSRS_ASSET_BASE_URL__ !== "undefined"
-      ? __OSRS_ASSET_BASE_URL__
-      : "";
+    const configuredBaseUrl = typeof __OSRS_ASSET_BASE_URL__ !== "undefined" ? __OSRS_ASSET_BASE_URL__ : "";
     const baseUrl = configuredBaseUrl || DEFAULT_OSRS_ASSET_BASE_URL;
     const url = `${baseUrl.replace(/\/$/, "")}/${asset}`;
     if (Assets.loadedAssets[url]) {

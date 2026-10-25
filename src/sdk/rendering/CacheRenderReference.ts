@@ -5,7 +5,13 @@ export type CacheRenderReference =
   /** A precomposed cache payload, used by compiled static scene recipes. */
   | { kind: "asset"; assetId: string; bundleId?: string }
   | { kind: "spotAnim"; spotAnims: CacheRenderSpotAnim[]; bundleId?: string }
-  | { kind: "player"; loadout: Array<string | number>; poses?: Record<string, number>; spotAnims?: CacheRenderSpotAnim[]; bundleId?: string };
+  | {
+      kind: "player";
+      loadout: Array<string | number>;
+      poses?: Record<string, number>;
+      spotAnims?: CacheRenderSpotAnim[];
+      bundleId?: string;
+    };
 
 /** Runtime placement/timing for a cache-derived effect. The cache stores the
  * effect model and sequence, but actor-specific height, offset, and delay are
@@ -31,7 +37,11 @@ export function cacheRenderItemKey(item: string | number): string {
 }
 
 export const CacheRenderReferences = {
-  npc(definitionId: number, spotAnimsOrBundleId?: CacheRenderSpotAnim[] | string, bundleId?: string): CacheRenderReference {
+  npc(
+    definitionId: number,
+    spotAnimsOrBundleId?: CacheRenderSpotAnim[] | string,
+    bundleId?: string,
+  ): CacheRenderReference {
     const spotAnims = Array.isArray(spotAnimsOrBundleId) ? spotAnimsOrBundleId : undefined;
     const resolvedBundleId = typeof spotAnimsOrBundleId === "string" ? spotAnimsOrBundleId : bundleId;
     return { kind: "npc", definitionId, spotAnims, bundleId: resolvedBundleId };
@@ -45,7 +55,12 @@ export const CacheRenderReferences = {
   spotAnim(spotAnims: CacheRenderSpotAnim[], bundleId?: string): CacheRenderReference {
     return { kind: "spotAnim", spotAnims: spotAnims.slice(), bundleId };
   },
-  player(loadout: Array<string | number>, poses?: Record<string, number>, spotAnimsOrBundleId?: CacheRenderSpotAnim[] | string, bundleId?: string): CacheRenderReference {
+  player(
+    loadout: Array<string | number>,
+    poses?: Record<string, number>,
+    spotAnimsOrBundleId?: CacheRenderSpotAnim[] | string,
+    bundleId?: string,
+  ): CacheRenderReference {
     // Preserve equipment-slot order. The cache animation groups are merged in
     // this order; sorting IDs changes the correspondence between concatenated
     // vertices and animation frames.

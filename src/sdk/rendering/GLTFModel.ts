@@ -14,7 +14,7 @@ const loader = new GLTFLoader();
 loader.setMeshoptDecoder(MeshoptDecoder);
 
 // cache a copy of each model
-const globalModelCache: {[name: string]: GLTF} = {};
+const globalModelCache: { [name: string]: GLTF } = {};
 
 const DRAW_HITBOX = false;
 
@@ -25,26 +25,18 @@ export type GLTFModelOptions = {
   scale?: number;
   verticalOffset?: number;
   originOffset?: Location;
-}
+};
 
 /**
  * Render the model using one or more GLTF models. If there are multiple models, they are drawn superimposed on the same spot and are expected
  * to have the same animation set.
  */
 export class GLTFModel implements Model, RenderableListener {
-  static forRenderable(
-    r: Renderable,
-    model: string,
-    options: GLTFModelOptions = {},
-  ) {
+  static forRenderable(r: Renderable, model: string, options: GLTFModelOptions = {}) {
     return new GLTFModel(r, [model], options);
   }
 
-  static forRenderableMulti(
-    r: Renderable,
-    models: string[],
-    options: GLTFModelOptions = {},
-  ) {
+  static forRenderableMulti(r: Renderable, models: string[], options: GLTFModelOptions = {}) {
     return new GLTFModel(r, models, options);
   }
 
@@ -79,7 +71,7 @@ export class GLTFModel implements Model, RenderableListener {
   constructor(
     private renderable: Renderable,
     private models: string[],
-    private options: GLTFModelOptions
+    private options: GLTFModelOptions,
   ) {
     const { size } = renderable;
 
@@ -261,7 +253,7 @@ export class GLTFModel implements Model, RenderableListener {
         });
       }
       this.modelOrder.push(index);
-    }
+    };
     if (model in globalModelCache) {
       // prevents reloading the model from file
       processGltf(globalModelCache[model], true);
@@ -309,10 +301,7 @@ export class GLTFModel implements Model, RenderableListener {
       this.loadedModel.visible = visible;
     }
     this.outlineMaterial.color.set(outlineColor);
-    drawLineOnTop(
-      this.outline,
-      this.renderable.outlineRenderOrder ?? GroundOverlayRenderOrder.ENTITY_INDICATOR,
-    );
+    drawLineOnTop(this.outline, this.renderable.outlineRenderOrder ?? GroundOverlayRenderOrder.ENTITY_INDICATOR);
     if (this.renderable.animationIndex !== this.lastPoseId) {
       // start a new pose if the pose index changes and we're not currently playing an animation
       this.onPoseChanged(this.renderable.animationIndex);
@@ -320,10 +309,10 @@ export class GLTFModel implements Model, RenderableListener {
     }
 
     const { x, y, z } = location;
-     this.outline.position.x = x;
-     this.outline.position.y = -0.49;
-     this.outline.position.z = y;
-     this.outline.visible = this.renderable.drawOutline && visible && Settings.entityIndicatorEnabled;
+    this.outline.position.x = x;
+    this.outline.position.y = -0.49;
+    this.outline.position.z = y;
+    this.outline.visible = this.renderable.drawOutline && visible && Settings.entityIndicatorEnabled;
     const { x: trueX, y: trueY } = this.renderable.getTrueLocation();
     if (this.renderable.drawTrueTile) {
       this.trueTile.position.x = trueX;
@@ -331,10 +320,11 @@ export class GLTFModel implements Model, RenderableListener {
       this.trueTile.position.z = trueY;
       drawLineOnTop(this.trueTile, this.renderable.trueTileRenderOrder ?? GroundOverlayRenderOrder.TRUE_TILE);
     }
-     const trueTileColor = Settings.trueTileColor;
-     (this.trueTile.material as THREE.LineBasicMaterial).color.set(trueTileColor);
-     const indicatorCoversTrueTile = Settings.entityIndicatorEnabled && x === trueX && y === trueY;
-     this.trueTile.visible = this.renderable.drawTrueTile && visible && Settings.trueTileEnabled && !indicatorCoversTrueTile;
+    const trueTileColor = Settings.trueTileColor;
+    (this.trueTile.material as THREE.LineBasicMaterial).color.set(trueTileColor);
+    const indicatorCoversTrueTile = Settings.entityIndicatorEnabled && x === trueX && y === trueY;
+    this.trueTile.visible =
+      this.renderable.drawTrueTile && visible && Settings.trueTileEnabled && !indicatorCoversTrueTile;
 
     this.clickHull.position.x = x + this.renderable.size / 2;
     this.clickHull.position.z = y - this.renderable.size / 2;

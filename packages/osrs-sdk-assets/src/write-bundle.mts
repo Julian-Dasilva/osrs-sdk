@@ -36,8 +36,8 @@ export async function writeBundle(decoded, outputDirectory) {
   // accumulate or remain discoverable alongside the current manifest. Only
   // delete files produced by this extractor; leave unrelated files/directories
   // in the output directory untouched.
-// Content hashes are safe relative URLs even when logical asset IDs contain `:`.
-const generatedFile = /^[a-f0-9]{64}\.bin$/i;
+  // Content hashes are safe relative URLs even when logical asset IDs contain `:`.
+  const generatedFile = /^[a-f0-9]{64}\.bin$/i;
   const generatedSoundPack = /^cache-sound-effects\.[a-f0-9]{64}\.soundpack$/i;
   const assets: Record<string, CacheRenderAsset> = {};
   for (const asset of decoded.assets.sort((a, b) => a.id.localeCompare(b.id))) {

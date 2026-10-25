@@ -47,7 +47,9 @@ export function PauseController() {
       <Modal open={resumeRequired}>
         <RuneScapePanel style={{ maxWidth: 360, textAlign: "center" }}>
           <p style={{ margin: "0 0 16px" }}>Paused</p>
-          <RuneScapeButton autoFocus onClick={resume} type="button">Resume</RuneScapeButton>
+          <RuneScapeButton autoFocus onClick={resume} type="button">
+            Resume
+          </RuneScapeButton>
         </RuneScapePanel>
       </Modal>
     </GameOverlay>

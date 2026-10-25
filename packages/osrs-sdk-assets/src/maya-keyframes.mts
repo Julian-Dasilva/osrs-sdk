@@ -32,7 +32,8 @@ export function keyframeTimeline(cyclePoses, frameSounds = {}) {
   const poses = starts.map((cycle) => {
     const next = keys.findIndex((key) => key >= cycle);
     if (keys[next] === cycle) return cyclePoses[cycle];
-    const before = keys[next - 1], after = keys[next];
+    const before = keys[next - 1],
+      after = keys[next];
     return lerpPose(cyclePoses[before], cyclePoses[after], (cycle - before) / (after - before));
   });
   const lengths = starts.map((cycle, index) => (starts[index + 1] ?? cyclePoses.length) - cycle);

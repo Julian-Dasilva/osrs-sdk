@@ -3,7 +3,6 @@
 import { Entity, CollisionType, LineOfSightMask, Model, CacheRenderSceneModel } from "../src";
 import { SAMPLE_ASSETS } from "./assets";
 
-
 export class SampleScene extends Entity {
   get collisionType() {
     return CollisionType.NONE;

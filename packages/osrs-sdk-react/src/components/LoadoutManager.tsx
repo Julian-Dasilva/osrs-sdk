@@ -19,9 +19,8 @@ export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: Load
   const trainer = useTrainerContext();
   const settings = Settings.getSnapshot();
   const savedLoadoutIndex = loadouts.findIndex((template) => template.name === settings.loadout);
-  const savedCustomLoadout = settings.customLoadout?.name === loadouts[savedLoadoutIndex]?.name
-    ? settings.customLoadout
-    : null;
+  const savedCustomLoadout =
+    settings.customLoadout?.name === loadouts[savedLoadoutIndex]?.name ? settings.customLoadout : null;
   const [selectedLoadoutIndex, setSelectedLoadoutIndex] = useState(savedLoadoutIndex >= 0 ? savedLoadoutIndex : 0);
   const [loadout, setLoadout] = useState<LoadoutData | undefined>(
     savedCustomLoadout ?? loadouts[savedLoadoutIndex >= 0 ? savedLoadoutIndex : 0],
@@ -64,33 +63,31 @@ export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: Load
     if (!loadout) return;
 
     const selectedItem = itemId === null ? undefined : registry?.get(itemId);
-    const currentWeapon = loadout.equipment.weapon === null
-      ? undefined
-      : registry?.get(loadout.equipment.weapon);
-    const equipsTwoHandedWeapon = slot.kind === "equipment"
-      && slot.slot === "weapon"
-      && selectedItem instanceof Weapon
-      && selectedItem.isTwoHander;
-    const replacesTwoHandedWeapon = slot.kind === "equipment"
-      && slot.slot === "offhand"
-      && currentWeapon instanceof Weapon
-      && currentWeapon.isTwoHander;
+    const currentWeapon = loadout.equipment.weapon === null ? undefined : registry?.get(loadout.equipment.weapon);
+    const equipsTwoHandedWeapon =
+      slot.kind === "equipment" && slot.slot === "weapon" && selectedItem instanceof Weapon && selectedItem.isTwoHander;
+    const replacesTwoHandedWeapon =
+      slot.kind === "equipment" &&
+      slot.slot === "offhand" &&
+      currentWeapon instanceof Weapon &&
+      currentWeapon.isTwoHander;
 
-    const nextLoadout = slot.kind === "equipment"
-      ? {
-        ...loadout,
-        equipment: {
-          ...loadout.equipment,
-          [slot.slot]: itemId,
-          ...(equipsTwoHandedWeapon ? { offhand: null } : {}),
-          ...(replacesTwoHandedWeapon ? { weapon: null } : {}),
-        },
-      }
-      : (() => {
-        const inventory = [...loadout.inventory];
-        inventory[slot.index] = itemId;
-        return { ...loadout, inventory };
-      })();
+    const nextLoadout =
+      slot.kind === "equipment"
+        ? {
+            ...loadout,
+            equipment: {
+              ...loadout.equipment,
+              [slot.slot]: itemId,
+              ...(equipsTwoHandedWeapon ? { offhand: null } : {}),
+              ...(replacesTwoHandedWeapon ? { weapon: null } : {}),
+            },
+          }
+        : (() => {
+            const inventory = [...loadout.inventory];
+            inventory[slot.index] = itemId;
+            return { ...loadout, inventory };
+          })();
 
     setLoadout(nextLoadout);
     setIsCustomLoadout(true);
@@ -134,7 +131,9 @@ export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: Load
             >
               {isCustomLoadout && <option value="custom">Custom*</option>}
               {loadouts.map((template, index) => (
-                <option key={template.name} value={index}>{template.name}</option>
+                <option key={template.name} value={index}>
+                  {template.name}
+                </option>
               ))}
             </select>
             {loadout && (

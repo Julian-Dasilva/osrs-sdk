@@ -21,9 +21,7 @@ describe("text tests", () => {
     });
 
     test("handles unterminated tag", () => {
-      expect(parseText("<col=ffffff>Give me your")).toEqual([
-        { text: "Give me your", color: "ffffff" },
-      ]);
+      expect(parseText("<col=ffffff>Give me your")).toEqual([{ text: "Give me your", color: "ffffff" }]);
     });
   });
 });

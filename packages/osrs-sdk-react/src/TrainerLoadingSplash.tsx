@@ -9,9 +9,10 @@ export type TrainerLoadingSplashProps = HTMLAttributes<HTMLDivElement> & {
 
 export function TrainerLoadingSplash({ progressBar, state, style, ...props }: TrainerLoadingSplashProps) {
   if (state?.status === "ready") return null;
-  const text = state?.status === "error"
-    ? `Loading failed: ${state.error?.message ?? "Unknown error"}`
-    : `Loading: ${Math.floor((state?.assetProgress ?? 0) * 100)}%`;
+  const text =
+    state?.status === "error"
+      ? `Loading failed: ${state.error?.message ?? "Unknown error"}`
+      : `Loading: ${Math.floor((state?.assetProgress ?? 0) * 100)}%`;
   return (
     <div
       id="trainer-loading"
@@ -37,7 +38,7 @@ export function TrainerLoadingSplash({ progressBar, state, style, ...props }: Tr
           fillColor="#FFFF00"
           progress={state?.assetProgress ?? 0}
           {...progressBar}
-          style={{ marginTop: "0.25rem", width: '50%', ...progressBar?.style }}
+          style={{ marginTop: "0.25rem", width: "50%", ...progressBar?.style }}
         />
       )}
     </div>

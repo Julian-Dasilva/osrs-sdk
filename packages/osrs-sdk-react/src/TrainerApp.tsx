@@ -36,13 +36,16 @@ export function TrainerApp({
     if (!canvas || activeTrainer.current === trainer) return;
     activeTrainer.current = trainer;
     trainer.mount(canvas, playableAreaRef.current!);
-    void trainer.load({
-      onStateChange: (state) => {
-        if (activeTrainer.current === trainer) loadingListener.current?.(state);
-      },
-    }).then(() => {
-      if (autoStart && activeTrainer.current === trainer) trainer.start();
-    }).catch(() => undefined);
+    void trainer
+      .load({
+        onStateChange: (state) => {
+          if (activeTrainer.current === trainer) loadingListener.current?.(state);
+        },
+      })
+      .then(() => {
+        if (autoStart && activeTrainer.current === trainer) trainer.start();
+      })
+      .catch(() => undefined);
 
     return () => {
       if (activeTrainer.current === trainer) activeTrainer.current = null;
@@ -53,10 +56,7 @@ export function TrainerApp({
   return (
     <TrainerProvider trainer={trainer}>
       <GameOverlayProvider target={playableArea}>
-        <div
-          {...props}
-          style={{ display: "flex", inset: 0, overflow: "hidden", position: "fixed", ...style }}
-        >
+        <div {...props} style={{ display: "flex", inset: 0, overflow: "hidden", position: "fixed", ...style }}>
           <PlayableArea ref={setPlayableAreaRef}>
             <canvas
               id="world"

@@ -33,8 +33,8 @@ export class DragonClaws extends MeleeWeapon {
 
   constructor() {
     super();
-    [NORMAL_ATTACK_SOUND_ID, ...SPECIAL_ATTACK_SOUNDS.map(({ id }) => id)].forEach(
-      (id) => SoundCache.preload(cacheSound(id)),
+    [NORMAL_ATTACK_SOUND_ID, ...SPECIAL_ATTACK_SOUNDS.map(({ id }) => id)].forEach((id) =>
+      SoundCache.preload(cacheSound(id)),
     );
     this.bonuses = {
       attack: { stab: 41, slash: 57, crush: -4, magic: -4, range: 0 },

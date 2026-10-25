@@ -185,14 +185,14 @@ export class AttackStylesController {
     [AttackStyle.LONG_FUSE]: RANGE_LONGRANGE,
   };
 
-  static attackStyleStrengthBonus: {[style in AttackStyle]?: number} = {
+  static attackStyleStrengthBonus: { [style in AttackStyle]?: number } = {
     // aggressive = 3
     [AttackStyle.AGGRESSIVECRUSH]: 3,
     [AttackStyle.AGGRESSIVESLASH]: 3,
     // controlled = 1
     [AttackStyle.CONTROLLED]: 1,
     [AttackStyle.STAB]: 1,
-  }
+  };
 
   static controller: AttackStylesController = new AttackStylesController();
   stylesMap: AttackStyleStorage = {};
@@ -207,15 +207,16 @@ export class AttackStylesController {
   setWeaponAttackStyle(weapon: Weapon, newStyle: AttackStyle) {
     this.stylesMap[weapon.attackStyleCategory()] = newStyle;
   }
-  
+
   getWeaponAttackStyle(weapon: Weapon): AttackStyle {
     return this.stylesMap[weapon.attackStyleCategory()];
   }
 
   getWeaponXpDrops(style: AttackStyle, damage: number, npcMultiplier: number, category?: AttackStyleTypes): XpDrop[] {
-    const xpTypes = category === AttackStyleTypes.AXE && style === AttackStyle.ACCURATE
-      ? MELEE_ACCURATE
-      : AttackStylesController.attackStyleXpType[style];
+    const xpTypes =
+      category === AttackStyleTypes.AXE && style === AttackStyle.ACCURATE
+        ? MELEE_ACCURATE
+        : AttackStylesController.attackStyleXpType[style];
     return xpTypes.map(({ skill, multiplier: skillMultiplier }) => {
       return new XpDrop(skill, damage * skillMultiplier * npcMultiplier, damage);
     });

@@ -10,7 +10,9 @@ import { cacheSound } from "../../sdk/audio/CacheSoundEffects";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
 
 export class BladeOfSaeldor extends MeleeWeapon {
-  get cacheItemId(): number { return CACHE_ASSETS.items.bladeOfSaeldor.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.bladeOfSaeldor.id;
+  }
   constructor() {
     super();
 

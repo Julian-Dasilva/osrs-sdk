@@ -267,7 +267,7 @@ export class ControlPanelController {
     return intercepted;
   }
 
-  setActiveControl(index: keyof ((typeof ControlPanelController)["controls"])) {
+  setActiveControl(index: keyof (typeof ControlPanelController)["controls"]) {
     this.selectedControl = ControlPanelController.controls[index];
   }
 
@@ -334,7 +334,7 @@ export class ControlPanelController {
     } else {
       // desktop compact
       return {
-          x: width - 188 * scale,
+        x: width - 188 * scale,
         y: height - 72 * scale - 251 * scale,
       };
     }
@@ -354,7 +354,7 @@ export class ControlPanelController {
       const position = this.controlPosition(this.selectedControl);
       this.selectedControl.draw(context, this, position.x, position.y);
     }
-    
+
     // TODO: make this rendering configurable
     const boostPosition = this.boostPosition();
     this.boostPanel.draw(context, scale, boostPosition.x, boostPosition.y);

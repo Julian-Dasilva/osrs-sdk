@@ -6,7 +6,9 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { Assets } from "../../sdk/utils/Assets";
 
 export class PrimordialBoots extends Feet {
-  get cacheItemId(): number { return CACHE_ASSETS.items.primordialBoots.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.primordialBoots.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

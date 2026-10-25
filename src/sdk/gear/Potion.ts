@@ -27,7 +27,7 @@ export class Potion extends Item {
     } else if (this.doses === 3) {
       return 0.03;
     } else if (this.doses === 2) {
-      return 0.025
+      return 0.025;
     } else if (this.doses === 1) {
       return 0.02;
     }

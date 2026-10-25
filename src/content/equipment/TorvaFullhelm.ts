@@ -6,7 +6,9 @@ import { Assets } from "../../sdk/utils/Assets";
 import { Helmet } from "../../sdk/gear/Helmet";
 
 export class TorvaFullhelm extends Helmet {
-  get cacheItemId(): number { return CACHE_ASSETS.items.torvaFullHelm.id; }
+  get cacheItemId(): number {
+    return CACHE_ASSETS.items.torvaFullHelm.id;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get itemName(): ItemName {

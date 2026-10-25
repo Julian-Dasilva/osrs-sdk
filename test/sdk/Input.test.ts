@@ -89,6 +89,9 @@ describe("InputController client-tick inputs", () => {
     jest.runOnlyPendingTimers();
     controller.onWorldTick();
 
-    expect([afterFirstTick, seen]).toEqual([[1, 2, 3, 4, 5, 6, 7, 8], [1, 2, 3, 4, 5, 6, 7, 8, 10]]);
+    expect([afterFirstTick, seen]).toEqual([
+      [1, 2, 3, 4, 5, 6, 7, 8],
+      [1, 2, 3, 4, 5, 6, 7, 8, 10],
+    ]);
   });
 });

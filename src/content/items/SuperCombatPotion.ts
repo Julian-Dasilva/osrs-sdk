@@ -48,10 +48,10 @@ export class SuperCombatPotion extends Potion {
       const boost = Math.floor(player.stats[stat] * 0.15) + 5;
       player.currentStats[stat] += boost;
       player.currentStats[stat] = Math.min(player.currentStats[stat], player.stats[stat] + boost);
-    }
-    boost('strength');
-    boost('attack');
-    boost('defence');
+    };
+    boost("strength");
+    boost("attack");
+    boost("defence");
   }
 
   updateInventorySprite() {

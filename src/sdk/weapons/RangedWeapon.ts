@@ -17,11 +17,18 @@ export class RangedWeapon extends Weapon {
 
   registerProjectile(from: Unit, to: Unit, bonuses: AttackBonuses, options: ProjectileOptions = {}) {
     to.addProjectile(
-      new Projectile(this, this.damage, from, to, "range", mergeProjectileOptions(
-        { sound: this.attackSound, hitSound: this.attackLandingSound, visuals: { model: this.projectileModel } },
-        this.projectileOptions,
-        options,
-      )),
+      new Projectile(
+        this,
+        this.damage,
+        from,
+        to,
+        "range",
+        mergeProjectileOptions(
+          { sound: this.attackSound, hitSound: this.attackLandingSound, visuals: { model: this.projectileModel } },
+          this.projectileOptions,
+          options,
+        ),
+      ),
     );
   }
 

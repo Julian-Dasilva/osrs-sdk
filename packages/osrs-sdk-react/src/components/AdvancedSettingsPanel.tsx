@@ -19,7 +19,11 @@ type SettingRowProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
 };
 
 type ColorSettingName = "entityIndicatorColor" | "hoveredTileColor" | "targetTileColor" | "trueTileColor";
-type ColorEnabledSettingName = "entityIndicatorEnabled" | "hoveredTileEnabled" | "targetTileEnabled" | "trueTileEnabled";
+type ColorEnabledSettingName =
+  | "entityIndicatorEnabled"
+  | "hoveredTileEnabled"
+  | "targetTileEnabled"
+  | "trueTileEnabled";
 
 function SettingRow({ children, htmlFor, label, style, ...props }: SettingRowProps) {
   return (
@@ -30,7 +34,14 @@ function SettingRow({ children, htmlFor, label, style, ...props }: SettingRowPro
   );
 }
 
-function ColorSetting({ colorSetting, enabled, enabledSetting, id, label, value }: {
+function ColorSetting({
+  colorSetting,
+  enabled,
+  enabledSetting,
+  id,
+  label,
+  value,
+}: {
   colorSetting: ColorSettingName;
   enabled: boolean;
   enabledSetting: ColorEnabledSettingName;
@@ -67,16 +78,32 @@ export function AdvancedSettingsPanel({ children, onClose, open, style, ...props
   const settings = useTrainerSnapshot((snapshot) => snapshot.settings);
 
   return (
-    <Modal aria-label="Advanced settings" open={open} onClick={(event) => {
-      if (event.currentTarget === event.target) onClose();
-    }}>
+    <Modal
+      aria-label="Advanced settings"
+      open={open}
+      onClick={(event) => {
+        if (event.currentTarget === event.target) onClose();
+      }}
+    >
       <RuneScapePanel
         {...props}
-        style={{ boxSizing: "border-box", maxHeight: "calc(100% - 32px)", maxWidth: "calc(100% - 32px)", overflowY: "auto", width: 440, ...style }}
+        style={{
+          boxSizing: "border-box",
+          maxHeight: "calc(100% - 32px)",
+          maxWidth: "calc(100% - 32px)",
+          overflowY: "auto",
+          width: 440,
+          ...style,
+        }}
       >
         <div style={{ alignItems: "center", display: "flex", justifyContent: "space-between" }}>
           <h2 style={{ color: "#ffffff", minWidth: 250, margin: 0 }}>Advanced settings</h2>
-          <RuneScapeButton aria-label="Close advanced settings" onClick={onClose} style={{ minWidth: 72 }} type="button">
+          <RuneScapeButton
+            aria-label="Close advanced settings"
+            onClick={onClose}
+            style={{ minWidth: 72 }}
+            type="button"
+          >
             Close
           </RuneScapeButton>
         </div>

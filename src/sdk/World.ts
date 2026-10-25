@@ -16,7 +16,9 @@ export class World {
   regions: Region[] = [];
   globalTickCounter = 0;
   private _clientTickCounter = 0;
-  get clientTickCounter() { return this._clientTickCounter; }
+  get clientTickCounter() {
+    return this._clientTickCounter;
+  }
   isPaused = true;
   tickPercent: number;
   clientTickPercent = 0;
@@ -94,7 +96,7 @@ export class World {
     }
     const elapsed = now - this.then;
     this.fps = Math.floor(1000 / elapsed);
-    
+
     if (now > this.nextTickTimer) {
       this.nextTickTimer += Settings.tickMs;
       this.tickTimer = now;
@@ -172,10 +174,7 @@ export class World {
 
     DelayedAction.afterNpcTick();
 
-    region.projectiles = filter(
-      region.projectiles,
-      (projectile: Projectile) => !projectile.shouldDestroy(),
-    );
+    region.projectiles = filter(region.projectiles, (projectile: Projectile) => !projectile.shouldDestroy());
     region.projectiles.forEach((projectile: Projectile) => {
       projectile.onTick();
 

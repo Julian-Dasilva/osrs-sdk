@@ -25,13 +25,13 @@ offset. Region 7216 has origin `(1792, 3072)`; cache local coordinates are
 so do not apply this mapping to that app without accounting for it.
 
 | SDK tile | Object | Model | Orientation |
-| --- | --- | --- | --- |
-| 21, 11 | 52521 | 51308 | 3 |
-| 15, 17 | 52521 | 51308 | 2 |
-| 49, 15 | 52521 | 51308 | 0 |
-| 19, 45 | 52521 | 51308 | 1 |
-| 20, 12 | 52522 | 51304 | 0 |
-| 20, 11 | 52523 | 51309 | 0 |
+| -------- | ------ | ----- | ----------- |
+| 21, 11   | 52521  | 51308 | 3           |
+| 15, 17   | 52521  | 51308 | 2           |
+| 49, 15   | 52521  | 51308 | 0           |
+| 19, 45   | 52521  | 51308 | 1           |
+| 20, 12   | 52522  | 51304 | 0           |
+| 20, 11   | 52523  | 51309 | 0           |
 
 These are type-22 decorations on plane 1, with 1x1 footprints and contouring
 enabled. Using OpenRS2 cache 2437 (revision 236):

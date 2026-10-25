@@ -53,12 +53,7 @@ export class Viewport2d implements ViewportDelegate {
       region.context.save();
       region.context.fillStyle = "rgba(255, 0, 0, 0.25)";
       region.getTileCollisionFlagLocations().forEach(({ x, y }) => {
-        region.context.fillRect(
-          x * Settings.tileSize,
-          y * Settings.tileSize,
-          Settings.tileSize,
-          Settings.tileSize,
-        );
+        region.context.fillRect(x * Settings.tileSize, y * Settings.tileSize, Settings.tileSize, Settings.tileSize);
       });
       region.context.restore();
     }
@@ -113,7 +108,6 @@ export class Viewport2d implements ViewportDelegate {
       region.players.forEach((player: Player) => {
         player.drawUILayer(world.tickPercent, getUILayerProjector(player), player.region.context, Settings.tileSize);
       });
-
     }
 
     if (this.selectedTile && Settings.hoveredTileEnabled) {

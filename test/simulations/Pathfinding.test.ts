@@ -83,7 +83,6 @@ describe("pathfinding tests", () => {
     region.addPlayer(player);
     Viewport.viewport.setPlayer(player);
 
-    
     region.addEntity(new InvisibleMovementBlocker(region, { x: 16, y: 16 }));
     region.addEntity(new InvisibleMovementBlocker(region, { x: 17, y: 16 }));
     region.addEntity(new InvisibleMovementBlocker(region, { x: 18, y: 16 }));
