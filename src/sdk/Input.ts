@@ -30,10 +30,12 @@ export class InputController {
   }
 
   queueAction(fn: () => void) {
-    if (this.queuedActions.length >= MAX_QUEUED_ACTIONS) {
+    const now = performance.now();
+    const registered = this.queuedActions.filter((action) => action.registersAt <= now);
+    if (registered.length >= MAX_QUEUED_ACTIONS) {
       return;
     }
-    this.queuedActions.push({ run: fn, registersAt: performance.now() + Settings.inputDelay });
+    this.queuedActions.push({ run: fn, registersAt: now + Settings.inputDelay });
   }
 
   onWorldTick() {
