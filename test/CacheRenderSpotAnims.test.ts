@@ -22,6 +22,9 @@ const body: CacheRenderPayload = {
   indices: [0, 1, 2],
   sourceVertices: [0, 1, 2],
   colors: [0xffffff, 0xffffff, 0xffffff],
+  uvs: [0, 0, 1, 0, 0, 1],
+  textureIds: [7, 7, 7],
+  textures: { 7: { width: 1, height: 1, pixels: [-1] } },
   poseMap: { 0: 100 },
   animations: { 100: { frames: [triangle, triangle], lengths: [4, 4] } },
 };
@@ -157,4 +160,69 @@ test("a model change does not replay the sounds of a playing spotanim", async ()
   await model.preload();
   cycle();
   expect(play).toHaveBeenCalledTimes(1);
+});
+
+// Names each geometry, material and texture of the given objects as three.js is told to release it.
+function disposals(objects: Record<string, THREE.Object3D>) {
+  const disposed: string[] = [];
+  Object.entries(objects).forEach(([name, object]) => {
+    const { geometry, material } = object as THREE.Mesh;
+    geometry.addEventListener("dispose", () => disposed.push(`${name} geometry`));
+    (Array.isArray(material) ? material : [material]).forEach((each, index) => {
+      each.addEventListener("dispose", () => disposed.push(`${name} material ${index}`));
+      (each as THREE.MeshBasicMaterial).map?.addEventListener("dispose", () =>
+        disposed.push(`${name} texture ${index}`),
+      );
+    });
+  });
+  return disposed;
+}
+
+const actorResources = [
+  "mesh geometry",
+  "mesh material 0",
+  "mesh material 1",
+  "mesh texture 1",
+  "outline geometry",
+  "outline material 0",
+  "clickbox geometry",
+  "clickbox material 0",
+];
+const actorObjects = (model: CacheRenderModel) => ({
+  mesh: (model as any).mesh,
+  outline: (model as any).outline,
+  clickbox: (model as any).clickbox,
+});
+
+test("a reload disposes the actor objects it replaced once their replacements have been drawn", async () => {
+  const { model, attach, draw, spotMeshes } = await fixture([effect(1)]);
+  attach({ id: 1 });
+  draw();
+  const replaced = disposals(actorObjects(model));
+  const kept = disposals({ spot: spotMeshes()[0] });
+  model.modelChanged();
+  await model.preload();
+  // The renderer takes the replacements' shader programs on this draw, so releasing
+  // the old materials cannot free a program the new ones are about to use.
+  draw();
+  expect(replaced).toEqual([]);
+  draw();
+  expect(replaced.sort()).toEqual(actorResources.slice().sort());
+  expect(kept).toEqual([]);
+});
+
+test("destroy disposes everything the model owns, including objects a reload replaced", async () => {
+  const { model, scene, attach, draw, spotMeshes } = await fixture([effect(1)]);
+  attach({ id: 1 });
+  draw();
+  const replaced = disposals(actorObjects(model));
+  model.modelChanged();
+  await model.preload();
+  const owned = disposals({ ...actorObjects(model), trueTile: (model as any).trueTile, spot: spotMeshes()[0] });
+  model.destroy(scene);
+  expect(replaced.sort()).toEqual(actorResources.slice().sort());
+  expect(owned.sort()).toEqual(
+    [...actorResources, "trueTile geometry", "trueTile material 0", "spot geometry", "spot material 0"].sort(),
+  );
+  expect(scene.children).toEqual([]);
 });
