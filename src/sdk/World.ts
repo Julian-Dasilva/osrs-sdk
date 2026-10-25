@@ -42,6 +42,7 @@ export class World {
 
   startTicking() {
     this.isPaused = false;
+    InputController.controller.resume();
     const now = window.performance.now();
     // Anchor accounting to this frame, preserving fractional progress on
     // resume so animation poses do not jump backwards after a pause.
@@ -72,6 +73,7 @@ export class World {
     this.deltaTimeSincePause = window.performance.now() - this.then;
     this.deltaTimeSinceLastTick = window.performance.now() - this.tickTimer;
     this.isPaused = true;
+    InputController.controller.pause();
   }
 
   doClientTick(now = window.performance.now()) {
