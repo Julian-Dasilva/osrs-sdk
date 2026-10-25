@@ -286,7 +286,6 @@ export class CacheRenderModel implements Model, RenderableListener {
     this.animationPlaying = false;
     this.animationCanBlendWithPose = false;
     this.frameSoundPlayer.reset();
-    this.spotFrameSoundPlayers.clear();
     this.frameSoundsReady = Promise.resolve();
     this.basePositions = null;
     this.baseAlphas = null;
@@ -296,7 +295,6 @@ export class CacheRenderModel implements Model, RenderableListener {
     this.logicalHeight = null;
     this.animayaGroups = [];
     this.animayaScales = [];
-    this.spotAnims = [];
     this.setActiveSpotAnims(
       this.currentSpotAnims(
         this.reference.kind === "model" || this.reference.kind === "asset" ? undefined : this.reference.spotAnims,
@@ -313,7 +311,7 @@ export class CacheRenderModel implements Model, RenderableListener {
     if (this.ready) return this.ready;
     this.ready = (async () => {
       const generation = this.modelGeneration;
-      // Effects attached since the model changed already have current meshes.
+      // A model change replaces the actor's geometry, not its spotanims.
       const previousChildren = this.root.children.filter(
         (child) => !this.spotAnims.some((spot) => spot.mesh === child),
       );
@@ -498,7 +496,6 @@ export class CacheRenderModel implements Model, RenderableListener {
       );
       this.meshGeneration = generation;
       this.spotAnimPayloads = new Map(spotIds.map((id, index) => [id, spotPayloads[index]] as [string, Payload]));
-      this.buildSpotAnims();
       // A queued actor animation may have begun while its cache geometry was
       // loading. Start it once the mesh is ready so short spawn sequences are
       // not skipped.
@@ -507,12 +504,18 @@ export class CacheRenderModel implements Model, RenderableListener {
         this.animationStartsOnNextCycle = true;
       }
       this.frameSoundPlayer.reset();
-      this.spotFrameSoundPlayers.clear();
       previousChildren.forEach((child) => {
         if (child.parent === this.root) this.root.remove(child);
       });
       if (previousOutline?.parent) previousOutline.parent.remove(previousOutline);
       if (previousClickbox?.parent) previousClickbox.parent.remove(previousClickbox);
+      // Spotanim meshes stay after the actor's mesh, which model offsets
+      // address first, and follow the new actor's scale.
+      this.spotAnims.forEach((spot) => {
+        this.root.add(spot.mesh);
+        this.fitSpotAnimScale(spot);
+      });
+      this.buildSpotAnims();
     })();
     return this.ready;
   }
@@ -553,18 +556,9 @@ export class CacheRenderModel implements Model, RenderableListener {
       effect.userData.cacheBaseColors = spotPayload.colors ?? [];
       effect.userData.cacheFaceColors = spotPayload.faceColors ?? [];
       effect.visible = false;
-      // Actor roots already carry the NPC definition's model scale. Cache
-      // spotanim resize values are world-space scales in the client, so
-      // compensate for the inherited root scale instead of multiplying the
-      // two definitions together (Sol uses 300 for both).
-      effect.scale.set(
-        (metadata.resizeX ?? 128) / 128 / this.root.scale.x,
-        (metadata.resizeY ?? 128) / 128 / this.root.scale.y,
-        (metadata.resizeX ?? 128) / 128 / this.root.scale.z,
-      );
       effect.rotation.y = ((placement?.rotation ?? metadata.rotation ?? 0) * Math.PI) / 1024;
       this.root.add(effect);
-      this.spotAnims.push({
+      const spot: SpotAnimRuntime = {
         assetId,
         interpolatedMayaFrame: [],
         animayaGroups: spotPayload.animayaGroups ?? [],
@@ -586,8 +580,22 @@ export class CacheRenderModel implements Model, RenderableListener {
         rotation: metadata.rotation ?? 0,
         height: placement?.height ?? 0,
         delay: placement?.delay ?? 0,
-      });
+      };
+      this.fitSpotAnimScale(spot);
+      this.spotAnims.push(spot);
     });
+  }
+
+  // Actor roots already carry the NPC definition's model scale. Cache
+  // spotanim resize values are world-space scales in the client, so
+  // compensate for the inherited root scale instead of multiplying the
+  // two definitions together (Sol uses 300 for both).
+  private fitSpotAnimScale(spot: SpotAnimRuntime) {
+    spot.mesh.scale.set(
+      spot.scaleX / 128 / this.root.scale.x,
+      spot.scaleY / 128 / this.root.scale.y,
+      spot.scaleX / 128 / this.root.scale.z,
+    );
   }
 
   draw(
