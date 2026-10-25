@@ -15,6 +15,11 @@ import { Location } from "./Location";
 import { CHUNK_SIZE } from "./utils/Chunk";
 import { ScreenPoint } from "./rendering/utils/projectedClickbox";
 
+function farthestShownPixel(tiles: number, viewportTiles: number, viewportPixels: number) {
+  const farthestCameraOrigin = (tiles - 0.5 - viewportTiles / 2) * Settings.tileSize;
+  return Math.max(1, Math.ceil(farthestCameraOrigin + viewportPixels));
+}
+
 export class Viewport2d implements ViewportDelegate {
   private selectedTile: Location | null = null;
 
@@ -28,6 +33,10 @@ export class Viewport2d implements ViewportDelegate {
   }
 
   draw(world: World, region: Region) {
+    region.sizeCanvas(
+      farthestShownPixel(region.width, Viewport.viewport.width, Viewport.viewport.canvas.width),
+      farthestShownPixel(region.height, Viewport.viewport.height, Viewport.viewport.canvas.height),
+    );
     region.context.save();
     region.drawWorldBackground(region.context, Settings.tileSize);
     region.drawGroundItems(region.context);

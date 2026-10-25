@@ -89,14 +89,17 @@ export abstract class Region {
     return [];
   }
 
-  get context(): OffscreenCanvasRenderingContext2D {
+  sizeCanvas(width: number, height: number) {
     if (!this.canvas) {
-      if (Settings.mobileCheck()) {
-        this.canvas = new OffscreenCanvas(2000, 2000);
-      } else {
-        this.canvas = new OffscreenCanvas(10000, 10000);
-      }
+      this.canvas = new OffscreenCanvas(width, height);
+    } else if (this.canvas.width !== width || this.canvas.height !== height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
     }
+  }
+
+  get context(): OffscreenCanvasRenderingContext2D {
+    if (!this.canvas) this.sizeCanvas(1, 1);
     return this.canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
   }
 
