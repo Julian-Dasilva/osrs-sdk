@@ -78,6 +78,16 @@ function enableVertexAlpha(material: THREE.Material) {
   };
 }
 
+/** Release the GPU resources an object owns. If it is drawn again, three.js uploads them anew. */
+function disposeObject(object: THREE.Object3D | null) {
+  if (!(object instanceof THREE.Mesh || object instanceof THREE.Line)) return;
+  object.geometry.dispose();
+  (Array.isArray(object.material) ? object.material : [object.material]).forEach((material) => {
+    (material as THREE.MeshBasicMaterial).map?.dispose();
+    material.dispose();
+  });
+}
+
 function needsVertexAlpha(payload: Payload) {
   // A model with only opaque faces must stay in Three.js's opaque render
   // queue. Putting it in the transparent queue changes its sorting against
@@ -157,6 +167,11 @@ export class CacheRenderModel implements Model, RenderableListener {
   private outline: THREE.LineSegments | null = null;
   private trueTile: THREE.LineSegments;
   private clickbox: THREE.Mesh | null = null;
+  // Actor objects a reload replaced, disposed on the second draw after it.
+  // The first draw has the renderer take the replacements' shader programs,
+  // so releasing the old materials cannot free a program they share.
+  private retired: THREE.Object3D[] = [];
+  private retiredDrawn = false;
   private modelGeneration = 0;
   private meshGeneration = -1;
   private readonly clickboxController: ClickboxController;
@@ -504,11 +519,7 @@ export class CacheRenderModel implements Model, RenderableListener {
         this.animationStartsOnNextCycle = true;
       }
       this.frameSoundPlayer.reset();
-      previousChildren.forEach((child) => {
-        if (child.parent === this.root) this.root.remove(child);
-      });
-      if (previousOutline?.parent) previousOutline.parent.remove(previousOutline);
-      if (previousClickbox?.parent) previousClickbox.parent.remove(previousClickbox);
+      this.retire([...previousChildren, previousOutline, previousClickbox]);
       // Spotanim meshes stay after the actor's mesh, which model offsets
       // address first, and follow the new actor's scale.
       this.spotAnims.forEach((spot) => {
@@ -598,6 +609,26 @@ export class CacheRenderModel implements Model, RenderableListener {
     );
   }
 
+  private retire(objects: Array<THREE.Object3D | null>) {
+    objects.forEach((object) => {
+      // A reload without an outline keeps the previous one.
+      if (!object || object === this.outline) return;
+      object.removeFromParent();
+      this.retired.push(object);
+    });
+    this.retiredDrawn = false;
+  }
+
+  private disposeRetired() {
+    if (!this.retired.length) return;
+    if (!this.retiredDrawn) {
+      this.retiredDrawn = true;
+      return;
+    }
+    this.retired.forEach(disposeObject);
+    this.retired = [];
+  }
+
   draw(
     scene: THREE.Scene,
     _clockDelta: number,
@@ -609,6 +640,7 @@ export class CacheRenderModel implements Model, RenderableListener {
     modelOffsets: Location3[],
     clientTickFraction = 0,
   ) {
+    this.disposeRetired();
     this.clickboxController.invalidate();
     this.startLoading();
     this.updateSceneObjects(scene, location, rotation, pitch, visible, modelOffsets);
@@ -1003,6 +1035,8 @@ export class CacheRenderModel implements Model, RenderableListener {
     if (this.trueTile?.parent === scene) scene.remove(this.trueTile);
     if (this.clickbox?.parent === scene) scene.remove(this.clickbox);
     this.renderable.clearAnimationListener();
+    [...this.retired, ...this.root.children, this.outline, this.trueTile, this.clickbox].forEach(disposeObject);
+    this.retired = [];
   }
   getWorldPosition() {
     return this.root.getWorldPosition(new THREE.Vector3());
