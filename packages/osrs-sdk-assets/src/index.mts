@@ -45,7 +45,7 @@ export async function loadConfig({ config = "osrs-assets.config.ts", cwd = proce
     });
     loaded = await import(pathToFileURL(compiledPath).href);
   } finally {
-    await unlink(compiledPath).catch(() => {});
+    await unlink(compiledPath).catch(() => undefined);
   }
   const value = loaded.default?.default ?? loaded.default;
   if (!value || typeof value !== "object") throw new Error(`${configPath} must default-export an asset configuration`);

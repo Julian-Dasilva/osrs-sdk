@@ -329,7 +329,7 @@ export class CacheRenderModel implements Model, RenderableListener {
           new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false, wireframe: true }),
         );
         clickGeometryDebug.renderOrder = 10;
-        clickGeometryDebug.raycast = () => { };
+        clickGeometryDebug.raycast = () => undefined;
         this.root.add(clickGeometryDebug);
       }
       this.clickbox = null;
