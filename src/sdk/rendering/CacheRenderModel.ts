@@ -1038,6 +1038,10 @@ export class CacheRenderModel implements Model, RenderableListener {
     [...this.retired, ...this.root.children, this.outline, this.trueTile, this.clickbox].forEach(disposeObject);
     this.retired = [];
   }
+  sceneRoot() {
+    return this.root;
+  }
+
   getWorldPosition() {
     return this.root.getWorldPosition(new THREE.Vector3());
   }

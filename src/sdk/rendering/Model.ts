@@ -38,4 +38,7 @@ export interface Model {
   getClickboxTriangles?(): ArrayLike<number>;
 
   preload(): Promise<void>;
+
+  /** The object the first draw adds to the scene, so its shaders can be compiled before that draw. */
+  sceneRoot?(): THREE.Object3D;
 }

@@ -493,9 +493,14 @@ export class Viewport3d implements ViewportDelegate {
 
     this.scene.add(this.selectedTileMesh);
 
-    // preload by adding a bunch of models to the scene but out of sight
     await Trainer.player.region.preload();
+    const preloadedRoots: THREE.Object3D[] = [];
+    for (const renderable of Trainer.player.region.getRenderables()) {
+      const root = renderable.get3dModel()?.sceneRoot?.();
+      if (root) preloadedRoots.push(root);
+    }
     await this.renderer.compileAsync(this.scene, this.camera);
+    await Promise.all(preloadedRoots.map((root) => this.renderer.compileAsync(root, this.camera, this.scene)));
   }
 
   firstFramePresented() {
