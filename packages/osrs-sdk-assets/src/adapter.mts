@@ -20,6 +20,24 @@ const OBJECT_TYPE = Object.freeze({
 });
 const CACHE_ANGLE_45 = 0x100;
 
+/**
+ * Reads each sound effect a bundle needs. A sequence can name a frame sound the cache does not hold
+ * (cache 2746 lacks 12814, 12825 and 12832, which Ocellus's phase 2 poses reference); that sound is
+ * skipped with a warning instead of failing the whole extraction.
+ */
+export async function readSoundEffects(ids, getFile, warn = console.warn) {
+  const soundEffects = [];
+  for (const id of [...ids].sort((a, b) => a - b)) {
+    const file = await getFile(id).catch(() => undefined);
+    if (!file?.content) {
+      warn(`osrs-sdk-assets: sound effect ${id} is not in this cache; skipped`);
+      continue;
+    }
+    soundEffects.push({ id, bytes: Uint8Array.from(file.content) });
+  }
+  return soundEffects;
+}
+
 export async function decodeAllAssets(options) {
   const reader = await loadReader(options.readerPath);
   return createDecoder(reader)(options);
@@ -994,11 +1012,9 @@ export function createDecoder({ RSCache, IndexType, ConfigType, ModelGroup }) {
           }
         }
       }
-      const soundEffects = [];
-      for (const id of [...soundEffectIds].sort((a, b) => a - b)) {
-        const file = await cache.getFile(IndexType.SOUNDEFFECTS, id, 0, { cacheResults: false });
-        soundEffects.push({ id, bytes: Uint8Array.from(file.content) });
-      }
+      const soundEffects = await readSoundEffects(soundEffectIds, (id) =>
+        cache.getFile(IndexType.SOUNDEFFECTS, id, 0, { cacheResults: false }),
+      );
       const rev = Number(revision || 0);
       return {
         revision: rev,
