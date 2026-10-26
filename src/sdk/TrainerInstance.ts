@@ -179,7 +179,12 @@ export class TrainerInstance {
       this.setLoadingState({ status: "initialising-viewport" });
       await this.initialiseViewport();
       this.world.startLoop();
-      await Viewport.viewport.getDelegate().firstFramePresented();
+      const viewport = Viewport.viewport.getDelegate();
+      const failure = await Promise.race([
+        viewport.firstFramePresented().then(() => null),
+        viewport.firstFrameFailed(),
+      ]);
+      if (failure) throw failure;
       this.setLoadingState({ status: "ready", viewportReady: true });
     } catch (error) {
       const loadingError = error instanceof Error ? error : new Error(String(error));

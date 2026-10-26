@@ -9,6 +9,7 @@ import { TestRegion } from "../../src/sdk/testing/TestRegion";
 
 const renderedCanvases: unknown[] = [];
 const pixelReads: number[] = [];
+const gpu: { contextLost: boolean; renderError: Error | null } = { contextLost: false, renderError: null };
 
 // jsdom has no WebGL context.
 jest.mock("three", () => ({
@@ -29,10 +30,12 @@ jest.mock("three", () => ({
       this.domElement = canvas;
       renderedCanvases.push(canvas);
     }
-    render() {}
+    render() {
+      if (gpu.renderError) throw gpu.renderError;
+    }
     setSize() {}
     getContext() {
-      return { readPixels: () => pixelReads.push(pixelReads.length) };
+      return { isContextLost: () => gpu.contextLost, readPixels: () => pixelReads.push(pixelReads.length) };
     }
   },
 }));
@@ -86,6 +89,8 @@ describe("3D present", () => {
   let worldCanvas: HTMLCanvasElement;
 
   beforeEach(() => {
+    Object.assign(gpu, { contextLost: false, renderError: null });
+    pixelReads.length = 0;
     renderedCanvases.length = 0;
     Object.defineProperty(globalThis, "OffscreenCanvas", { configurable: true, value: RecordedOffscreenCanvas });
     jest.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(function (
@@ -226,6 +231,70 @@ describe("3D present", () => {
         [true, 1],
       ],
       presentedLater: true,
+    });
+  });
+
+  function openWorld() {
+    const frames: FrameRequestCallback[] = [];
+    jest.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => frames.push(callback));
+    let now = 0;
+    jest.spyOn(window.performance, "now").mockImplementation(() => (now += 1000));
+    [ControlPanelController.controller, XpDropController.controller, MapController.controller].forEach((controller) =>
+      Object.assign(controller, { draw() {} }),
+    );
+    const delegate = new Viewport3d(true, worldCanvas);
+    const region = new TestRegion(20, 20);
+    const world = new World();
+    region.world = world;
+    world.addRegion(region);
+    const player = new UnmodelledPlayer(region, { x: 10, y: 10 });
+    region.addPlayer(player);
+    Viewport.viewport = new Viewport(delegate, worldCanvas, area);
+    Viewport.viewport.setPlayer(player);
+    let outcome = "pending";
+    void delegate.firstFramePresented().then(() => {
+      outcome = "presented";
+    });
+    void delegate.firstFrameFailed().then((error) => {
+      outcome = `failed: ${error.message}`;
+    });
+    const runFrames = async (count: number) => {
+      for (let i = 0; i < count; i++) {
+        frames.splice(0).forEach((callback) => callback(now));
+        await Promise.resolve();
+      }
+    };
+    return { world, runFrames, outcome: () => outcome };
+  }
+
+  test("settles the first frame as failed when the render that draws the world throws", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    const { world, runFrames, outcome } = openWorld();
+    gpu.renderError = new Error("GPU render failed");
+
+    Viewport.viewport.draw(world);
+    await runFrames(3);
+
+    expect({ outcome: outcome(), pixelReads: pixelReads.length }).toEqual({
+      outcome: "failed: GPU render failed",
+      pixelReads: 0,
+    });
+  });
+
+  test("presents the first frame only after a render with a restored context", async () => {
+    const { world, runFrames, outcome } = openWorld();
+    gpu.contextLost = true;
+
+    Viewport.viewport.draw(world);
+    await runFrames(3);
+    const whileLost = outcome();
+    gpu.contextLost = false;
+    await runFrames(2);
+
+    expect({ whileLost, restored: outcome(), pixelReads: pixelReads.length }).toEqual({
+      whileLost: "pending",
+      restored: "presented",
+      pixelReads: 1,
     });
   });
 });

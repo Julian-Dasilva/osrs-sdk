@@ -63,6 +63,8 @@ function squareRing(centre: ScreenPoint, distance: number): ScreenPoint[] {
   return ring;
 }
 
+type RenderOutcome = { kind: "rendered" } | { kind: "context-lost" } | { kind: "failed"; error: Error };
+
 export class Viewport3d implements ViewportDelegate {
   private canvas: HTMLCanvasElement;
   private uiCanvas: OffscreenCanvas;
@@ -385,16 +387,27 @@ export class Viewport3d implements ViewportDelegate {
     this.canvasDimensions = { width, height };
   }
 
-  render() {
+  render(): RenderOutcome {
+    // three returns without drawing while the context is lost, so a lost context is not a drawn frame.
+    if (this.renderer.getContext().isContextLost()) return { kind: "context-lost" };
     try {
       this.renderer.render(this.scene, this.camera);
+      return { kind: "rendered" };
     } catch (error) {
       if (!this.renderFailureLogged) {
         this.renderFailureLogged = true;
         console.error("[osrs-sdk] WebGL render failed", error);
       }
+      return { kind: "failed", error: error instanceof Error ? error : new Error(String(error)) };
     }
   }
+
+  // The first frame with new models costs a software renderer up to a second. gl.finish() returned before that
+  // work was done, but a read waits for it, so it happens here instead of after the page shows ready.
+  private readonly readOnePixel = () => {
+    const gl = this.renderer.getContext();
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+  };
 
   animate() {
     if (this.renderingSuspended) return;
@@ -402,13 +415,21 @@ export class Viewport3d implements ViewportDelegate {
     const now = window.performance.now();
     const frameInterval = Settings.renderFps > 0 ? 1000 / Settings.renderFps : 0;
     if (frameInterval === 0 || now >= this.nextRenderTime) {
-      this.render();
-      // The first frame with new models costs a software renderer up to a second. gl.finish() returned before that
-      // work was done, but a read waits for it, so it happens here instead of after the page shows ready.
-      this.firstFrame.rendered(() => {
-        const gl = this.renderer.getContext();
-        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
-      });
+      const outcome = this.render();
+      switch (outcome.kind) {
+        case "rendered":
+          this.firstFrame.rendered(this.readOnePixel);
+          break;
+        case "context-lost":
+          break;
+        case "failed":
+          this.firstFrame.renderFailed(outcome.error);
+          break;
+        default: {
+          const unhandled: never = outcome;
+          return unhandled;
+        }
+      }
       this.stats.update();
       this.lastRenderTime = now;
       this.nextRenderTime =
@@ -510,6 +531,10 @@ export class Viewport3d implements ViewportDelegate {
 
   firstFramePresented() {
     return this.firstFrame.presented();
+  }
+
+  firstFrameFailed() {
+    return this.firstFrame.failed();
   }
 
   reset() {

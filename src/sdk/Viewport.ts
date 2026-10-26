@@ -49,6 +49,8 @@ export interface ViewportDelegate {
   initialise(world: World, region: Region): Promise<void>;
   // resolves once the first frame that draws the world has reached the screen
   firstFramePresented(): Promise<void>;
+  // resolves with the error if the render that draws the world fails
+  firstFrameFailed(): Promise<Error>;
   reset();
   clientTick?(region: Region, timestamp?: number): void;
 

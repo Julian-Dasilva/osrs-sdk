@@ -29,6 +29,10 @@ export class Viewport2d implements ViewportDelegate {
     return this.firstFrame.presented();
   }
 
+  firstFrameFailed() {
+    return this.firstFrame.failed();
+  }
+
   reset() {
     // do nothing
   }
