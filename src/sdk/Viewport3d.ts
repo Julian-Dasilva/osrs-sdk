@@ -403,7 +403,10 @@ export class Viewport3d implements ViewportDelegate {
     const frameInterval = Settings.renderFps > 0 ? 1000 / Settings.renderFps : 0;
     if (frameInterval === 0 || now >= this.nextRenderTime) {
       this.render();
-      this.firstFrame.rendered(() => this.renderer.getContext().finish());
+      this.firstFrame.rendered(() => {
+        const gl = this.renderer.getContext();
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+      });
       this.stats.update();
       this.lastRenderTime = now;
       this.nextRenderTime =

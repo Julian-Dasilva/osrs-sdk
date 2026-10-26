@@ -8,6 +8,7 @@ import { XpDropController } from "../../src/sdk/XpDropController";
 import { TestRegion } from "../../src/sdk/testing/TestRegion";
 
 const renderedCanvases: unknown[] = [];
+const glFinishes: number[] = [];
 
 // jsdom has no WebGL context.
 jest.mock("three", () => ({
@@ -30,6 +31,9 @@ jest.mock("three", () => ({
     }
     render() {}
     setSize() {}
+    getContext() {
+      return { finish: () => glFinishes.push(glFinishes.length) };
+    }
   },
 }));
 
@@ -169,7 +173,8 @@ describe("3D present", () => {
     });
   });
 
-  test("reports the first frame presented one animation frame after the first render that draws the world", async () => {
+  test("finishes the first world frame's GPU work and reports it presented one animation frame later", async () => {
+    glFinishes.length = 0;
     const frames: FrameRequestCallback[] = [];
     jest.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => frames.push(callback));
     let now = 0;
@@ -194,21 +199,33 @@ describe("3D present", () => {
     void delegate.firstFramePresented().then(() => {
       presented = true;
     });
-    const seen: boolean[] = [];
+    const seen: [boolean, number][] = [];
+    const look = () => seen.push([presented, glFinishes.length]);
 
     await runFrame();
-    seen.push(presented);
+    look();
     Viewport.viewport.draw(world);
-    seen.push(presented);
+    look();
     await runFrame();
-    seen.push(presented);
+    look();
     await runFrame();
-    seen.push(presented);
+    look();
+    await runFrame();
+    look();
     let presentedLater = false;
     await delegate.firstFramePresented().then(() => {
       presentedLater = true;
     });
 
-    expect({ seen, presentedLater }).toEqual({ seen: [false, false, false, true], presentedLater: true });
+    expect({ seen, presentedLater }).toEqual({
+      seen: [
+        [false, 0],
+        [false, 0],
+        [false, 1],
+        [true, 1],
+        [true, 1],
+      ],
+      presentedLater: true,
+    });
   });
 });
