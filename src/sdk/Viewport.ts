@@ -47,6 +47,8 @@ const BOSS_BAR_INNER_PADDING = 2;
 
 export interface ViewportDelegate {
   initialise(world: World, region: Region): Promise<void>;
+  // resolves once the first frame that draws the world has reached the screen
+  firstFramePresented(): Promise<void>;
   reset();
   clientTick?(region: Region, timestamp?: number): void;
 

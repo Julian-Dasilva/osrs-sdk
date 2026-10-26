@@ -168,4 +168,47 @@ describe("3D present", () => {
       layerHidden: false,
     });
   });
+
+  test("reports the first frame presented one animation frame after the first render that draws the world", async () => {
+    const frames: FrameRequestCallback[] = [];
+    jest.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => frames.push(callback));
+    let now = 0;
+    jest.spyOn(window.performance, "now").mockImplementation(() => (now += 1000));
+    const runFrame = async () => {
+      frames.splice(0).forEach((callback) => callback(now));
+      await Promise.resolve();
+    };
+    [ControlPanelController.controller, XpDropController.controller, MapController.controller].forEach((controller) =>
+      Object.assign(controller, { draw() {} }),
+    );
+    const delegate = new Viewport3d(true, worldCanvas);
+    const region = new TestRegion(20, 20);
+    const world = new World();
+    region.world = world;
+    world.addRegion(region);
+    const player = new UnmodelledPlayer(region, { x: 10, y: 10 });
+    region.addPlayer(player);
+    Viewport.viewport = new Viewport(delegate, worldCanvas, area);
+    Viewport.viewport.setPlayer(player);
+    let presented = false;
+    void delegate.firstFramePresented().then(() => {
+      presented = true;
+    });
+    const seen: boolean[] = [];
+
+    await runFrame();
+    seen.push(presented);
+    Viewport.viewport.draw(world);
+    seen.push(presented);
+    await runFrame();
+    seen.push(presented);
+    await runFrame();
+    seen.push(presented);
+    let presentedLater = false;
+    await delegate.firstFramePresented().then(() => {
+      presentedLater = true;
+    });
+
+    expect({ seen, presentedLater }).toEqual({ seen: [false, false, false, true], presentedLater: true });
+  });
 });

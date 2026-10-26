@@ -38,6 +38,7 @@ import {
 import { CameraFocalPoint, CameraFocalPosition } from "./utils/camera/CameraFocalPoint";
 import { cameraOrbitDistance } from "./utils/camera/CameraOrbit";
 import { CHUNK_SIZE } from "./utils/Chunk";
+import { FirstFrame } from "./FirstFrame";
 
 // how many pixels wide should 2d elements be scaled to
 const SPRITE_SCALE = 32;
@@ -118,6 +119,7 @@ export class Viewport3d implements ViewportDelegate {
   private animateHandle: number;
   private renderingSuspended = false;
   private renderFailureLogged = false;
+  private firstFrame = new FirstFrame();
 
   constructor(faceCameraSouth: boolean, worldCanvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
@@ -401,6 +403,7 @@ export class Viewport3d implements ViewportDelegate {
     const frameInterval = Settings.renderFps > 0 ? 1000 / Settings.renderFps : 0;
     if (frameInterval === 0 || now >= this.nextRenderTime) {
       this.render();
+      this.firstFrame.rendered();
       this.stats.update();
       this.lastRenderTime = now;
       this.nextRenderTime =
@@ -495,6 +498,10 @@ export class Viewport3d implements ViewportDelegate {
     await this.renderer.compileAsync(this.scene, this.camera);
   }
 
+  firstFramePresented() {
+    return this.firstFrame.presented();
+  }
+
   reset() {
     this.knownActors.forEach((actor) => actor.destroy(this.scene));
     this.knownActors = new Map();
@@ -584,6 +591,7 @@ export class Viewport3d implements ViewportDelegate {
     }
 
     this.knownActors.forEach((actor) => actor.draw(this.scene, delta, world.tickPercent, world.clientTickPercent ?? 0));
+    this.firstFrame.worldDrawn();
     this.refreshProjectedClickboxes();
 
     // highlight selected tile

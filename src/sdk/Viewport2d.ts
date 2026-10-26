@@ -14,13 +14,19 @@ import { Trainer } from "./Trainer";
 import { Location } from "./Location";
 import { CHUNK_SIZE } from "./utils/Chunk";
 import { ScreenPoint } from "./rendering/utils/projectedClickbox";
+import { FirstFrame } from "./FirstFrame";
 
 export class Viewport2d implements ViewportDelegate {
   private selectedTile: Location | null = null;
+  private firstFrame = new FirstFrame();
 
   async initialise(world: World, region: Region) {
     // do nothing, but maybe we should buffer the world background
     return;
+  }
+
+  firstFramePresented() {
+    return this.firstFrame.presented();
   }
 
   reset() {
@@ -125,6 +131,8 @@ export class Viewport2d implements ViewportDelegate {
     }
 
     region.context.restore();
+    this.firstFrame.worldDrawn();
+    this.firstFrame.rendered();
 
     const { viewportX, viewportY } = Viewport.viewport.getViewport(world.tickPercent);
     return {
