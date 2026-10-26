@@ -403,7 +403,12 @@ export class Viewport3d implements ViewportDelegate {
     const frameInterval = Settings.renderFps > 0 ? 1000 / Settings.renderFps : 0;
     if (frameInterval === 0 || now >= this.nextRenderTime) {
       this.render();
-      this.firstFrame.rendered();
+      // The first frame with new models costs a software renderer up to a second. gl.finish() returned before that
+      // work was done, but a read waits for it, so it happens here instead of after the page shows ready.
+      this.firstFrame.rendered(() => {
+        const gl = this.renderer.getContext();
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+      });
       this.stats.update();
       this.lastRenderTime = now;
       this.nextRenderTime =

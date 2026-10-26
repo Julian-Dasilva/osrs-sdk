@@ -8,12 +8,10 @@ export class FirstFrame {
     if (this.stage === "waiting") this.stage = "drawn";
   }
 
-  // The first draw of new models queues their shader links and uploads, and the
-  // browser finishes that work when it presents the frame. No animation frame
-  // runs until that presentation returns, so the next one marks it done.
-  rendered() {
+  rendered(waitForPixels?: () => void) {
     if (this.stage !== "drawn") return;
     this.stage = "presenting";
+    waitForPixels?.();
     requestAnimationFrame(() => {
       this.stage = "presented";
       this.waiters.splice(0).forEach((resolve) => resolve());
