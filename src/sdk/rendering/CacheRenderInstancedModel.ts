@@ -165,10 +165,13 @@ export class CacheRenderInstancedModel implements Model {
         );
 
         const terrain = this.reference.kind === "asset" && this.reference.assetId.endsWith("-terrain");
+        const transparent = Boolean(payload.alphas?.some((alpha) => alpha !== 0));
         const materialOptions = {
           color: payload.color ?? 0xffffff,
           vertexColors: Boolean(payload.colors?.length),
-          transparent: Boolean(payload.alphas?.some((alpha) => alpha !== 0)),
+          transparent,
+          // Faded fragments share this material. A depth write from one hides the fragments behind it.
+          depthWrite: this.reference.kind === "spotAnim" ? !transparent : true,
           alphaTest: 0.01,
           polygonOffset: terrain,
           polygonOffsetFactor: terrain ? 1 : 0,
