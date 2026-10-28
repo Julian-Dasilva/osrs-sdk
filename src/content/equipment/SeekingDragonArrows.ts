@@ -13,6 +13,10 @@ export class SeekingDragonArrows extends Ammo {
   get cacheItemId(): number {
     return CACHE_ASSETS.items.seekingDragonArrows.id;
   }
+
+  override get itemId(): number {
+    return 33595;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {

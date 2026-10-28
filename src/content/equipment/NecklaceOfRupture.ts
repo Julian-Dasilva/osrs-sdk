@@ -8,6 +8,10 @@ export class NecklaceOfRupture extends Necklace {
   get cacheItemId(): number {
     return CACHE_ASSETS.items.necklaceOfRupture.id;
   }
+
+  override get itemId(): number {
+    return 33639;
+  }
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   get inventoryImage() {
