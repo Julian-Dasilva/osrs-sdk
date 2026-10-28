@@ -383,6 +383,8 @@ const COLLAPSED_SPAN = 0.02;
 const SLAB_HEIGHT = 0.2;
 const SLAB_WIDTH = 0.25;
 const SLAB_VERTS = 20;
+const CLUSTER_RADIUS = 0.32;
+const SHARD_SCALE = 0.55;
 
 function span(values: ArrayLike<number>, verts: readonly number[], axis: number) {
   let min = Infinity;
@@ -397,7 +399,7 @@ function span(values: ArrayLike<number>, verts: readonly number[], axis: number)
 
 /**
  * A floor graphic's sequence lifts its shards into a column. The bind height is the one that lies on the tile.
- * A flat shard the sequence scales to a point is put back, centred with the other restored shards.
+ * A flat shard the sequence scales to a point is put back with the others, gathered so the cluster stays on one tile.
  */
 export function levelPosedFrame(bind: ArrayLike<number>, posed: Float32Array, groups: readonly (readonly number[])[]) {
   const restore: (readonly number[])[] = [];
@@ -427,5 +429,25 @@ export function levelPosedFrame(bind: ArrayLike<number>, posed: Float32Array, gr
       posed[vertex * 3 + 1] = bind[vertex * 3 + 1];
       posed[vertex * 3 + 2] = bind[vertex * 3 + 2] - centreZ;
     }
+    fitShard(posed, verts);
+  }
+}
+
+function fitShard(posed: Float32Array, verts: readonly number[]) {
+  let centreX = 0;
+  let centreZ = 0;
+  for (const vertex of verts) {
+    centreX += posed[vertex * 3];
+    centreZ += posed[vertex * 3 + 2];
+  }
+  centreX /= verts.length;
+  centreZ /= verts.length;
+  const reach = Math.hypot(centreX, centreZ);
+  const placed = reach > CLUSTER_RADIUS && reach !== 0 ? CLUSTER_RADIUS / reach : 1;
+  const nextX = centreX * placed;
+  const nextZ = centreZ * placed;
+  for (const vertex of verts) {
+    posed[vertex * 3] = nextX + (posed[vertex * 3] - centreX) * SHARD_SCALE;
+    posed[vertex * 3 + 2] = nextZ + (posed[vertex * 3 + 2] - centreZ) * SHARD_SCALE;
   }
 }
