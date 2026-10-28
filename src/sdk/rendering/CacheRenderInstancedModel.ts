@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { CacheRenderAnimation, CacheRenderTexture } from "../../cache-render-format";
+import type { CacheRenderAnimation } from "../../cache-render-format";
 import { Location3 } from "../Location";
 import { Renderable } from "../Renderable";
 import { AnimationFrameSoundPlayer, preloadAnimationFrameSounds } from "./AnimationFrameSounds";
@@ -11,6 +11,7 @@ import { cachedPayload, mergePayloads } from "./utils/payloadUtils";
 import { CLIENT_CYCLES_PER_SECOND } from "../utils/constants";
 import { cacheColorsToRgba, normalizeCacheAlpha } from "./utils/colors";
 import { splitTexturedFaces } from "./utils/texturedFaces";
+import { textureImages } from "./utils/textureImages";
 
 // Animated instances cannot all mutate one shared geometry when their start
 // delays differ. A pool therefore owns one pre-posed geometry per cache frame;
@@ -20,28 +21,6 @@ let hiddenMatrixValue: THREE.Matrix4 | undefined;
 const hiddenMatrix = () => (hiddenMatrixValue ??= new THREE.Matrix4().makeScale(0, 0, 0));
 
 type AnimationFrameMesh = { mesh: THREE.InstancedMesh; textured: THREE.InstancedMesh[]; active: Set<number> };
-
-function textureImages(
-  textures: Readonly<Record<string, CacheRenderTexture>> | undefined,
-): Map<number, THREE.DataTexture> {
-  const images = new Map<number, THREE.DataTexture>();
-  if (!textures) return images;
-  Object.entries(textures).forEach(([id, texture]) => {
-    const rgba = new Uint8Array(texture.pixels.length * 4);
-    texture.pixels.forEach((pixel, index) => {
-      const value = pixel >>> 0;
-      rgba[index * 4] = (value >> 16) & 255;
-      rgba[index * 4 + 1] = (value >> 8) & 255;
-      rgba[index * 4 + 2] = value & 255;
-      rgba[index * 4 + 3] = (value >> 24) & 255;
-    });
-    const image = new THREE.DataTexture(rgba, texture.width, texture.height, THREE.RGBAFormat);
-    image.flipY = false;
-    image.needsUpdate = true;
-    images.set(Number(id), image);
-  });
-  return images;
-}
 
 function drawsOf(frame: AnimationFrameMesh): THREE.InstancedMesh[] {
   return [frame.mesh, ...frame.textured];
@@ -229,11 +208,14 @@ export class CacheRenderInstancedModel implements Model {
             payload.colors && payload.colors.length * 3 === payload.positions.length
               ? cacheColorsToRgba(payload.colors, frame.alphas, spotPayload?.faceColors, recolor)
               : null;
+          const position = new THREE.Float32BufferAttribute(frame.positions, 3);
+          const color = colors ? new THREE.Float32BufferAttribute(colors, 4) : null;
+          const uv = uvs ? new THREE.Float32BufferAttribute(uvs, 2) : null;
           const build = (faceIndices: readonly number[], withUv: boolean, meshMaterial: THREE.Material) => {
             const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute("position", new THREE.Float32BufferAttribute(frame.positions.slice(), 3));
-            if (colors) geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 4));
-            if (withUv && uvs) geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+            geometry.setAttribute("position", position);
+            if (color) geometry.setAttribute("color", color);
+            if (withUv && uv) geometry.setAttribute("uv", uv);
             geometry.setIndex(Array.from(faceIndices));
             geometry.computeVertexNormals();
             const mesh = new THREE.InstancedMesh(geometry, meshMaterial, this.maxInstances);
