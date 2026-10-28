@@ -28,6 +28,7 @@ import {
   normalizeCacheAlpha,
   resolveCacheColor,
 } from "./utils/colors";
+import { textureImages } from "./utils/textureImages";
 
 const DRAW_CLICKBOX_DEBUG = false;
 const DRAW_CACHE_MODEL_WIREFRAME = false;
@@ -382,19 +383,8 @@ export class CacheRenderModel implements Model, RenderableListener {
       ];
       if (hasVertexAlpha && !DRAW_CACHE_MODEL_WIREFRAME) enableVertexAlpha(materials[0]);
       const textureMaterial = new Map<number, number>();
-      Object.entries(payload.textures ?? {}).forEach(([id, texture]) => {
-        const rgba = new Uint8Array(texture.pixels.length * 4);
-        texture.pixels.forEach((pixel, index) => {
-          const value = pixel >>> 0;
-          rgba[index * 4] = (value >> 16) & 255;
-          rgba[index * 4 + 1] = (value >> 8) & 255;
-          rgba[index * 4 + 2] = value & 255;
-          rgba[index * 4 + 3] = (value >> 24) & 255;
-        });
-        const image = new THREE.DataTexture(rgba, texture.width, texture.height, THREE.RGBAFormat);
-        image.flipY = false;
-        image.needsUpdate = true;
-        textureMaterial.set(Number(id), materials.length);
+      textureImages(payload.textures).forEach((image, id) => {
+        textureMaterial.set(id, materials.length);
         const textureMaterialInstance = new THREE.MeshBasicMaterial({
           map: image,
           vertexColors: Boolean(payload.colors?.length),
