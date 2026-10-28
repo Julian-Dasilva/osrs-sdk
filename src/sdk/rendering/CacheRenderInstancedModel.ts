@@ -9,9 +9,10 @@ import { Model } from "./Model";
 import { applyMayaFrame, applyRawFrame, sampleAnimation } from "./utils/animations";
 import { cachedPayload, mergePayloads } from "./utils/payloadUtils";
 import { CLIENT_CYCLES_PER_SECOND } from "../utils/constants";
-import { cacheColorsToRgba, normalizeCacheAlpha } from "./utils/colors";
+import { cacheAlphaToOpacity, cacheColorsToRgba, normalizeCacheAlpha } from "./utils/colors";
 import { splitTexturedFaces } from "./utils/texturedFaces";
 import { textureImages } from "./utils/textureImages";
+import { enableVertexAlpha, needsVertexAlpha } from "./utils/vertexAlpha";
 
 // Animated instances cannot all mutate one shared geometry when their start
 // delays differ. A pool therefore owns one pre-posed geometry per cache frame;
@@ -171,10 +172,13 @@ export class CacheRenderInstancedModel implements Model {
         );
 
         const terrain = this.reference.kind === "asset" && this.reference.assetId.endsWith("-terrain");
+        const fades = needsVertexAlpha(payload);
         const materialOptions = {
           color: payload.color ?? 0xffffff,
           vertexColors: Boolean(payload.colors?.length),
-          transparent: Boolean(payload.alphas?.some((alpha) => alpha !== 0)),
+          transparent: fades,
+          // A faded spotanim fragment must not hide the smoke behind it.
+          depthWrite: !(fades && this.reference.kind === "spotAnim"),
           alphaTest: 0.01,
           polygonOffset: terrain,
           polygonOffsetFactor: terrain ? 1 : 0,
@@ -187,6 +191,10 @@ export class CacheRenderInstancedModel implements Model {
         images.forEach((image, id) => {
           textureMaterials.set(id, new THREE.MeshBasicMaterial({ ...materialOptions, map: image }));
         });
+        if (fades) {
+          enableVertexAlpha(material);
+          textureMaterials.forEach((textureMaterial) => enableVertexAlpha(textureMaterial));
+        }
         const indices = payload.indices ?? [];
         const available = new Set<number>();
         textureMaterials.forEach((_material, id) => available.add(id));
@@ -211,11 +219,15 @@ export class CacheRenderInstancedModel implements Model {
           const position = new THREE.Float32BufferAttribute(frame.positions, 3);
           const color = colors ? new THREE.Float32BufferAttribute(colors, 4) : null;
           const uv = uvs ? new THREE.Float32BufferAttribute(uvs, 2) : null;
+          const cacheAlpha = fades
+            ? new THREE.Float32BufferAttribute(Array.from(frame.alphas, cacheAlphaToOpacity), 1)
+            : null;
           const build = (faceIndices: readonly number[], withUv: boolean, meshMaterial: THREE.Material) => {
             const geometry = new THREE.BufferGeometry();
             geometry.setAttribute("position", position);
             if (color) geometry.setAttribute("color", color);
             if (withUv && uv) geometry.setAttribute("uv", uv);
+            if (cacheAlpha) geometry.setAttribute("cacheAlpha", cacheAlpha);
             geometry.setIndex(Array.from(faceIndices));
             geometry.computeVertexNormals();
             const mesh = new THREE.InstancedMesh(geometry, meshMaterial, this.maxInstances);
