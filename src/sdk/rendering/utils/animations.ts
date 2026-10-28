@@ -404,8 +404,14 @@ function span(values: ArrayLike<number>, verts: readonly number[], axis: number)
 export function levelPosedFrame(bind: ArrayLike<number>, posed: Float32Array, groups: readonly (readonly number[])[]) {
   const restore: (readonly number[])[] = [];
   for (const verts of groups) {
-    const collapsed = span(posed, verts, 0) < COLLAPSED_SPAN && span(posed, verts, 1) < COLLAPSED_SPAN && span(posed, verts, 2) < COLLAPSED_SPAN;
-    const slab = verts.length > SLAB_VERTS && span(bind, verts, 1) < SLAB_HEIGHT && Math.max(span(bind, verts, 0), span(bind, verts, 2)) > SLAB_WIDTH;
+    const collapsed =
+      span(posed, verts, 0) < COLLAPSED_SPAN &&
+      span(posed, verts, 1) < COLLAPSED_SPAN &&
+      span(posed, verts, 2) < COLLAPSED_SPAN;
+    const slab =
+      verts.length > SLAB_VERTS &&
+      span(bind, verts, 1) < SLAB_HEIGHT &&
+      Math.max(span(bind, verts, 0), span(bind, verts, 2)) > SLAB_WIDTH;
     if (collapsed && slab) restore.push(verts);
     else for (const vertex of verts) posed[vertex * 3 + 1] = bind[vertex * 3 + 1];
   }
