@@ -26,6 +26,8 @@ const EXPECTED_PCM = new Map<number, [number, string]>([
 test("cache sound pack synthesizes the reference PCM", () => {
   const packed = readFileSync("test/fixtures/cache-sound-effects.soundpack");
   const definitions = parseSoundEffectPack(packed);
+  // Sound 2497 (baxeCrush) was registered after the pack was built; rebuilding it would commit extracted cache audio.
+  expect(CACHE_SOUND_EFFECT_IDS.filter((id) => !definitions.has(id))).toEqual([2497]);
   // Shared Varl effects referenced by Sol's sequence definitions are pulled in
   // automatically even though they are not part of the named sound registry.
   expect([8066, 8289].every((id) => definitions.has(id))).toBe(true);
