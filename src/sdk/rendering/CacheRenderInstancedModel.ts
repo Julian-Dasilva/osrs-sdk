@@ -6,7 +6,7 @@ import { AnimationFrameSoundPlayer, preloadAnimationFrameSounds } from "./Animat
 import { CacheRender } from "./CacheRenderBundle";
 import { CacheRenderReference } from "./CacheRenderReference";
 import { Model } from "./Model";
-import { applyMayaFrame, applyRawFrame, sampleAnimation } from "./utils/animations";
+import { applyMayaFrame, applyRawFrame, levelPosedFrame, sampleAnimation } from "./utils/animations";
 import { cachedPayload, mergePayloads } from "./utils/payloadUtils";
 import { CLIENT_CYCLES_PER_SECOND } from "../utils/constants";
 import { cacheAlphaToOpacity, cacheColorsToRgba, normalizeCacheAlpha } from "./utils/colors";
@@ -58,7 +58,7 @@ function poolKey(reference: CacheRenderReference, ids: string[], bundleVersion: 
   const spot = reference.kind === "spotAnim" ? reference.spotAnims[0] : undefined;
   // Placement, rotation, height and animation delay belong to the instance.
   // Recolouring changes shared vertex data and therefore still needs a pool.
-  return `${bundleVersion}:${reference.kind}:${ids.join(",")}:${stableRecolorKey(spot?.recolor)}`;
+  return `${bundleVersion}:${reference.kind}:${ids.join(",")}:${stableRecolorKey(spot?.recolor)}:${spot?.level ? "level" : ""}`;
 }
 
 function posedFrames(
@@ -69,7 +69,8 @@ function posedFrames(
   alphaGroups: number[][],
   animayaGroups: number[][],
   animayaScales: number[][],
-  animation?: CacheRenderAnimation,
+  animation: CacheRenderAnimation | undefined,
+  level: boolean,
 ) {
   const rawFrames = animation?.rawFrames ?? [];
   const mayaFrames = animation?.mayaFrames ?? [];
@@ -88,6 +89,7 @@ function posedFrames(
         posedAlphas,
         alphaGroups,
       );
+      if (level) levelPosedFrame(positions, posedPositions, vertexGroups);
     } else if (mayaFrames[frame]) {
       applyMayaFrame(posedPositions, mayaFrames[frame], animayaGroups, animayaScales);
     } else if (expandedFrames[frame]?.length === posedPositions.length) {
@@ -210,6 +212,7 @@ export class CacheRenderInstancedModel implements Model {
           payload.animayaGroups ?? [],
           payload.animayaScales ?? [],
           animation,
+          Boolean(placement?.level),
         );
         pool!.frames = frameData.map((frame) => {
           const colors =

@@ -378,3 +378,54 @@ export function applyMayaFrame(
     }
   }
 }
+
+const COLLAPSED_SPAN = 0.02;
+const SLAB_HEIGHT = 0.2;
+const SLAB_WIDTH = 0.25;
+const SLAB_VERTS = 20;
+
+function span(values: ArrayLike<number>, verts: readonly number[], axis: number) {
+  let min = Infinity;
+  let max = -Infinity;
+  for (const vertex of verts) {
+    const value = values[vertex * 3 + axis];
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
+  return max - min;
+}
+
+/**
+ * A floor graphic's sequence lifts its shards into a column. The bind height is the one that lies on the tile.
+ * A flat shard the sequence scales to a point is put back, centred with the other restored shards.
+ */
+export function levelPosedFrame(bind: ArrayLike<number>, posed: Float32Array, groups: readonly (readonly number[])[]) {
+  const restore: (readonly number[])[] = [];
+  for (const verts of groups) {
+    const collapsed = span(posed, verts, 0) < COLLAPSED_SPAN && span(posed, verts, 1) < COLLAPSED_SPAN && span(posed, verts, 2) < COLLAPSED_SPAN;
+    const slab = verts.length > SLAB_VERTS && span(bind, verts, 1) < SLAB_HEIGHT && Math.max(span(bind, verts, 0), span(bind, verts, 2)) > SLAB_WIDTH;
+    if (collapsed && slab) restore.push(verts);
+    else for (const vertex of verts) posed[vertex * 3 + 1] = bind[vertex * 3 + 1];
+  }
+  let centreX = 0;
+  let centreZ = 0;
+  let count = 0;
+  for (const verts of restore) {
+    for (const vertex of verts) {
+      centreX += bind[vertex * 3];
+      centreZ += bind[vertex * 3 + 2];
+      count++;
+    }
+  }
+  if (count > 0) {
+    centreX /= count;
+    centreZ /= count;
+  }
+  for (const verts of restore) {
+    for (const vertex of verts) {
+      posed[vertex * 3] = bind[vertex * 3] - centreX;
+      posed[vertex * 3 + 1] = bind[vertex * 3 + 1];
+      posed[vertex * 3 + 2] = bind[vertex * 3 + 2] - centreZ;
+    }
+  }
+}

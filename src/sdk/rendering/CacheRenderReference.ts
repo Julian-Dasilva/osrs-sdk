@@ -27,6 +27,8 @@ export type CacheRenderSpotAnim = {
   offset?: { x: number; y: number };
   delay?: number;
   rotation?: number;
+  /** Keep the model's bind height so a rising sequence stays on the floor. */
+  level?: boolean;
   /** Optional mapping from cache HSL face colours to Three.js RGB values. */
   recolor?: Record<string, number>;
 };
