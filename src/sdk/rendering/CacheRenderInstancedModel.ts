@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { CacheRenderAnimation } from "../../cache-render-format";
+import type { CacheRenderAnimation, CacheRenderTexture } from "../../cache-render-format";
 import { Location3 } from "../Location";
 import { Renderable } from "../Renderable";
 import { AnimationFrameSoundPlayer, preloadAnimationFrameSounds } from "./AnimationFrameSounds";
@@ -10,6 +10,7 @@ import { applyMayaFrame, applyRawFrame, sampleAnimation } from "./utils/animatio
 import { cachedPayload, mergePayloads } from "./utils/payloadUtils";
 import { CLIENT_CYCLES_PER_SECOND } from "../utils/constants";
 import { cacheColorsToRgba, normalizeCacheAlpha } from "./utils/colors";
+import { splitTexturedFaces } from "./utils/texturedFaces";
 
 // Animated instances cannot all mutate one shared geometry when their start
 // delays differ. A pool therefore owns one pre-posed geometry per cache frame;
@@ -18,7 +19,33 @@ const DEFAULT_MAX_INSTANCES = 256;
 let hiddenMatrixValue: THREE.Matrix4 | undefined;
 const hiddenMatrix = () => (hiddenMatrixValue ??= new THREE.Matrix4().makeScale(0, 0, 0));
 
-type AnimationFrameMesh = { mesh: THREE.InstancedMesh; active: Set<number> };
+type AnimationFrameMesh = { mesh: THREE.InstancedMesh; textured: THREE.InstancedMesh[]; active: Set<number> };
+
+function textureImages(
+  textures: Readonly<Record<string, CacheRenderTexture>> | undefined,
+): Map<number, THREE.DataTexture> {
+  const images = new Map<number, THREE.DataTexture>();
+  if (!textures) return images;
+  Object.entries(textures).forEach(([id, texture]) => {
+    const rgba = new Uint8Array(texture.pixels.length * 4);
+    texture.pixels.forEach((pixel, index) => {
+      const value = pixel >>> 0;
+      rgba[index * 4] = (value >> 16) & 255;
+      rgba[index * 4 + 1] = (value >> 8) & 255;
+      rgba[index * 4 + 2] = value & 255;
+      rgba[index * 4 + 3] = (value >> 24) & 255;
+    });
+    const image = new THREE.DataTexture(rgba, texture.width, texture.height, THREE.RGBAFormat);
+    image.flipY = false;
+    image.needsUpdate = true;
+    images.set(Number(id), image);
+  });
+  return images;
+}
+
+function drawsOf(frame: AnimationFrameMesh): THREE.InstancedMesh[] {
+  return [frame.mesh, ...frame.textured];
+}
 type Pool = {
   ready: Promise<void>;
   capacity: number;
@@ -176,6 +203,16 @@ export class CacheRenderInstancedModel implements Model {
         };
         // Cache payload colours already contain the game client's model lighting.
         const material = new THREE.MeshBasicMaterial(materialOptions);
+        const images = textureImages(payload.textures);
+        const textureMaterials = new Map<number, THREE.MeshBasicMaterial>();
+        images.forEach((image, id) => {
+          textureMaterials.set(id, new THREE.MeshBasicMaterial({ ...materialOptions, map: image }));
+        });
+        const indices = payload.indices ?? [];
+        const available = new Set<number>();
+        textureMaterials.forEach((_material, id) => available.add(id));
+        const split = splitTexturedFaces(payload.textureIds, indices, available);
+        const uvs = payload.uvs?.length === (payload.positions.length / 3) * 2 ? payload.uvs : null;
         const recolor = placement?.recolor ?? {};
         const frameData = posedFrames(
           payload.positions,
@@ -188,20 +225,32 @@ export class CacheRenderInstancedModel implements Model {
           animation,
         );
         pool!.frames = frameData.map((frame) => {
-          const geometry = new THREE.BufferGeometry();
-          geometry.setAttribute("position", new THREE.Float32BufferAttribute(frame.positions, 3));
-          if (payload.colors && payload.colors.length * 3 === payload.positions.length) {
-            const colors = cacheColorsToRgba(payload.colors, frame.alphas, spotPayload?.faceColors, recolor);
-            geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 4));
-          }
-          geometry.setIndex(payload.indices ?? []);
-          geometry.computeVertexNormals();
-          const mesh = new THREE.InstancedMesh(geometry, material, pool!.capacity);
-          mesh.frustumCulled = false;
-          mesh.count = 0;
-          for (let index = 0; index < pool!.capacity; index++) mesh.setMatrixAt(index, hiddenMatrix());
-          mesh.instanceMatrix.needsUpdate = true;
-          return { mesh, active: new Set<number>() };
+          const colors =
+            payload.colors && payload.colors.length * 3 === payload.positions.length
+              ? cacheColorsToRgba(payload.colors, frame.alphas, spotPayload?.faceColors, recolor)
+              : null;
+          const build = (faceIndices: readonly number[], withUv: boolean, meshMaterial: THREE.Material) => {
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute("position", new THREE.Float32BufferAttribute(frame.positions.slice(), 3));
+            if (colors) geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 4));
+            if (withUv && uvs) geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+            geometry.setIndex(Array.from(faceIndices));
+            geometry.computeVertexNormals();
+            const mesh = new THREE.InstancedMesh(geometry, meshMaterial, this.maxInstances);
+            mesh.frustumCulled = false;
+            mesh.count = 0;
+            for (let index = 0; index < this.maxInstances; index++) mesh.setMatrixAt(index, hiddenMatrix());
+            mesh.instanceMatrix.needsUpdate = true;
+            return mesh;
+          };
+          const mesh = build(split ? split.plain : indices, false, material);
+          const textured: THREE.InstancedMesh[] = [];
+          split?.textured.forEach((group) => {
+            const meshMaterial = textureMaterials.get(group.id);
+            if (!meshMaterial) return;
+            textured.push(build(group.indices, true, meshMaterial));
+          });
+          return { mesh, textured, active: new Set<number>() };
         });
       });
       pools.set(key, pool);
@@ -226,20 +275,31 @@ export class CacheRenderInstancedModel implements Model {
     if (this.currentFrame !== frame) {
       if (this.currentFrame >= 0) {
         const previous = pool.frames[this.currentFrame];
-        previous.mesh.setMatrixAt(this.slot, hiddenMatrix());
-        previous.mesh.instanceMatrix.needsUpdate = true;
+        for (const mesh of drawsOf(previous)) {
+          mesh.setMatrixAt(this.slot, hiddenMatrix());
+          mesh.instanceMatrix.needsUpdate = true;
+        }
         previous.active.delete(this.slot);
-        if (!previous.active.size && previous.mesh.parent === scene) scene.remove(previous.mesh);
+        if (!previous.active.size) {
+          for (const mesh of drawsOf(previous)) {
+            if (mesh.parent === scene) scene.remove(mesh);
+          }
+        }
       }
       this.currentFrame = frame;
       if (frame >= 0) pool.frames[frame].active.add(this.slot);
     }
     if (frame < 0) return;
     const bucket = pool.frames[frame];
-    if (bucket.mesh.parent !== scene) scene.add(bucket.mesh);
-    bucket.mesh.count = pool.next;
-    bucket.mesh.setMatrixAt(this.slot, matrix ?? hiddenMatrix());
-    bucket.mesh.instanceMatrix.needsUpdate = true;
+    const placed = matrix ?? hiddenMatrix();
+    for (const mesh of drawsOf(bucket)) {
+      const index = mesh.geometry.getIndex();
+      if (index !== null && index.count === 0) continue;
+      if (mesh.parent !== scene) scene.add(mesh);
+      mesh.count = pool.next;
+      mesh.setMatrixAt(this.slot, placed);
+      mesh.instanceMatrix.needsUpdate = true;
+    }
   }
 
   draw(
