@@ -1,17 +1,15 @@
 import React from "react";
 import { Dropdown } from "./Dropdown";
-import type { Item, Loadout as LoadoutData, LoadoutItemId, UnitEquipment } from "osrs-sdk";
-
-export type LoadoutRegistry = Map<number, Item>;
+import type { ItemCatalog, Loadout as LoadoutData, LoadoutItemId, UnitEquipment } from "osrs-sdk";
 
 export type LoadoutSlot = { kind: "equipment"; slot: keyof UnitEquipment } | { index: number; kind: "inventory" };
 
-export type GetLoadoutSubstitutes = (slot: keyof UnitEquipment | null, registry?: LoadoutRegistry) => number[];
+export type GetLoadoutSubstitutes = (slot: keyof UnitEquipment | null, catalog: ItemCatalog) => number[];
 
 export type LoadoutProps = {
   loadout: LoadoutData;
   onItemSelect: (slot: LoadoutSlot, itemId: LoadoutItemId) => void;
-  registry?: LoadoutRegistry;
+  catalog: ItemCatalog;
   // Return appropriate substitutes for the given slot (slot is null for inventory slots).
   getSubstitutes: GetLoadoutSubstitutes;
 };
@@ -68,22 +66,22 @@ function ItemSlot({
   itemId,
   allowEmpty,
   onItemSelect,
-  registry,
+  catalog,
   substituteItemIds,
 }: {
   allowEmpty: boolean;
   itemId: LoadoutItemId;
   onItemSelect: (itemId: LoadoutItemId) => void;
-  registry?: LoadoutRegistry;
+  catalog: ItemCatalog;
   substituteItemIds: number[];
 }) {
-  const item = itemId === null ? undefined : registry?.get(itemId);
+  const item = itemId === null ? undefined : catalog.get(itemId);
 
   const trigger = item ? (
     <img
       src={item.inventoryImage}
-      alt={item.itemName}
-      title={`${item.itemName} (${itemId})`}
+      alt={item.name}
+      title={`${item.name} (${itemId})`}
       style={{ maxHeight: "90%", maxWidth: "90%", imageRendering: "pixelated" }}
     />
   ) : (
@@ -118,13 +116,13 @@ function ItemSlot({
         </div>
       )}
       {substituteItemIds.map((substituteId) => {
-        const substitute = registry?.get(substituteId);
+        const substitute = catalog.get(substituteId);
         if (!substitute) return null;
         return (
           <div
             key={substituteId}
             onClick={() => onItemSelect(substituteId)}
-            title={`${substitute.itemName} (${substitute.cacheItemId})`}
+            title={`${substitute.name} (${substitute.id})`}
             style={{
               alignItems: "center",
               justifyItems: "center",
@@ -138,10 +136,10 @@ function ItemSlot({
           >
             <img
               src={substitute.inventoryImage}
-              alt={substitute.itemName}
+              alt={substitute.name}
               style={{ maxHeight: "24px", imageRendering: "pixelated" }}
             />
-            <span>{substitute.itemName}</span>
+            <span>{substitute.name}</span>
           </div>
         );
       })}
@@ -149,7 +147,7 @@ function ItemSlot({
   );
 }
 
-export function Loadout({ loadout, onItemSelect, registry, getSubstitutes }: LoadoutProps) {
+export function Loadout({ loadout, onItemSelect, catalog, getSubstitutes }: LoadoutProps) {
   return (
     <div style={{ display: "flex", gap: 24 }}>
       <section>
@@ -171,8 +169,8 @@ export function Loadout({ loadout, onItemSelect, registry, getSubstitutes }: Loa
                 allowEmpty={!equipmentSlotsRequiringItems.has(slot.key)}
                 itemId={loadout.equipment[slot.key]}
                 onItemSelect={(itemId) => onItemSelect({ kind: "equipment", slot: slot.key }, itemId)}
-                registry={registry}
-                substituteItemIds={getSubstitutes(slot.key, registry)}
+                catalog={catalog}
+                substituteItemIds={getSubstitutes(slot.key, catalog)}
               />
             </div>
           ))}
@@ -187,8 +185,8 @@ export function Loadout({ loadout, onItemSelect, registry, getSubstitutes }: Loa
                 allowEmpty
                 itemId={itemId}
                 onItemSelect={(selectedItemId) => onItemSelect({ index, kind: "inventory" }, selectedItemId)}
-                registry={registry}
-                substituteItemIds={getSubstitutes(null, registry)}
+                catalog={catalog}
+                substituteItemIds={getSubstitutes(null, catalog)}
               />
             </div>
           ))}

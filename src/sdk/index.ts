@@ -71,6 +71,7 @@ export * from "./gear/Ring";
 export * from "./gear/Weapon";
 export * from "./Input";
 export * from "./Item";
+export * from "./ItemCatalog";
 export * from "./ItemName";
 export * from "./Location";
 export * from "./MapController";

@@ -5,8 +5,4 @@ export * from "./equipment";
 export * from "./items";
 export * from "./mobs";
 export * from "./weapons";
-
-export async function loadLoadoutRegistry() {
-  const { LoadoutRegistry } = await import("./LoadoutRegistry");
-  return LoadoutRegistry;
-}
+export { SDK_ITEM_CATALOG } from "./SdkItemCatalog";

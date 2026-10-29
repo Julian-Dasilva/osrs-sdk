@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { EQUIPMENT_TYPE_TO_SLOT, Equipment, loadLoadoutRegistry, Settings, Weapon } from "osrs-sdk";
+import React, { useState } from "react";
+import { SDK_ITEM_CATALOG, Settings } from "osrs-sdk";
 import type { Loadout as LoadoutData, LoadoutItemId } from "osrs-sdk";
 import { Modal } from "./Modal";
 import { RuneScapeButton } from "./RuneScapeButton";
 import { RuneScapePanel } from "./RuneScapePanel";
 import { Loadout } from "./Loadout";
-import type { GetLoadoutSubstitutes, LoadoutRegistry, LoadoutSlot } from "./Loadout";
+import type { GetLoadoutSubstitutes, LoadoutSlot } from "./Loadout";
 import { useTrainerContext } from "../TrainerContext";
 
 export type LoadoutManagerProps = {
@@ -26,24 +26,7 @@ export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: Load
     savedCustomLoadout ?? loadouts[savedLoadoutIndex >= 0 ? savedLoadoutIndex : 0],
   );
   const [isCustomLoadout, setIsCustomLoadout] = useState(savedCustomLoadout !== null);
-  const [registry, setRegistry] = useState<LoadoutRegistry>();
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
-
-  useEffect(() => {
-    if (!open || registry) return;
-
-    let mounted = true;
-
-    // The registry imports and constructs every item class, so keep it out of
-    // the initial app bundle and load it only when the loadout UI is opened.
-    loadLoadoutRegistry().then((loadedRegistry) => {
-      if (mounted) setRegistry(loadedRegistry);
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, [open, registry]);
 
   // Selecting something from the dropdown resets to a base loadout and clears custom state.
   const onSelectTemplatedLoadout = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -62,15 +45,16 @@ export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: Load
   const onItemSelect = (slot: LoadoutSlot, itemId: LoadoutItemId) => {
     if (!loadout) return;
 
-    const selectedItem = itemId === null ? undefined : registry?.get(itemId);
-    const currentWeapon = loadout.equipment.weapon === null ? undefined : registry?.get(loadout.equipment.weapon);
+    const selectedItem = itemId === null ? undefined : SDK_ITEM_CATALOG.get(itemId);
+    const currentWeapon =
+      loadout.equipment.weapon === null ? undefined : SDK_ITEM_CATALOG.get(loadout.equipment.weapon);
     const equipsTwoHandedWeapon =
-      slot.kind === "equipment" && slot.slot === "weapon" && selectedItem instanceof Weapon && selectedItem.isTwoHander;
+      slot.kind === "equipment" && slot.slot === "weapon" && selectedItem?.slot === "weapon" && selectedItem.twoHanded;
     const replacesTwoHandedWeapon =
       slot.kind === "equipment" &&
       slot.slot === "offhand" &&
-      currentWeapon instanceof Weapon &&
-      currentWeapon.isTwoHander;
+      currentWeapon?.slot === "weapon" &&
+      currentWeapon.twoHanded;
 
     const nextLoadout =
       slot.kind === "equipment"
@@ -103,14 +87,9 @@ export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: Load
     onClose();
   };
 
-  const getLoadoutSubstitutes: GetLoadoutSubstitutes = (slot, currentRegistry) => {
-    if (getSubstitutes) return getSubstitutes(slot, currentRegistry);
-    if (!currentRegistry) return [];
-    if (slot === null) return Array.from(currentRegistry.keys());
-
-    return Array.from(currentRegistry.entries())
-      .filter(([, item]) => item instanceof Equipment && EQUIPMENT_TYPE_TO_SLOT[item.type] === slot)
-      .map(([itemId]) => itemId);
+  const getLoadoutSubstitutes: GetLoadoutSubstitutes = (slot, catalog) => {
+    if (getSubstitutes) return getSubstitutes(slot, catalog);
+    return catalog.items.filter((item) => slot === null || item.slot === slot).map((item) => item.id);
   };
 
   return (
@@ -141,7 +120,7 @@ export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: Load
                 getSubstitutes={getLoadoutSubstitutes}
                 loadout={loadout}
                 onItemSelect={onItemSelect}
-                registry={registry}
+                catalog={SDK_ITEM_CATALOG}
               />
             )}
           </>

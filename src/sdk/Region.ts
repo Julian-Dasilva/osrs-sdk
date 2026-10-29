@@ -12,12 +12,13 @@ import type { World } from "./World";
 import type { Projectile, ProjectileGraphic } from "./weapons/Projectile";
 import { DelayedAction } from "./DelayedAction";
 import { TileMarker } from "../content";
-import { LoadoutRegistry } from "../content/LoadoutRegistry";
+import { SDK_ITEM_CATALOG } from "../content/SdkItemCatalog";
 import { Viewport } from "./Viewport";
 import { Trainer } from "./Trainer";
 import { Button } from "./ui/Button";
-import type { Loadout as LoadoutData, LoadoutItemId } from "./Loadout";
-import type { UnitEquipment } from "./Unit";
+import { describeLoadoutRejection, parseLoadout } from "./Loadout";
+import type { CatalogLoadout, Loadout as LoadoutData, LoadoutRejection } from "./Loadout";
+import { UnitEquipment } from "./Unit";
 import { ChunkUtils } from "./utils/Chunk";
 import type { Location } from "./Location";
 
@@ -36,9 +37,22 @@ export enum CardinalDirection {
   WEST,
 }
 
+function refusal(name: string, rejections: readonly LoadoutRejection[]): string {
+  return `Loadout "${name}" refused: ${rejections.map(describeLoadoutRejection).join("; ")}`;
+}
+
 // Base class for any trainer region.
 export abstract class Region {
-  constructor(protected readonly loadoutTemplates: LoadoutData[] = []) {}
+  private readonly loadoutTemplates: readonly Readonly<{ name: string; loadout: CatalogLoadout }>[];
+
+  /** Throws when a template fails to parse, naming every rejected item and its slot. */
+  constructor(loadoutTemplates: readonly LoadoutData[] = []) {
+    this.loadoutTemplates = loadoutTemplates.map((template) => {
+      const parsed = parseLoadout(SDK_ITEM_CATALOG, template);
+      if (parsed.kind === "refused") throw new Error(refusal(template.name, parsed.rejections));
+      return { name: template.name, loadout: parsed.loadout };
+    });
+  }
 
   canvas: OffscreenCanvas;
 
@@ -326,35 +340,25 @@ export abstract class Region {
 
   abstract initialiseRegion(): { player: Player };
 
-  private createLoadoutItem(itemId: LoadoutItemId): Item | null {
-    if (itemId === null) return null;
-
-    const registeredItem = LoadoutRegistry.get(itemId);
-    if (!registeredItem) return null;
-
-    const ItemType = registeredItem.constructor as new () => Item;
-    return new ItemType();
-  }
-
-  private constructLoadout(loadout: LoadoutData): { equipment: UnitEquipment; inventory: (Item | null)[] } {
-    const equipment = {} as Record<keyof UnitEquipment, Item | null>;
-    (Object.keys(loadout.equipment) as (keyof UnitEquipment)[]).forEach((slot) => {
-      equipment[slot] = this.createLoadoutItem(loadout.equipment[slot]);
-    });
-
-    return {
-      equipment: equipment as UnitEquipment,
-      inventory: loadout.inventory.map((itemId) => this.createLoadoutItem(itemId)),
-    };
+  private configuredLoadout(): CatalogLoadout | undefined {
+    const selected = this.loadoutTemplates.find(({ name }) => name === Settings.loadout);
+    if (selected && Settings.customLoadout?.name === selected.name) {
+      const custom = parseLoadout(SDK_ITEM_CATALOG, Settings.customLoadout);
+      if (custom.kind === "parsed") return custom.loadout;
+      console.warn(`${refusal(selected.name, custom.rejections)}. Using the template instead.`);
+    }
+    return (selected ?? this.loadoutTemplates[0])?.loadout;
   }
 
   private applyConfiguredLoadout(player: Player) {
-    if (this.loadoutTemplates.length === 0) return;
-
-    const selectedLoadout = this.loadoutTemplates.find(({ name }) => name === Settings.loadout);
-    const customLoadout = Settings.customLoadout?.name === selectedLoadout?.name ? Settings.customLoadout : null;
-    const loadout = customLoadout ?? selectedLoadout ?? this.loadoutTemplates[0];
-    if (loadout) player.setUnitOptions(this.constructLoadout(loadout));
+    const loadout = this.configuredLoadout();
+    if (!loadout) return;
+    player.setUnitOptions({
+      equipment: new UnitEquipment(),
+      inventory: loadout.inventory.map((item) => item?.build() ?? null),
+    });
+    for (const item of Object.values(loadout.equipment)) item?.build().assignToPlayer(player);
+    player.equipmentChanged();
   }
 
   reset(startWorld = true) {

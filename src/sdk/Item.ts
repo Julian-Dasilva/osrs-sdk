@@ -74,6 +74,11 @@ export class Item {
     return null;
   }
 
+  /** The game's item id, which loadouts hold. Differs from `cacheItemId` only when the cache lacks this item. */
+  get itemId(): number | null {
+    return typeof this.cacheItemId === "number" ? this.cacheItemId : null;
+  }
+
   get weight(): number {
     return 0;
   }
