@@ -38,6 +38,7 @@ import {
 import { CameraFocalPoint, CameraFocalPosition } from "./utils/camera/CameraFocalPoint";
 import { cameraOrbitDistance } from "./utils/camera/CameraOrbit";
 import { CHUNK_SIZE } from "./utils/Chunk";
+import { FixedLayout } from "./FixedLayout";
 import { FirstFrame } from "./FirstFrame";
 
 // how many pixels wide should 2d elements be scaled to
@@ -227,7 +228,16 @@ export class Viewport3d implements ViewportDelegate {
 
   onDocumentMouseDown(e: MouseEvent) {
     this.clientCameraRotation.setPointerPosition(e.clientX, e.clientY);
-    if (e.button === 1) this.clientCameraRotation.setMiddleMouseDown(true);
+    if (e.button === 1 && !this.outsideGameView(e.clientX, e.clientY))
+      this.clientCameraRotation.setMiddleMouseDown(true);
+  }
+
+  /** Fixed mode turns and zooms the camera from the game view only, as the client does; the frame around it does neither. */
+  private outsideGameView(clientX: number, clientY: number): boolean {
+    if (!FixedLayout.enabled) return false;
+    // The 3D canvas covers exactly the game view in fixed mode.
+    const box = this.canvas.getBoundingClientRect();
+    return clientX < box.left || clientY < box.top || clientX >= box.right || clientY >= box.bottom;
   }
 
   onDocumentMouseUp(e: MouseEvent) {
@@ -240,6 +250,7 @@ export class Viewport3d implements ViewportDelegate {
   }
 
   onDocumentMouseWheel(e: WheelEvent) {
+    if (this.outsideGameView(e.clientX, e.clientY)) return;
     const v = this.camera.position.z + e.deltaY * ZOOM_MULT;
     if (v >= 2 && v <= 20) {
       this.camera.position.z = v;
@@ -250,6 +261,11 @@ export class Viewport3d implements ViewportDelegate {
   }
 
   onDocumentTouchStart(e: TouchEvent) {
+    if (e.touches.length >= 1 && this.outsideGameView(e.touches[0].clientX, e.touches[0].clientY)) {
+      this.touchStart = null;
+      this.touchStart2 = null;
+      return;
+    }
     if (e.touches.length >= 1) {
       this.touchStart = e.touches[0];
     }
