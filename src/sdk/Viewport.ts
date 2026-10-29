@@ -364,9 +364,17 @@ export class Viewport {
     if (world.getReadyTimer > 0 && !world.isPaused) {
       this.context.font = "72px OSRS";
       this.context.textAlign = "center";
-      this.drawText(`GET READY...${world.getReadyTimer}`, width / 2, height / 2 - 50);
+      const anchor = Viewport.countdownAnchor(width, height);
+      this.drawText(`GET READY...${world.getReadyTimer}`, anchor.x, anchor.y);
     }
     this.context.restore();
+  }
+
+  /** Where the countdown is centred: 50 pixels above the middle of the game view, which fixed mode insets in its frame. */
+  static countdownAnchor(width: number, height: number): Readonly<{ x: number; y: number }> {
+    if (!FixedLayout.enabled) return { x: width / 2, y: height / 2 - 50 };
+    const game = FixedLayout.gameView(FixedLayout.scaleOf(width));
+    return { x: game.x + game.width / 2, y: game.y + game.height / 2 - 50 };
   }
 
   private drawBossHealthBar(region: Region, viewportWidth: number) {

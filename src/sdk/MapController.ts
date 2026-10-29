@@ -47,6 +47,35 @@ enum MapHover {
 const INITIAL_WIDTH = 210;
 const INITIAL_HEIGHT = 180;
 
+/**
+ * Each orb's top edge in minimap pixels: where the resizable layout draws it, and where interface 160 puts it in fixed
+ * mode (its box sits at frame y 4), which keeps the spec orb above the top tab row at y 168.
+ */
+const RESIZABLE_ORB_TOPS = { xp: 26, hitpoint: 47, prayer: 81, run: 114, spec: 140 } as const;
+const FIXED_ORB_TOPS = { xp: 21, hitpoint: 41, prayer: 75, run: 107, spec: 132 } as const;
+type OrbShift = Record<keyof typeof RESIZABLE_ORB_TOPS, number>;
+
+/** How far each orb sits from its resizable place: nothing in the resizable layout, a few pixels up in fixed mode. */
+function orbShift(): OrbShift {
+  const shift = { xp: 0, hitpoint: 0, prayer: 0, run: 0, spec: 0 };
+  if (!FixedLayout.enabled) return shift;
+  for (const orb of Object.keys(shift) as (keyof OrbShift)[])
+    shift[orb] = FIXED_ORB_TOPS[orb] - RESIZABLE_ORB_TOPS[orb];
+  return shift;
+}
+
+/** A point's y measured in the resizable layout's numbers for each orb, so one set of hit boxes serves both layouts. */
+function orbYs(y: number): OrbShift {
+  const shift = orbShift();
+  return {
+    xp: y - shift.xp,
+    hitpoint: y - shift.hitpoint,
+    prayer: y - shift.prayer,
+    run: y - shift.run,
+    spec: y - shift.spec,
+  };
+}
+
 export class MapController {
   static controller = new MapController();
 
@@ -240,17 +269,18 @@ export class MapController {
     const offset = width - this.width;
     const x = (event.offsetX - offset) / scale;
     const y = event.offsetY / scale;
+    const at = orbYs(y);
 
     this.hovering = MapHover.NONE;
-    if (x > 4 && x < 28 && y > 31 && y < 56) {
+    if (x > 4 && x < 28 && at.xp > 31 && at.xp < 56) {
       this.hovering = MapHover.XP;
-    } else if (x > 4 && x < 53 && y > 53 && y < 81) {
+    } else if (x > 4 && x < 53 && at.hitpoint > 53 && at.hitpoint < 81) {
       this.hovering = MapHover.HITPOINT;
-    } else if (x > 4 && x < 53 && y > 90 && y < 113) {
+    } else if (x > 4 && x < 53 && at.prayer > 90 && at.prayer < 113) {
       this.hovering = MapHover.PRAYER;
-    } else if (x > 15 && x < 67 && y > 122 && y < 149) {
+    } else if (x > 15 && x < 67 && at.run > 122 && at.run < 149) {
       this.hovering = MapHover.RUN;
-    } else if (x > 38 && x < 90 && y > 148 && y < 173) {
+    } else if (x > 38 && x < 90 && at.spec > 148 && at.spec < 173) {
       this.hovering = MapHover.SPEC;
     }
   }
@@ -265,8 +295,9 @@ export class MapController {
     const offset = width - this.width;
     const x = (event.offsetX - offset) / scale;
     const y = event.offsetY / scale;
+    const at = orbYs(y);
 
-    if (x > 4 && x < 20 && y > 31 && y < 48) {
+    if (x > 4 && x < 20 && at.xp > 31 && at.xp < 48) {
       intercepted = true;
       if (Settings.displayXpDrops === true) {
         menuOptions = [
@@ -309,10 +340,10 @@ export class MapController {
           },
         },
       ];
-    } else if (x > 4 && x < 52 && y > 53 && y < 73) {
+    } else if (x > 4 && x < 52 && at.hitpoint > 53 && at.hitpoint < 73) {
       // intercepted = true;
       // hitpoint
-    } else if (x > 4 && x < 53 && y > 90 && y < 113) {
+    } else if (x > 4 && x < 53 && at.prayer > 90 && at.prayer < 113) {
       intercepted = true;
       // prayer
       menuOptions = [
@@ -323,7 +354,7 @@ export class MapController {
           },
         },
       ];
-    } else if (x > 15 && x < 67 && y > 122 && y < 149) {
+    } else if (x > 15 && x < 67 && at.run > 122 && at.run < 149) {
       intercepted = true;
       // run
       menuOptions = [
@@ -334,7 +365,7 @@ export class MapController {
           },
         },
       ];
-    } else if (x > 38 && x < 90 && y > 148 && y < 175) {
+    } else if (x > 38 && x < 90 && at.spec > 148 && at.spec < 175) {
       if (this.canSpecialAttack()) {
         intercepted = true;
         // special attack
@@ -365,8 +396,9 @@ export class MapController {
     const offset = width - this.width;
     const x = (event.offsetX - offset) / scale;
     const y = event.offsetY / scale;
+    const at = orbYs(y);
 
-    if (x > 4 && x < 20 && y > 31 && y < 48) {
+    if (x > 4 && x < 20 && at.xp > 31 && at.xp < 48) {
       Settings.displayXpDrops = !Settings.displayXpDrops;
       intercepted = true;
       Settings.persistToStorage();
@@ -378,16 +410,16 @@ export class MapController {
         Viewport.viewport.rotateNorth();
       }
       Settings.persistToStorage();
-    } else if (x > 4 && x < 52 && y > 53 && y < 73) {
+    } else if (x > 4 && x < 52 && at.hitpoint > 53 && at.hitpoint < 73) {
       intercepted = true;
       // this.hovering = MapHover.HITPOINT;
-    } else if (x > 4 && x < 53 && y > 90 && y < 113) {
+    } else if (x > 4 && x < 53 && at.prayer > 90 && at.prayer < 113) {
       intercepted = true;
       this.toggleQuickprayers();
-    } else if (x > 15 && x < 67 && y > 122 && y < 149) {
+    } else if (x > 15 && x < 67 && at.run > 122 && at.run < 149) {
       intercepted = true;
       Trainer.player.running = !Trainer.player.running;
-    } else if (x > 38 && x < 90 && y > 148 && y < 175) {
+    } else if (x > 38 && x < 90 && at.spec > 148 && at.spec < 175) {
       intercepted = true;
       this.toggleSpecialAttack();
     }
@@ -428,12 +460,13 @@ export class MapController {
     this.width = (fixed ? MINIMAP.width : INITIAL_WIDTH) * scale;
     this.height = (fixed ? MINIMAP.height : INITIAL_HEIGHT) * scale;
     const offset = width - this.width;
+    const shift = orbShift();
 
     ctx.font = 16 * scale + "px Stats_11";
     ctx.textAlign = "center";
 
     this.generateMaskedMap();
-    ctx.drawImage(this.mapCanvas, offset + 52 * scale, 8, 152 * scale, 152 * scale);
+    ctx.drawImage(this.mapCanvas, offset + 52 * scale, fixed ? 8 * scale : 8, 152 * scale, 152 * scale);
 
     // draw compass
     ctx.save();
@@ -441,7 +474,7 @@ export class MapController {
     ctx.rotate(Viewport.viewport.getMapRotation());
     ctx.translate(-50.5 * scale, -23.5 * scale);
     if (this.compassImage) {
-      ctx.drawImage(this.compassImage, 25 * scale, -2, 51 * scale, 51 * scale);
+      ctx.drawImage(this.compassImage, 25 * scale, fixed ? -2 * scale : -2, 51 * scale, 51 * scale);
     }
     ctx.restore();
 
@@ -453,7 +486,7 @@ export class MapController {
     ctx.drawImage(
       this.hovering == MapHover.XP ? this.mapXpHoverButton : this.mapXpButton,
       offset,
-      26,
+      fixed ? (26 + shift.xp) * scale : 26,
       27 * scale,
       27 * scale,
     );
@@ -461,37 +494,43 @@ export class MapController {
     ctx.drawImage(
       this.hovering == MapHover.HITPOINT ? this.mapSelectedNumberOrb : this.mapNumberOrb,
       offset,
-      47 * scale,
+      (47 + shift.hitpoint) * scale,
       57 * scale,
       34 * scale,
     );
     ctx.drawImage(
       this.hovering == MapHover.PRAYER ? this.mapSelectedNumberOrb : this.mapNumberOrb,
       offset,
-      81 * scale,
+      (81 + shift.prayer) * scale,
       57 * scale,
       34 * scale,
     );
     ctx.drawImage(
       this.hovering == MapHover.RUN ? this.mapSelectedNumberOrb : this.mapNumberOrb,
       offset + 10 * scale,
-      114 * scale,
+      (114 + shift.run) * scale,
       57 * scale,
       34 * scale,
     );
     ctx.drawImage(
       this.hovering == MapHover.SPEC ? this.mapSelectedNumberOrb : this.mapNumberOrb,
       offset + 32 * scale,
-      140 * scale,
+      (140 + shift.spec) * scale,
       57 * scale,
       34 * scale,
     );
 
-    ctx.drawImage(this.mapHitpointOrbMasked, offset + 27 * scale, 51 * scale, 26 * scale, 26 * scale);
-    ctx.drawImage(this.mapHitpointIcon, offset + 27 * scale, 51 * scale, 26 * scale, 26 * scale);
-    ctx.drawImage(this.mapPrayerOrbMasked, offset + 27 * scale, 85 * scale, 26 * scale, 26 * scale);
-    ctx.drawImage(this.mapPrayerIcon, offset + 27 * scale, 85 * scale, 26 * scale, 26 * scale);
-    ctx.drawImage(this.mapRunOrbMasked, offset + 37 * scale, 118 * scale, 26 * scale, 26 * scale);
+    ctx.drawImage(
+      this.mapHitpointOrbMasked,
+      offset + 27 * scale,
+      (51 + shift.hitpoint) * scale,
+      26 * scale,
+      26 * scale,
+    );
+    ctx.drawImage(this.mapHitpointIcon, offset + 27 * scale, (51 + shift.hitpoint) * scale, 26 * scale, 26 * scale);
+    ctx.drawImage(this.mapPrayerOrbMasked, offset + 27 * scale, (85 + shift.prayer) * scale, 26 * scale, 26 * scale);
+    ctx.drawImage(this.mapPrayerIcon, offset + 27 * scale, (85 + shift.prayer) * scale, 26 * scale, 26 * scale);
+    ctx.drawImage(this.mapRunOrbMasked, offset + 37 * scale, (118 + shift.run) * scale, 26 * scale, 26 * scale);
 
     let mapRunIcon = this.mapWalkIcon;
     if (Trainer.player.effects.stamina) {
@@ -499,32 +538,32 @@ export class MapController {
     } else if (Trainer.player.running) {
       mapRunIcon = this.mapRunIcon;
     }
-    ctx.drawImage(mapRunIcon, offset + 37 * scale, 118 * scale, 26 * scale, 26 * scale);
-    ctx.drawImage(this.mapSpecOrbMasked, offset + 59 * scale, 144 * scale, 26 * scale, 26 * scale);
-    ctx.drawImage(this.mapSpecIcon, offset + 57 * scale, 142 * scale, 30 * scale, 30 * scale);
+    ctx.drawImage(mapRunIcon, offset + 37 * scale, (118 + shift.run) * scale, 26 * scale, 26 * scale);
+    ctx.drawImage(this.mapSpecOrbMasked, offset + 59 * scale, (144 + shift.spec) * scale, 26 * scale, 26 * scale);
+    ctx.drawImage(this.mapSpecIcon, offset + 57 * scale, (142 + shift.spec) * scale, 30 * scale, 30 * scale);
 
     // // hitpoints
     ctx.fillStyle = "black";
-    ctx.fillText(String(this.currentStats.hitpoint), offset + 15 * scale, 74 * scale);
+    ctx.fillText(String(this.currentStats.hitpoint), offset + 15 * scale, (74 + shift.hitpoint) * scale);
     ctx.fillStyle = this.colorScale.getColor(this.currentStats.hitpoint / this.stats.hitpoint).toHexString();
-    ctx.fillText(String(this.currentStats.hitpoint), offset + 14 * scale, 73 * scale);
+    ctx.fillText(String(this.currentStats.hitpoint), offset + 14 * scale, (73 + shift.hitpoint) * scale);
     // prayer
     ctx.fillStyle = "black";
-    ctx.fillText(String(this.currentStats.prayer), offset + 15 * scale, 108 * scale);
+    ctx.fillText(String(this.currentStats.prayer), offset + 15 * scale, (108 + shift.prayer) * scale);
     ctx.fillStyle = this.colorScale.getColor(this.currentStats.prayer / this.stats.prayer).toHexString();
-    ctx.fillText(String(this.currentStats.prayer), offset + 14 * scale, 107 * scale);
+    ctx.fillText(String(this.currentStats.prayer), offset + 14 * scale, (107 + shift.prayer) * scale);
 
     // run
     ctx.fillStyle = "black";
-    ctx.fillText(String(Math.floor(this.currentStats.run / 100)), offset + 25 * scale, 140 * scale);
+    ctx.fillText(String(Math.floor(this.currentStats.run / 100)), offset + 25 * scale, (140 + shift.run) * scale);
     ctx.fillStyle = this.colorScale.getColor(this.currentStats.run / 10000).toHexString();
-    ctx.fillText(String(Math.floor(this.currentStats.run / 100)), offset + 24 * scale, 139 * scale);
+    ctx.fillText(String(Math.floor(this.currentStats.run / 100)), offset + 24 * scale, (139 + shift.run) * scale);
 
     // spec
     ctx.fillStyle = "black";
-    ctx.fillText(String(this.currentStats.specialAttack), offset + 47 * scale, 166 * scale);
+    ctx.fillText(String(this.currentStats.specialAttack), offset + 47 * scale, (166 + shift.spec) * scale);
     ctx.fillStyle = this.colorScale.getColor(this.currentStats.specialAttack / 100).toHexString();
-    ctx.fillText(String(this.currentStats.specialAttack), offset + 46 * scale, 165 * scale);
+    ctx.fillText(String(this.currentStats.specialAttack), offset + 46 * scale, (165 + shift.spec) * scale);
 
     // Keep the simulated input latency visible without requiring the settings panel.
     const pingLabel = `${Settings.inputDelay}ms`;
