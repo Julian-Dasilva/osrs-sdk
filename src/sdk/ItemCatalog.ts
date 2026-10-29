@@ -54,14 +54,19 @@ export class ItemCatalog {
   readonly items: readonly CatalogItem[];
   private readonly byId = new Map<number, CatalogItem>();
 
-  /** Throws when two classes claim one id, so an id never resolves to the wrong item. */
-  constructor(classes: readonly ItemClass[]) {
+  /**
+   * Throws when two classes claim one id, so an id never resolves to the wrong item.
+   * With `base`, the catalog also holds every base item, and a class that claims a base item's id replaces it.
+   */
+  constructor(classes: readonly ItemClass[], base?: ItemCatalog) {
+    const own = new Map<number, CatalogItem>();
     for (const ItemType of classes) {
       const item = catalogItem(ItemType);
-      const claimed = this.byId.get(item.id);
+      const claimed = own.get(item.id);
       if (claimed) throw new Error(`Item id ${item.id} is claimed by both ${claimed.name} and ${item.name}`);
-      this.byId.set(item.id, item);
+      own.set(item.id, item);
     }
+    for (const item of [...(base?.items ?? []), ...Array.from(own.values())]) this.byId.set(item.id, item);
     this.items = Array.from(this.byId.values());
   }
 
