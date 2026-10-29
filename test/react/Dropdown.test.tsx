@@ -3,12 +3,17 @@ import { createRoot } from "react-dom/client";
 import { Dropdown } from "osrs-sdk-react";
 
 const MENU_WIDTH = 150;
+const SQUEEZED_WIDTH = 61;
 
 function openedMenuLeft(triggerLeft: number): string {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
-  const width = jest.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(MENU_WIDTH);
+  const width = jest.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    return this.style.position === "fixed" ? MENU_WIDTH : SQUEEZED_WIDTH;
+  });
   const box = jest.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
     x: triggerLeft,
     y: 100,
@@ -45,7 +50,7 @@ function openedMenuLeft(triggerLeft: number): string {
 }
 
 describe("Dropdown", () => {
-  test("opens its menu right of the trigger when it fits, and left of it at the window's right edge", () => {
+  test("opens its menu right of the trigger when it fits, and left of it at the window's right edge, by the width it opens at", () => {
     expect({ room: openedMenuLeft(100), edge: openedMenuLeft(1200) }).toEqual({
       room: "148px",
       edge: `${1200 - 4 - MENU_WIDTH}px`,
