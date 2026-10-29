@@ -186,6 +186,35 @@ describe("LoadoutEditor", () => {
     expect(reopened()).toEqual({ preset: "melee", source: "preset", ...MELEE_IDS });
   });
 
+  test("switching presets keeps each one's unsaved draft, and Apply saves only the preset shown", () => {
+    render();
+    const select = find<HTMLSelectElement>("select");
+    const pick = (id: string) =>
+      act(() => {
+        select.value = id;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    const options = () => Array.from(select.options).map((option) => option.text);
+
+    click(find('[aria-label="Take Saradomin Brew"]'));
+    pick("melee");
+    const onMelee = { options: options(), slot2: find('[aria-label="Inventory slot 2"]').querySelector("img") };
+    pick("max");
+    const backOnMax = { options: options(), slot5: find('[aria-label="Inventory slot 5"] img').getAttribute("alt") };
+    click(button(container, "Apply"));
+
+    expect({ onMelee, backOnMax, saved: reopened() }).toEqual({
+      onMelee: { options: ["Max (edited)", "Melee"], slot2: null },
+      backOnMax: { options: ["Max (edited)", "Melee"], slot5: "Saradomin Brew" },
+      saved: {
+        preset: "max",
+        source: "edit",
+        equipment: MAX_IDS.equipment,
+        inventory: bag(20997, 6685, 6685, 3024, 6685),
+      },
+    });
+  });
+
   test("an edit of an older preset revision shows the D02 notice until Reset discards it", () => {
     const edit = { equipment: MAX_IDS.equipment, inventory: bag(6685) };
     window.localStorage.setItem(KEY, stored({ selected: "max", edits: { max: { presetRevision: 1, loadout: edit } } }));

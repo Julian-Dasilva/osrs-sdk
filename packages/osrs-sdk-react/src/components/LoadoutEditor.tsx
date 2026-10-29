@@ -29,7 +29,10 @@ export type LoadoutEditorProps = {
   choices?: (slot: EquipmentSlot | null) => readonly CatalogItem[];
 };
 
-type View = Readonly<{ active: ActiveLoadout; editor: EditorState; refusal: EditRejection | null }>;
+/** Each preset's unsaved draft, kept while the player looks at another preset. */
+type Drafts = Readonly<Partial<Record<string, CatalogLoadout>>>;
+
+type View = Readonly<{ active: ActiveLoadout; editor: EditorState; refusal: EditRejection | null; drafts: Drafts }>;
 
 const SLOT_SIZE = 44;
 const REFERENCE_SLOT_SIZE = 36;
@@ -91,17 +94,23 @@ const menuEntryStyle: React.CSSProperties = {
   textAlign: "left",
 };
 
-function viewOf(sim: SimLoadouts, store: LoadoutEditorStore): View {
+function viewOf(sim: SimLoadouts, store: LoadoutEditorStore, drafts: Drafts): View {
   const active = store.active();
   return {
     active,
-    editor: { stock: sim.supplyStock, base: active.preset.loadout, draft: active.loadout },
+    editor: { stock: sim.supplyStock, base: active.preset.loadout, draft: drafts[active.preset.id] ?? active.loadout },
     refusal: null,
+    drafts,
   };
 }
 
 function sameLoadout(a: CatalogLoadout, b: CatalogLoadout): boolean {
   return JSON.stringify(loadoutIds(a)) === JSON.stringify(loadoutIds(b));
+}
+
+function withoutDraft(drafts: Drafts, presetId: string): Drafts {
+  const { [presetId]: _dropped, ...kept } = drafts;
+  return kept;
 }
 
 function items(count: number): string {
@@ -201,9 +210,9 @@ function MenuEntry({ item, label, onSelect }: { item?: CatalogItem; label: strin
 
 /** Edits one sim's presets: worn slots, the 28-slot inventory with drag to swap, and a supply shop. */
 export function LoadoutEditor({ sim, store, onApply, choices }: LoadoutEditorProps) {
-  const [view, setView] = useState(() => viewOf(sim, store));
+  const [view, setView] = useState(() => viewOf(sim, store, {}));
   const [dragging, setDragging] = useState<InventoryIndex | null>(null);
-  const { active, editor, refusal } = view;
+  const { active, editor, refusal, drafts } = view;
   const { preset } = active;
   const { draft } = editor;
   const edited = !sameLoadout(draft, preset.loadout);
@@ -218,13 +227,20 @@ export function LoadoutEditor({ sim, store, onApply, choices }: LoadoutEditorPro
         : { ...view, refusal: result.rejection },
     );
   };
-  const reload = () => setView(viewOf(sim, store));
+  const reload = () => setView(viewOf(sim, store, withoutDraft(drafts, preset.id)));
 
   const select = (id: string) => {
     const chosen = sim.presets.find((candidate) => candidate.id === id);
     if (!chosen) return;
     store.select(chosen.id);
-    reload();
+    const kept = sameLoadout(draft, active.loadout)
+      ? withoutDraft(drafts, preset.id)
+      : { ...drafts, [preset.id]: draft };
+    setView(viewOf(sim, store, kept));
+  };
+  const markedEdited = (candidate: (typeof sim.presets)[number]) => {
+    const shown = candidate.id === preset.id ? draft : drafts[candidate.id];
+    return shown !== undefined && !sameLoadout(shown, candidate.loadout);
   };
   const reset = () => {
     store.reset(preset.id);
@@ -255,7 +271,7 @@ export function LoadoutEditor({ sim, store, onApply, choices }: LoadoutEditorPro
         <select value={preset.id} onChange={(event) => select(event.currentTarget.value)}>
           {sim.presets.map((candidate) => (
             <option key={candidate.id} value={candidate.id}>
-              {candidate.id === preset.id && edited ? `${candidate.label} (edited)` : candidate.label}
+              {markedEdited(candidate) ? `${candidate.label} (edited)` : candidate.label}
             </option>
           ))}
         </select>
