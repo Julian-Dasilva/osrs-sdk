@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { SDK_ITEM_CATALOG, Settings } from "osrs-sdk";
-import type { Loadout as LoadoutData, LoadoutItemId } from "osrs-sdk";
+import { SDK_ITEM_CATALOG, Settings, slotsClearedBy } from "osrs-sdk";
+import type { Loadout as LoadoutData, LoadoutItemId, WornItem } from "osrs-sdk";
 import { Modal } from "./Modal";
 import { RuneScapeButton } from "./RuneScapeButton";
 import { RuneScapePanel } from "./RuneScapePanel";
@@ -14,6 +14,11 @@ export type LoadoutManagerProps = {
   onClose: () => void;
   open: boolean;
 };
+
+function wornItem(itemId: LoadoutItemId): WornItem | null {
+  const item = itemId === null ? undefined : SDK_ITEM_CATALOG.get(itemId);
+  return item && item.slot !== "carried" ? item : null;
+}
 
 export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: LoadoutManagerProps) {
   const trainer = useTrainerContext();
@@ -45,28 +50,15 @@ export function LoadoutManager({ getSubstitutes, loadouts, onClose, open }: Load
   const onItemSelect = (slot: LoadoutSlot, itemId: LoadoutItemId) => {
     if (!loadout) return;
 
-    const selectedItem = itemId === null ? undefined : SDK_ITEM_CATALOG.get(itemId);
-    const currentWeapon =
-      loadout.equipment.weapon === null ? undefined : SDK_ITEM_CATALOG.get(loadout.equipment.weapon);
-    const equipsTwoHandedWeapon =
-      slot.kind === "equipment" && slot.slot === "weapon" && selectedItem?.slot === "weapon" && selectedItem.twoHanded;
-    const replacesTwoHandedWeapon =
-      slot.kind === "equipment" &&
-      slot.slot === "offhand" &&
-      currentWeapon?.slot === "weapon" &&
-      currentWeapon.twoHanded;
-
     const nextLoadout =
       slot.kind === "equipment"
-        ? {
-            ...loadout,
-            equipment: {
-              ...loadout.equipment,
-              [slot.slot]: itemId,
-              ...(equipsTwoHandedWeapon ? { offhand: null } : {}),
-              ...(replacesTwoHandedWeapon ? { weapon: null } : {}),
-            },
-          }
+        ? (() => {
+            const equipment = { ...loadout.equipment, [slot.slot]: itemId };
+            const selected = wornItem(itemId);
+            const weapon = wornItem(loadout.equipment.weapon);
+            for (const cleared of selected ? slotsClearedBy(selected, weapon) : []) equipment[cleared] = null;
+            return { ...loadout, equipment };
+          })()
         : (() => {
             const inventory = [...loadout.inventory];
             inventory[slot.index] = itemId;
