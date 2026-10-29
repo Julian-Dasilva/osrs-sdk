@@ -67,7 +67,16 @@ function isFullInventory<T>(items: readonly T[]): items is Inventory<T> {
   return items.length === INVENTORY_SIZE;
 }
 
-const INVENTORY_INDICES = Array.from({ length: INVENTORY_SIZE }, (_, index) => index).filter(isInventoryIndex);
+export const INVENTORY_INDICES: readonly InventoryIndex[] = Array.from(
+  { length: INVENTORY_SIZE },
+  (_, index) => index,
+).filter(isInventoryIndex);
+
+export function mapInventory<T, U>(inventory: Inventory<T>, map: (item: T, index: InventoryIndex) => U): Inventory<U> {
+  const mapped = INVENTORY_INDICES.map((index) => map(inventory[index], index));
+  if (!isFullInventory(mapped)) throw new Error(`inventory has ${mapped.length} slots, expected ${INVENTORY_SIZE}`);
+  return mapped;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
