@@ -115,7 +115,8 @@ export type StartOption = Readonly<{ id: string; label: string; wear: readonly I
 
 export type StartRejection =
   | Readonly<{ kind: "not-carried"; option: string; id: ItemId }>
-  | Readonly<{ kind: "inventory-full"; option: string; id: ItemId }>;
+  | Readonly<{ kind: "inventory-full"; option: string; id: ItemId }>
+  | Readonly<{ kind: "not-offered"; option: string }>;
 
 export type StartResult =
   | Readonly<{ kind: "started"; loadout: CatalogLoadout }>
