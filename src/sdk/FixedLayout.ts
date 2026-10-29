@@ -65,6 +65,11 @@ const SELECTED_STONES: readonly (readonly [number, number])[] = [
 
 /** Stone brown, drawn under the frame where a sprite has not loaded. */
 const STONE = "#3e3529";
+/**
+ * How far a tab pixel's channels may sit from the empty tab's and still count as stone: the tab images carry an ICC
+ * profile and the empty tab a gamma, so the browser decodes the same stone a few levels apart.
+ */
+const STONE_TOLERANCE = 8;
 
 export class FixedLayout {
   private static sprites = new Map<number, CanvasImageSource>();
@@ -145,7 +150,7 @@ export class FixedLayout {
   }
 
   /**
-   * A tab image with its plain stone cut away, leaving the icon: pixels that match the empty tab's stone turn clear.
+   * A tab image with its plain stone cut away, leaving the icon: pixels within a few levels of the empty tab's stone turn clear.
    * Null until both images have loaded.
    */
   static tabIcon(tab: HTMLImageElement, stone: HTMLImageElement): OffscreenCanvas | null {
@@ -161,11 +166,10 @@ export class FixedLayout {
     const pixels = context.getImageData(0, 0, width, height);
     const background = plain.getImageData(0, 0, width, height).data;
     for (let i = 0; i < pixels.data.length; i += 4) {
-      const same =
-        pixels.data[i] === background[i] &&
-        pixels.data[i + 1] === background[i + 1] &&
-        pixels.data[i + 2] === background[i + 2] &&
-        pixels.data[i + 3] === background[i + 3];
+      let same = true;
+      for (let channel = 0; channel < 4; channel++) {
+        if (Math.abs(pixels.data[i + channel] - background[i + channel]) > STONE_TOLERANCE) same = false;
+      }
       if (same) pixels.data[i + 3] = 0;
     }
     context.putImageData(pixels, 0, 0);
