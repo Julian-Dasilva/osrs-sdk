@@ -1,4 +1,5 @@
-import { DragonArrows, SaradominBrew, TwistedBow } from "../../src/content";
+import { DragonArrows, SaradominBrew, ScytheOfVitur, TwistedBow } from "../../src/content";
+import { SDK_ITEM_CATALOG } from "../../src/content/SdkItemCatalog";
 import { ItemCatalog } from "../../src/sdk/ItemCatalog";
 import { parseLoadout } from "../../src/sdk/Loadout";
 
@@ -63,5 +64,31 @@ describe("parseLoadout", () => {
 describe("ItemCatalog", () => {
   test("refuses two classes that claim one id", () => {
     expect(() => new ItemCatalog([DragonArrows, DragonArrows])).toThrow(/11212/);
+  });
+
+  class SimTwistedBow extends TwistedBow {}
+  class SimRalos extends TwistedBow {
+    override get itemId() {
+      return 28922;
+    }
+  }
+
+  test("a sim item replaces the base item with its id and keeps the rest", () => {
+    const sim = new ItemCatalog([SimTwistedBow, SimRalos], SDK_ITEM_CATALOG);
+
+    expect(sim.get(20997)?.build().constructor).toBe(SimTwistedBow);
+    expect(sim.get(28922)?.build().constructor).toBe(SimRalos);
+    expect(sim.get(22325)?.build().constructor).toBe(ScytheOfVitur);
+    expect(sim.items.filter((item) => item.id === 20997)).toHaveLength(1);
+    expect(sim.items).toHaveLength(SDK_ITEM_CATALOG.items.length + 1);
+    expect(SDK_ITEM_CATALOG.get(20997)?.build().constructor).toBe(TwistedBow);
+  });
+
+  test("guard: refuses two sim items that claim one id", () => {
+    class OtherSimTwistedBow extends TwistedBow {}
+
+    expect(() => new ItemCatalog([SimTwistedBow, OtherSimTwistedBow], SDK_ITEM_CATALOG)).toThrow(
+      "Item id 20997 is claimed by both",
+    );
   });
 });
