@@ -2,7 +2,6 @@ export * from "./AdvancedSettingsPanel";
 export * from "./DefaultSidebar";
 export * from "./Dropdown";
 export * from "./GameOverlay";
-export * from "./Loadout";
 export * from "./LoadoutEditor";
 export * from "./LoadoutManager";
 export * from "./Modal";
