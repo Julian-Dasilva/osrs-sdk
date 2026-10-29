@@ -17,8 +17,8 @@ import { Viewport } from "./Viewport";
 import { Trainer } from "./Trainer";
 import { Button } from "./ui/Button";
 import { describeLoadoutRejection, parseLoadout } from "./Loadout";
+import { dressPlayer } from "./DressPlayer";
 import type { CatalogLoadout, Loadout as LoadoutData, LoadoutRejection } from "./Loadout";
-import { UnitEquipment } from "./Unit";
 import { ChunkUtils } from "./utils/Chunk";
 import type { Location } from "./Location";
 
@@ -350,17 +350,6 @@ export abstract class Region {
     return (selected ?? this.loadoutTemplates[0])?.loadout;
   }
 
-  private applyConfiguredLoadout(player: Player) {
-    const loadout = this.configuredLoadout();
-    if (!loadout) return;
-    player.setUnitOptions({
-      equipment: new UnitEquipment(),
-      inventory: loadout.inventory.map((item) => item?.build() ?? null),
-    });
-    for (const item of Object.values(loadout.equipment)) item?.build().assignToPlayer(player);
-    player.equipmentChanged();
-  }
-
   reset(startWorld = true) {
     if (!this.world.isPaused) {
       this.world.stopTicking();
@@ -383,7 +372,8 @@ export abstract class Region {
     this.world.getReadyTimer = 6;
 
     const reset = this.initialiseRegion();
-    this.applyConfiguredLoadout(reset.player);
+    const loadout = this.configuredLoadout();
+    if (loadout) dressPlayer(reset.player, loadout);
     for (const unit of [...this.players, ...this.mobs]) {
       unit.setStats();
     }

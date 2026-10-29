@@ -7,6 +7,7 @@ export * from "./Interpolation";
 export * from "./Collision";
 export * from "./Loadout";
 export * from "./LoadoutEdit";
+export * from "./DressPlayer";
 
 export * from "./Entity";
 export * from "./GraphicsObject";
