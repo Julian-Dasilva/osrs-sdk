@@ -35,3 +35,41 @@ test("frame sprites stay inside the frame and clear of the game view", () => {
     expect({ sprite: piece.sprite, overlapsGame }).toEqual({ sprite: piece.sprite, overlapsGame: false });
   }
 });
+
+// jsdom has no OffscreenCanvas; this one copies an image's pixels so the cut can be read back.
+type Pixels = Uint8ClampedArray;
+class PixelCanvas {
+  data: Pixels;
+  constructor(
+    public width: number,
+    public height: number,
+  ) {
+    this.data = new Uint8ClampedArray(width * height * 4);
+  }
+  getContext() {
+    return {
+      drawImage: (image: { pixels: Pixels }) => this.data.set(image.pixels),
+      getImageData: () => ({ data: new Uint8ClampedArray(this.data) }),
+      putImageData: (image: { data: Pixels }) => this.data.set(image.data),
+    };
+  }
+}
+
+function image(pixels: number[], complete = true): HTMLImageElement {
+  return {
+    complete,
+    naturalWidth: pixels.length / 4,
+    naturalHeight: 1,
+    pixels: Uint8ClampedArray.from(pixels),
+  } as unknown as HTMLImageElement;
+}
+
+test("cuts a tab's icon from its plain stone so the open tab's icon can sit on the red stone", () => {
+  Object.defineProperty(globalThis, "OffscreenCanvas", { configurable: true, value: PixelCanvas });
+  const stone = image([100, 91, 79, 255, 100, 91, 79, 255]);
+  const tab = image([100, 91, 79, 255, 232, 245, 232, 255]);
+  expect(FixedLayout.tabIcon(image([1, 2, 3, 255], false), stone)).toBeNull();
+  const icon = FixedLayout.tabIcon(tab, stone) as unknown as PixelCanvas;
+  expect(Array.from(icon.data)).toEqual([100, 91, 79, 0, 232, 245, 232, 255]);
+  expect(FixedLayout.tabIcon(tab, stone)).toBe(icon);
+});
