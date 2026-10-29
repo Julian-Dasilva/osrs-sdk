@@ -42,9 +42,13 @@ export function Dropdown({ children, menuStyle, trigger }: DropdownProps) {
       const opensAbove = spaceBelow < preferredMaxHeight && spaceAbove > spaceBelow;
       const availableHeight = opensAbove ? spaceAbove : spaceBelow;
 
+      const opensLeft =
+        trigger.right + 4 + menu.offsetWidth > window.innerWidth - viewportPadding &&
+        trigger.left - 4 - menu.offsetWidth >= viewportPadding;
+
       setMenuLayout({
         bottom: opensAbove ? window.innerHeight - trigger.bottom + 4 : undefined,
-        left: trigger.right + 4,
+        left: opensLeft ? trigger.left - 4 - menu.offsetWidth : trigger.right + 4,
         maxHeight: Math.max(1, Math.min(preferredMaxHeight, availableHeight)),
         top: opensAbove ? undefined : trigger.top,
       });
