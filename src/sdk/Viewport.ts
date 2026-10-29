@@ -19,6 +19,7 @@ import { Trainer } from "./Trainer";
 import { Component } from "./ui/Component";
 import { ToggleButton } from "./ui/ToggleButton";
 import { ScreenPoint } from "./rendering/utils/projectedClickbox";
+import { FixedLayout } from "./FixedLayout";
 
 type ViewportEntitiesClick = {
   type: "entities";
@@ -67,6 +68,9 @@ export interface ViewportDelegate {
   setMapRotation(direction: CardinalDirection);
 
   resize?(width: number, height: number): void;
+
+  // fixed mode: where the delegate's own canvas, if it has one, sits over the frame's game view (CSS pixels from the page)
+  place?(box: Readonly<{ left: number; top: number; width: number; height: number }> | null): void;
 }
 
 export class Viewport {
@@ -86,6 +90,11 @@ export class Viewport {
 
   private clickController: ClickController;
   private resizeObserver: ResizeObserver | null = null;
+  /** The canvas's style as mounted, restored when fixed mode turns off. */
+  private readonly fullAreaStyle: string;
+  private fixedPlaced = false;
+  private laidOutFixed = false;
+  private unsubscribeSettings: (() => void) | null = null;
   width: number;
   height: number;
 
@@ -96,6 +105,7 @@ export class Viewport {
     readonly canvas: HTMLCanvasElement,
     private readonly resizeTarget: Element,
   ) {
+    this.fullAreaStyle = canvas.style.cssText;
     if (typeof ResizeObserver === "undefined") {
       throw new Error("ResizeObserver is required to mount a viewport");
     }
@@ -103,6 +113,12 @@ export class Viewport {
       this.resize(entry.contentRect.width, entry.contentRect.height);
     });
     this.resizeObserver.observe(this.resizeTarget);
+    this.laidOutFixed = Settings.fixedMode;
+    this.unsubscribeSettings = Settings.subscribe(() => {
+      if (Settings.fixedMode === this.laidOutFixed) return;
+      this.laidOutFixed = Settings.fixedMode;
+      this.relayout();
+    });
   }
 
   /**
@@ -110,7 +126,13 @@ export class Viewport {
    * The location is null when the position shows no floor, and the result is null when it shows nothing.
    */
   translateClick(offsetX: number, offsetY: number, world: World): ViewportClickResult {
-    return this.delegate.translateClick(offsetX, offsetY, world, this);
+    if (!FixedLayout.enabled) return this.delegate.translateClick(offsetX, offsetY, world, this);
+    const game = FixedLayout.gameView(FixedLayout.scaleOf(this.canvas.width));
+    const x = offsetX - game.x;
+    const y = offsetY - game.y;
+    // In fixed mode only the game view shows the world; the frame around it shows nothing to click.
+    if (x < 0 || y < 0 || x >= game.width || y >= game.height) return null;
+    return this.delegate.translateClick(x, y, world, this);
   }
 
   /**
@@ -118,7 +140,10 @@ export class Viewport {
    * or null when no point on the canvas does. UI drawn over the viewport is not considered.
    */
   projectTile(tile: Location, world: World): ScreenPoint | null {
-    return this.delegate.projectTile(tile, world, this);
+    const point = this.delegate.projectTile(tile, world, this);
+    if (point === null || !FixedLayout.enabled) return point;
+    const game = FixedLayout.gameView(FixedLayout.scaleOf(this.canvas.width));
+    return { x: point.x + game.x, y: point.y + game.y };
   }
 
   get context() {
@@ -139,6 +164,15 @@ export class Viewport {
     width = Math.max(1, Math.round(width));
     height = Math.max(1, Math.round(height));
     if (!Trainer.player?.region) return;
+    if (FixedLayout.enabled) {
+      this.resizeFixed(width, height);
+      return;
+    }
+    if (this.fixedPlaced) {
+      this.canvas.style.cssText = this.fullAreaStyle;
+      this.delegate.place?.(null);
+      this.fixedPlaced = false;
+    }
     Settings._tileSize = width / Trainer.player.region.width;
     this.width = width / Settings.tileSize;
     this.height = height / Settings.tileSize;
@@ -147,6 +181,45 @@ export class Viewport {
       this.canvas.height = height;
     }
     this.delegate.resize?.(width, height);
+  }
+
+  /** Lays the viewport out again for the current playable area, as after a resize; call it after changing `Settings.fixedMode`. */
+  relayout() {
+    const area = this.resizeTarget.getBoundingClientRect();
+    this.resize(area.width, area.height);
+  }
+
+  /**
+   * Fixed mode: the canvas becomes the 765 by 503 frame scaled to fit the playable area and centred in it, and the
+   * delegate renders only the frame's game view. The UI controllers read the canvas's size, so they lay out in the frame.
+   */
+  private resizeFixed(areaWidth: number, areaHeight: number) {
+    const { left, top, scale } = FixedLayout.place(areaWidth, areaHeight);
+    this.fixedPlaced = true;
+    const width = Math.round(765 * scale);
+    const height = Math.round(503 * scale);
+    this.canvas.style.inset = "auto";
+    this.canvas.style.left = `${left}px`;
+    this.canvas.style.top = `${top}px`;
+    this.canvas.style.width = `${width}px`;
+    this.canvas.style.height = `${height}px`;
+    if (width !== this.canvas.width || height !== this.canvas.height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
+    }
+    const game = FixedLayout.gameView(FixedLayout.scaleOf(width));
+    const gameWidth = Math.round(game.width);
+    const gameHeight = Math.round(game.height);
+    Settings._tileSize = gameWidth / Trainer.player.region.width;
+    this.width = gameWidth / Settings.tileSize;
+    this.height = gameHeight / Settings.tileSize;
+    this.delegate.place?.({
+      left: left + Math.round(game.x),
+      top: top + Math.round(game.y),
+      width: gameWidth,
+      height: gameHeight,
+    });
+    this.delegate.resize?.(gameWidth, gameHeight);
   }
 
   // called after all graphics have loaded
@@ -164,6 +237,8 @@ export class Viewport {
   dispose() {
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
+    this.unsubscribeSettings?.();
+    this.unsubscribeSettings = null;
   }
 
   getViewport(tickPercent: number) {
@@ -243,7 +318,12 @@ export class Viewport {
         break;
       case "layered":
         this.context.clearRect(0, 0, width, height);
-        this.context.drawImage(frame.uiCanvas, 0, 0);
+        if (FixedLayout.enabled) {
+          const game = FixedLayout.gameView(FixedLayout.scaleOf(width));
+          this.context.drawImage(frame.uiCanvas, Math.round(game.x), Math.round(game.y));
+        } else {
+          this.context.drawImage(frame.uiCanvas, 0, 0);
+        }
         break;
       default: {
         const unhandled: never = frame;
@@ -253,7 +333,17 @@ export class Viewport {
     this.context.restore();
     this.context.save();
 
-    this.drawBossHealthBar(Trainer.player.region, width);
+    if (FixedLayout.enabled) {
+      const scale = FixedLayout.scaleOf(width);
+      FixedLayout.drawFrame(this.context, scale);
+      const game = FixedLayout.gameView(scale);
+      this.context.save();
+      this.context.translate(game.x, 0);
+      this.drawBossHealthBar(Trainer.player.region, game.width);
+      this.context.restore();
+    } else {
+      this.drawBossHealthBar(Trainer.player.region, width);
+    }
 
     // draw control panel
     ControlPanelController.controller.draw(this.context);

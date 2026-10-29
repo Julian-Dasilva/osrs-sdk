@@ -122,6 +122,7 @@ export class Viewport3d implements ViewportDelegate {
   private renderingSuspended = false;
   private renderFailureLogged = false;
   private firstFrame = new FirstFrame();
+  private fullAreaStyle = "";
 
   constructor(faceCameraSouth: boolean, worldCanvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
@@ -130,6 +131,7 @@ export class Viewport3d implements ViewportDelegate {
     this.canvas.width = this.canvasDimensions.width;
     this.canvas.height = this.canvasDimensions.height;
     this.canvas.style.cssText = worldCanvas.style.cssText;
+    this.fullAreaStyle = this.canvas.style.cssText;
     this.canvas.hidden = true;
     worldCanvas.before(this.canvas);
     this.uiCanvas = new OffscreenCanvas(this.canvasDimensions.width, this.canvasDimensions.height);
@@ -373,6 +375,20 @@ export class Viewport3d implements ViewportDelegate {
     canvas.addEventListener("touchend", this.onDocumentTouchEnd.bind(this), false);
     window.addEventListener("keydown", this.onKeyDown.bind(this), false);
     window.addEventListener("keyup", this.onKeyUp.bind(this), false);
+  }
+
+  /** Fixed mode puts the 3D canvas over the frame's game view only; null returns it to the full playable area. */
+  place(box: Readonly<{ left: number; top: number; width: number; height: number }> | null) {
+    const style = this.canvas.style;
+    if (box === null) {
+      style.cssText = this.fullAreaStyle;
+      return;
+    }
+    style.inset = "auto";
+    style.left = `${box.left}px`;
+    style.top = `${box.top}px`;
+    style.width = `${box.width}px`;
+    style.height = `${box.height}px`;
   }
 
   resize(width: number, height: number) {

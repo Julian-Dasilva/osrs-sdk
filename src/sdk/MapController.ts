@@ -1,4 +1,5 @@
 import MapBoarder from "../assets/images/interface/map_border.png";
+import { FixedLayout, MINIMAP, MINIMAP_COVER } from "./FixedLayout";
 import MapSelectedNumberOrb from "../assets/images/interface/map_selected_num_orb.png";
 import MapNumberOrb from "../assets/images/interface/map_num_orb.png";
 import MapBorderMask from "../assets/images/interface/map_border_mask.png";
@@ -417,11 +418,15 @@ export class MapController {
     const { width } = Chrome.size();
 
     const gameHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-    Settings.minimapScale = (gameHeight / 500 > 1 ? 1 : gameHeight / 500) * Settings.maxUiScale;
+    const fixed = FixedLayout.enabled;
+    // Fixed mode anchors the map's left edge at the frame's minimap box, so its orbs and map sit where the fixed client's do.
+    Settings.minimapScale = fixed
+      ? FixedLayout.scaleOf(width)
+      : (gameHeight / 500 > 1 ? 1 : gameHeight / 500) * Settings.maxUiScale;
 
     const scale = Settings.minimapScale;
-    this.width = INITIAL_WIDTH * scale;
-    this.height = INITIAL_HEIGHT * scale;
+    this.width = (fixed ? MINIMAP.width : INITIAL_WIDTH) * scale;
+    this.height = (fixed ? MINIMAP.height : INITIAL_HEIGHT) * scale;
     const offset = width - this.width;
 
     ctx.font = 16 * scale + "px Stats_11";
@@ -440,7 +445,11 @@ export class MapController {
     }
     ctx.restore();
 
-    ctx.drawImage(this.outlineImage, offset + 28 * scale, 0, 182 * scale, 166 * scale);
+    if (fixed) {
+      FixedLayout.drawSprite(ctx, MINIMAP_COVER, scale);
+    } else {
+      ctx.drawImage(this.outlineImage, offset + 28 * scale, 0, 182 * scale, 166 * scale);
+    }
     ctx.drawImage(
       this.hovering == MapHover.XP ? this.mapXpHoverButton : this.mapXpButton,
       offset,

@@ -87,6 +87,7 @@ export * from "./Renderable";
 
 export * from "./SetEffect";
 export * from "./Settings";
+export * from "./FixedLayout";
 export * from "./SettingsStore";
 export * from "./Trainer";
 export * from "./TrainerInstance";
