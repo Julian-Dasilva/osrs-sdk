@@ -30,7 +30,7 @@ export type LoadoutEditorProps = {
 };
 
 /** Each preset's unsaved draft, kept while the player looks at another preset. */
-type Drafts = Readonly<Partial<Record<string, CatalogLoadout>>>;
+type Drafts = ReadonlyMap<string, CatalogLoadout>;
 
 type View = Readonly<{ active: ActiveLoadout; editor: EditorState; refusal: EditRejection | null; drafts: Drafts }>;
 
@@ -98,7 +98,11 @@ function viewOf(sim: SimLoadouts, store: LoadoutEditorStore, drafts: Drafts): Vi
   const active = store.active();
   return {
     active,
-    editor: { stock: sim.supplyStock, base: active.preset.loadout, draft: drafts[active.preset.id] ?? active.loadout },
+    editor: {
+      stock: sim.supplyStock,
+      base: active.preset.loadout,
+      draft: drafts.get(active.preset.id) ?? active.loadout,
+    },
     refusal: null,
     drafts,
   };
@@ -109,8 +113,13 @@ function sameLoadout(a: CatalogLoadout, b: CatalogLoadout): boolean {
 }
 
 function withoutDraft(drafts: Drafts, presetId: string): Drafts {
-  const { [presetId]: _dropped, ...kept } = drafts;
+  const kept = new Map(drafts);
+  kept.delete(presetId);
   return kept;
+}
+
+function withDraft(drafts: Drafts, presetId: string, draft: CatalogLoadout): Drafts {
+  return new Map(drafts).set(presetId, draft);
 }
 
 function items(count: number): string {
@@ -210,7 +219,7 @@ function MenuEntry({ item, label, onSelect }: { item?: CatalogItem; label: strin
 
 /** Edits one sim's presets: worn slots, the 28-slot inventory with drag to swap, and a supply shop. */
 export function LoadoutEditor({ sim, store, onApply, choices }: LoadoutEditorProps) {
-  const [view, setView] = useState(() => viewOf(sim, store, {}));
+  const [view, setView] = useState(() => viewOf(sim, store, new Map()));
   const [dragging, setDragging] = useState<InventoryIndex | null>(null);
   const { active, editor, refusal, drafts } = view;
   const { preset } = active;
@@ -235,11 +244,11 @@ export function LoadoutEditor({ sim, store, onApply, choices }: LoadoutEditorPro
     store.select(chosen.id);
     const kept = sameLoadout(draft, active.loadout)
       ? withoutDraft(drafts, preset.id)
-      : { ...drafts, [preset.id]: draft };
+      : withDraft(drafts, preset.id, draft);
     setView(viewOf(sim, store, kept));
   };
   const markedEdited = (candidate: (typeof sim.presets)[number]) => {
-    const shown = candidate.id === preset.id ? draft : drafts[candidate.id];
+    const shown = candidate.id === preset.id ? draft : drafts.get(candidate.id);
     return shown !== undefined && !sameLoadout(shown, candidate.loadout);
   };
   const reset = () => {

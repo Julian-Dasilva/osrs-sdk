@@ -215,6 +215,51 @@ describe("LoadoutEditor", () => {
     });
   });
 
+  test.each(["__proto__", "constructor", "toString"])(
+    "a preset named %s opens with its own loadout and keeps its draft",
+    (name) => {
+      const sim = defineSimLoadouts({
+        sim: "editor-sim",
+        items: [],
+        presets: [
+          { id: name, label: "Odd", revision: 1, loadout: MELEE_IDS, startOptions: [] },
+          { id: "max", label: "Max", revision: 2, loadout: MAX_IDS, startOptions: [] },
+        ],
+        defaultPreset: name,
+        supplyStock: [{ id: 6685, quantity: 2 }],
+        startOptions: [],
+      });
+      container = document.createElement("div");
+      document.body.appendChild(container);
+      root = createRoot(container);
+      act(() =>
+        root.render(<LoadoutEditor sim={sim} store={sim.store(window.localStorage)} onApply={() => undefined} />),
+      );
+      const select = find<HTMLSelectElement>("select");
+      const pick = (id: string) =>
+        act(() => {
+          select.value = id;
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+      const weapon = () => find('[aria-label="Weapon"] img').getAttribute("alt");
+
+      const opened = weapon();
+      click(find('[aria-label="Take Saradomin Brew"]'));
+      pick("max");
+      pick(name);
+
+      expect({
+        opened,
+        weapon: weapon(),
+        slot2: find('[aria-label="Inventory slot 2"] img').getAttribute("alt"),
+      }).toEqual({
+        opened: "Scythe of Vitur",
+        weapon: "Scythe of Vitur",
+        slot2: "Saradomin Brew",
+      });
+    },
+  );
+
   test("an edit of an older preset revision shows the D02 notice until Reset discards it", () => {
     const edit = { equipment: MAX_IDS.equipment, inventory: bag(6685) };
     window.localStorage.setItem(KEY, stored({ selected: "max", edits: { max: { presetRevision: 1, loadout: edit } } }));
