@@ -226,6 +226,28 @@ describe("LoadoutStore", () => {
     });
   });
 
+  test.each([
+    { value: "a newer version", raw: stored({ chosen: "melee", edits: [] }, 2) },
+    { value: "truncated JSON", raw: '{"version":1,"values":{"selected":"max"' },
+  ])("two tabs that both loaded $value keep each other's saves to other presets", ({ raw }) => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    window.localStorage.setItem(KEY, raw);
+    const first = open();
+    const second = open();
+
+    first.save(MAX.id, loadout(EDIT_IDS));
+    second.save(MELEE.id, loadout(EDIT_IDS));
+
+    expect(storedValues()).toEqual({
+      selected: "max",
+      edits: {
+        max: { presetRevision: 2, loadout: EDIT_IDS },
+        melee: { presetRevision: 1, loadout: EDIT_IDS },
+      },
+    });
+    warn.mockRestore();
+  });
+
   test("two tabs keep each other's edits to other presets, and the last save of one preset wins", () => {
     const first = open();
     const second = open();

@@ -166,7 +166,7 @@ export class LoadoutStore {
   }
 
   private applyToLatest(apply: (values: StoredValues) => StoredValues, cause: "player-edit" | "choice") {
-    if (this.persistence === "kept") {
+    if (this.persistence !== "session-only") {
       const stored = this.read();
       this.persistence = persistenceOf(stored);
       if (stored.kind === "readable") this.values = stored.values;
