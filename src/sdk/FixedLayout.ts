@@ -68,6 +68,7 @@ const STONE = "#3e3529";
 
 export class FixedLayout {
   private static sprites = new Map<number, CanvasImageSource>();
+  private static icons = new Map<HTMLImageElement, OffscreenCanvas>();
 
   /** Frame sprites by cache sprite id; the trainer extracts them from its cache. Any missing piece draws as plain stone. */
   static setSprites(sprites: ReadonlyMap<number, CanvasImageSource>): void {
@@ -141,6 +142,35 @@ export class FixedLayout {
     if (image === undefined) return;
     const y = TAB_ROWS[index < TAB_LEFTS.length ? 0 : 1];
     context.drawImage(image, x * scale, y * scale, imageWidth(image) * scale, imageHeight(image) * scale);
+  }
+
+  /**
+   * A tab image with its plain stone cut away, leaving the icon: pixels that match the empty tab's stone turn clear.
+   * Null until both images have loaded.
+   */
+  static tabIcon(tab: HTMLImageElement, stone: HTMLImageElement): OffscreenCanvas | null {
+    const cached = FixedLayout.icons.get(tab);
+    if (cached !== undefined) return cached;
+    if (!tab.complete || !stone.complete || tab.naturalWidth === 0 || stone.naturalWidth === 0) return null;
+    const { naturalWidth: width, naturalHeight: height } = tab;
+    const icon = new OffscreenCanvas(width, height);
+    const context = icon.getContext("2d");
+    const plain = new OffscreenCanvas(width, height).getContext("2d");
+    context.drawImage(tab, 0, 0);
+    plain.drawImage(stone, 0, 0);
+    const pixels = context.getImageData(0, 0, width, height);
+    const background = plain.getImageData(0, 0, width, height).data;
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      const same =
+        pixels.data[i] === background[i] &&
+        pixels.data[i + 1] === background[i + 1] &&
+        pixels.data[i + 2] === background[i + 2] &&
+        pixels.data[i + 3] === background[i + 3];
+      if (same) pixels.data[i + 3] = 0;
+    }
+    context.putImageData(pixels, 0, 0);
+    FixedLayout.icons.set(tab, icon);
+    return icon;
   }
 
   static drawSprite(context: CanvasRenderingContext2D, piece: FrameSprite, scale: number): void {

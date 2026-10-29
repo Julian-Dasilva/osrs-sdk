@@ -7,6 +7,8 @@ import { ClanChatControls } from "./controlpanels/ClanChatControls";
 import { CombatControls } from "./controlpanels/CombatControls";
 import { EmotesControls } from "./controlpanels/EmotesControls";
 import { EmptyControls } from "./controlpanels/EmptyControls";
+import EmptyTab from "../assets/images/tabs/empty.png";
+import { ImageLoader } from "./utils/ImageLoader";
 import { EquipmentControls } from "./controlpanels/EquipmentControls";
 import { FriendsControls } from "./controlpanels/FriendsControls";
 import { InventoryControls } from "./controlpanels/InventoryControls";
@@ -31,6 +33,7 @@ const BASE_WIDTH = 33 * 7;
 const BASE_HEIGHT = 36 * 2 + 275;
 
 const PANEL_BORDER = 7;
+const EMPTY_TAB = ImageLoader.createImage(EmptyTab);
 
 export class ControlPanelController {
   static controls = Object.freeze({
@@ -412,11 +415,12 @@ export class ControlPanelController {
     });
 
     if (selectedPosition && FixedLayout.enabled) {
-      // The open tab's red stone, as the fixed client lights it; the SDK's tab sprites carry their own stone underneath.
-      context.save();
-      context.globalAlpha = 0.65;
+      // The open tab sits on its red stone, as the fixed client lights it: the SDK's tab images carry a plain stone, so
+      // the icon is cut from it and drawn over the red one.
       FixedLayout.drawSelectedStone(context, this.controls.indexOf(this.selectedControl), scale);
-      context.restore();
+      const icon = FixedLayout.tabIcon(this.selectedControl.tabImage, EMPTY_TAB);
+      if (icon !== null)
+        context.drawImage(icon, selectedPosition.x, selectedPosition.y, icon.width * scale, icon.height * scale);
     } else if (selectedPosition) {
       context.strokeStyle = "#00FF0073";
       context.lineWidth = 3;
