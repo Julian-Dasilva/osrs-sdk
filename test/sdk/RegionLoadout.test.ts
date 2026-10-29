@@ -1,3 +1,4 @@
+import { dressPlayer } from "../../src/sdk/DressPlayer";
 import { Player } from "../../src/sdk/Player";
 import { Settings } from "../../src/sdk/Settings";
 import { Viewport } from "../../src/sdk/Viewport";
@@ -5,7 +6,7 @@ import { World } from "../../src/sdk/World";
 import type { Item } from "../../src/sdk/Item";
 import type { Loadout } from "../../src/sdk/Loadout";
 import { TestRegion } from "../../src/sdk/testing/TestRegion";
-import { loadoutTemplates as sampleTemplates } from "../../sample/loadoutTemplates";
+import { SAMPLE_LOADOUTS } from "../../sample/loadouts";
 import {
   AbyssalTentacle,
   AhrimsRobeskirt,
@@ -339,11 +340,12 @@ describe("Region loadout templates", () => {
     warn.mockRestore();
   });
 
-  test("the sample app's templates dress the items they name", () => {
+  test("the sample app's presets dress the items they name", () => {
     const potions = [SaradominBrew, SuperCombatPotion, BastionPotion, SuperRestore, ...Array(24).fill(null)];
-    const dressed = sampleTemplates.map(({ name }) => {
-      const player = dress(sampleTemplates, name);
-      return { name, worn: wornClasses(player), carried: carriedClasses(player) };
+    const dressed = SAMPLE_LOADOUTS.presets.map(({ label, loadout }) => {
+      const { player } = new LoadoutRegion([]).reset(false);
+      dressPlayer(player, loadout);
+      return { name: label, worn: wornClasses(player), carried: carriedClasses(player) };
     });
 
     expect(dressed).toEqual([

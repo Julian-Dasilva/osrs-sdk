@@ -3,21 +3,24 @@ import { ControlPanelController, Region, Settings, TrainerInstance, TrainerLoadi
 import {
   DefaultSidebar,
   GameOverlay,
-  LoadoutManager,
+  LoadoutEditor,
+  Modal,
   RuneScapeButton,
+  RuneScapePanel,
   TrainerApp,
   TrainerLoadingSplash,
   useTrainerContext,
 } from "osrs-sdk-react";
 import { configureSampleCacheRenderer } from "./cache-render";
 import { SampleRegion } from "./SampleRegion";
-import { loadoutTemplates } from "./loadoutTemplates";
+import { SAMPLE_LOADOUTS } from "./loadouts";
 
 function createTrainer() {
   configureSampleCacheRenderer();
   Settings.readFromStorage();
+  const loadouts = SAMPLE_LOADOUTS.store(window.localStorage);
   const regions: Record<string, Region> = {
-    "index.html": new SampleRegion(loadoutTemplates),
+    "index.html": new SampleRegion(loadouts),
   };
   const regionName = window.location.pathname.split("/").pop() ?? "index.html";
   const region = regions[regionName] ?? regions["index.html"];
@@ -34,7 +37,7 @@ function createTrainer() {
       },
     };
   }
-  return trainer;
+  return { trainer, loadouts };
 }
 
 function SampleSidebarContents({ onLoadoutToggle }: { onLoadoutToggle: () => void }) {
@@ -96,7 +99,7 @@ function PlayerPositionDebug() {
 }
 
 export function SampleApp() {
-  const [trainer] = useState(createTrainer);
+  const [{ trainer, loadouts }] = useState(createTrainer);
   const [loading, setLoading] = useState<TrainerLoadingState>();
   const [loadoutOpen, setLoadoutOpen] = useState(false);
 
@@ -105,8 +108,25 @@ export function SampleApp() {
       <GameOverlay>
         {new URLSearchParams(window.location.search).get("scene-debug") === "1" && <PlayerPositionDebug />}
         <TrainerLoadingSplash state={loading} />
-        <LoadoutManager loadouts={loadoutTemplates} open={loadoutOpen} onClose={() => setLoadoutOpen(false)} />
       </GameOverlay>
+      <Modal open={loadoutOpen}>
+        <div style={{ maxHeight: "100%", overflowY: "auto" }}>
+          <RuneScapePanel>
+            <h2>Loadout</h2>
+            <LoadoutEditor
+              sim={SAMPLE_LOADOUTS}
+              store={loadouts}
+              onApply={() => {
+                trainer.reset();
+                setLoadoutOpen(false);
+              }}
+            />
+            <RuneScapeButton type="button" onClick={() => setLoadoutOpen(false)}>
+              Close
+            </RuneScapeButton>
+          </RuneScapePanel>
+        </div>
+      </Modal>
       <div id="disclaimer_panel">
         Work in progress.
         <br />

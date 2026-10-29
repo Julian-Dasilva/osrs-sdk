@@ -1,5 +1,5 @@
-import { CardinalDirection, Manticore, Player, Region } from "../src";
-import type { Loadout as LoadoutData } from "../src";
+import { CardinalDirection, Manticore, Player, Region, dressPlayer } from "../src";
+import type { LoadoutStore } from "../src";
 import { SampleNpc } from "./SampleNpc";
 import { SamplePillar } from "./SamplePillar";
 import { SampleAnimayaNpc } from "./SampleAnimayaNpc";
@@ -9,8 +9,8 @@ import { SampleSmallNpc } from "./SampleSmallNpc";
 import { SampleMinotaur } from "./SampleMinotaur";
 
 export class SampleRegion extends Region {
-  constructor(loadouts: LoadoutData[]) {
-    super(loadouts);
+  constructor(private readonly loadouts: LoadoutStore) {
+    super();
   }
 
   get initialFacing() {
@@ -39,6 +39,7 @@ export class SampleRegion extends Region {
       y: 25,
     });
     this.addPlayer(player);
+    dressPlayer(player, this.loadouts.active().loadout);
 
     const sampleNpc = new SampleNpc(this, { x: 40, y: 30 }, {});
     this.addMob(sampleNpc);
