@@ -3,6 +3,12 @@
 import { Random } from "../src/sdk/Random";
 import { Settings } from "../src/sdk/Settings";
 
+declare global {
+  var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
+}
+
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
 const nextRandom = [];
 jest.mock("../src/sdk/ControlPanelController");
 jest.mock("../src/sdk/MapController");

@@ -2,11 +2,8 @@ import React, { act } from "react";
 import { createRoot } from "react-dom/client";
 import { Dropdown } from "osrs-sdk-react";
 
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
 const MENU_WIDTH = 150;
 
-// jsdom has no layout, so the trigger's box, the menu's width and the window's width stand in for a browser's.
 function openedMenuLeft(triggerLeft: number): string {
   const container = document.createElement("div");
   document.body.appendChild(container);

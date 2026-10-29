@@ -29,7 +29,6 @@ export type LoadoutEditorProps = {
   choices?: (slot: EquipmentSlot | null) => readonly CatalogItem[];
 };
 
-/** Each preset's unsaved draft, kept while the player looks at another preset. */
 type Drafts = ReadonlyMap<string, CatalogLoadout>;
 
 type View = Readonly<{ active: ActiveLoadout; editor: EditorState; refusal: EditRejection | null; drafts: Drafts }>;
