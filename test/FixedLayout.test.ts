@@ -66,10 +66,11 @@ function image(pixels: number[], complete = true): HTMLImageElement {
 
 test("cuts a tab's icon from its plain stone so the open tab's icon can sit on the red stone", () => {
   Object.defineProperty(globalThis, "OffscreenCanvas", { configurable: true, value: PixelCanvas });
-  const stone = image([100, 91, 79, 255, 100, 91, 79, 255]);
-  const tab = image([100, 91, 79, 255, 232, 245, 232, 255]);
+  const stone = image([100, 91, 79, 255, 100, 91, 79, 255, 100, 91, 79, 255]);
+  // The second pixel is the same stone decoded a few levels off, as the two images' colour profiles leave it.
+  const tab = image([100, 91, 79, 255, 103, 88, 80, 255, 232, 245, 232, 255]);
   expect(FixedLayout.tabIcon(image([1, 2, 3, 255], false), stone)).toBeNull();
   const icon = FixedLayout.tabIcon(tab, stone) as unknown as PixelCanvas;
-  expect(Array.from(icon.data)).toEqual([100, 91, 79, 0, 232, 245, 232, 255]);
+  expect(Array.from(icon.data)).toEqual([100, 91, 79, 0, 103, 88, 80, 0, 232, 245, 232, 255]);
   expect(FixedLayout.tabIcon(tab, stone)).toBe(icon);
 });
