@@ -131,6 +131,17 @@ export function parseLoadout(catalog: ItemCatalog, raw: unknown): LoadoutParse {
   return { kind: "parsed", loadout: { equipment, inventory } };
 }
 
+/** The ids that `parseLoadout` reads back into `loadout`. */
+export function loadoutIds(loadout: CatalogLoadout): Readonly<{
+  equipment: Readonly<Record<EquipmentSlot, ItemId | null>>;
+  inventory: readonly (ItemId | null)[];
+}> {
+  return {
+    equipment: eachSlot((slot) => loadout.equipment[slot]?.id ?? null),
+    inventory: loadout.inventory.map((item) => item?.id ?? null),
+  };
+}
+
 function describeSlot(at: SlotRef): string {
   switch (at.kind) {
     case "equipment":
