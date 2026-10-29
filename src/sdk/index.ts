@@ -110,3 +110,4 @@ export * from "./testing/TestRegion";
 
 export * as __assets_mock from "./utils/__mocks__/Assets";
 export * as __sound_cache_mock from "./utils/__mocks__/SoundCache";
+export * from "./SimLoadouts";
