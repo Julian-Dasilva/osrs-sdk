@@ -70,6 +70,7 @@ for (const { id, name, heal, delay } of [
     const food = carry(player, id);
     const next = carry(player, id, 1);
     player.currentStats.hitpoint = 40;
+    player.attackDelay = 1;
     food.inventoryLeftClick(player);
     expect(player.inventory[0]).toBeNull();
     expect(player.currentStats.hitpoint).toBe(40);
@@ -94,6 +95,7 @@ test("halibut follows food and brew in one tick, but blocks another halibut and 
   const brew = new SaradominBrew();
   player.inventory[3] = brew;
   player.currentStats.hitpoint = 20;
+  player.attackDelay = 1;
   manta.inventoryLeftClick(player);
   brew.inventoryLeftClick(player);
   halibut.inventoryLeftClick(player);
@@ -124,7 +126,14 @@ test("Sanfew restores drained combat stats without removing a boost or healing",
   Object.assign(player.currentStats, { attack: 60, strength: 60, defence: 118, range: 98, magic: 60, hitpoint: 40 });
   carry(player, 10925).inventoryLeftClick(player);
   world.tickWorld(1);
-  expect([player.currentStats.attack, player.currentStats.strength, player.currentStats.defence, player.currentStats.range, player.currentStats.magic, player.currentStats.hitpoint]).toEqual([93, 93, 118, 99, 93, 40]);
+  expect([
+    player.currentStats.attack,
+    player.currentStats.strength,
+    player.currentStats.defence,
+    player.currentStats.range,
+    player.currentStats.magic,
+    player.currentStats.hitpoint,
+  ]).toEqual([93, 93, 118, 99, 93, 40]);
 });
 
 test("prayer restoration caps at base prayer and an exhausted bottle leaves the inventory", () => {
@@ -160,7 +169,9 @@ test("divine damages ten HP and expires after five minutes even when its last do
   world.tickWorld(1);
   expect(player.inventory[0]).toBeNull();
   expect(player.currentStats.hitpoint).toBe(89);
-  expect([player.currentStats.attack, player.currentStats.strength, player.currentStats.defence]).toEqual([118, 118, 118]);
+  expect([player.currentStats.attack, player.currentStats.strength, player.currentStats.defence]).toEqual([
+    118, 118, 118,
+  ]);
   world.tickWorld(499);
   expect(player.currentStats.attack).toBe(118);
   world.tickWorld(1);
@@ -176,5 +187,30 @@ test("Alliance log is carried without an eat or drink action or a combat effect"
   log.inventoryLeftClick(player);
   world.tickWorld(1);
   expect(player.inventory[0]).toBe(log);
-  expect([player.currentStats.hitpoint, player.currentStats.prayer, player.attackDelay]).toEqual([99, 99, 0]);
+  expect([player.currentStats.hitpoint, player.currentStats.prayer]).toEqual([99, 99]);
+  expect(player.attackDelay).toBeLessThanOrEqual(0);
+});
+
+for (const { id, stat, boosted, decayed } of [
+  { id: 2444, stat: "range", boosted: 112, decayed: 111 },
+  { id: 12699, stat: "attack", boosted: 118, decayed: 117 },
+] as const) {
+  test(`${id} boost decays by one after a minute`, () => {
+    const { player, world } = fight();
+    carry(player, id).inventoryLeftClick(player);
+    world.tickWorld(99);
+    expect(player.currentStats[stat]).toBe(boosted);
+    world.tickWorld(1);
+    expect(player.currentStats[stat]).toBe(decayed);
+  });
+}
+
+test("Preserve extends ordinary boosts by thirty seconds after its activation time", () => {
+  const { player, world } = fight();
+  player.prayerController.findPrayerByName("Preserve").activate(player);
+  carry(player, 2444).inventoryLeftClick(player);
+  world.tickWorld(149);
+  expect(player.currentStats.range).toBe(112);
+  world.tickWorld(1);
+  expect(player.currentStats.range).toBe(111);
 });

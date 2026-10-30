@@ -1,7 +1,6 @@
 "use strict";
 import { Potion } from "./gear/Potion";
 import { Food } from "./gear/Food";
-import { Karambwan } from "../content/items/Karambwan";
 import { Player } from "./Player";
 
 export class Eating {
@@ -12,7 +11,7 @@ export class Eating {
 
   currentFood: Food;
   currentPotion: Potion;
-  currentComboFood: Karambwan;
+  currentComboFood: Food;
 
   tickFood(player: Player) {
     this.foodDelay--;
@@ -20,7 +19,7 @@ export class Eating {
     this.comboDelay--;
     if (this.currentFood) {
       this.currentFood.eat(player);
-      player.attackDelay += 3;
+      player.attackDelay += this.currentFood.attackDelay;
       this.currentFood = null;
     }
     if (this.currentPotion) {
@@ -29,7 +28,7 @@ export class Eating {
     }
     if (this.currentComboFood) {
       this.currentComboFood.eat(player);
-      player.attackDelay += 3;
+      player.attackDelay += this.currentComboFood.attackDelay;
       this.currentComboFood = null;
     }
   }
@@ -46,7 +45,6 @@ export class Eating {
     return this.comboDelay <= 0;
   }
 
-  // The weird way that the lower tiers also eat the higher tiers forces the behavior of food -> potion -> karambwan
   eatFood(food: Food) {
     if (!this.canEatFood()) {
       return;
@@ -71,13 +69,13 @@ export class Eating {
     return true;
   }
 
-  eatComboFood(karambwan: Karambwan) {
+  eatComboFood(food: Food) {
     if (!this.canEatComboFood()) {
       return;
     }
     this.foodDelay = 3;
     this.potionDelay = 3;
-    this.currentComboFood = karambwan || null;
+    this.currentComboFood = food || null;
     this.comboDelay = 3;
     if (this.currentComboFood) {
       this.currentComboFood.consumeItem(this.player);

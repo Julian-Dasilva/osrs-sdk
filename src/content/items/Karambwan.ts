@@ -6,6 +6,7 @@ import { ImageLoader } from "../../sdk/utils/ImageLoader";
 
 export class Karambwan extends Food {
   healAmount = 18;
+  override attackDelay = 2;
   inventorySprite: HTMLImageElement = ImageLoader.createImage(KarambwanImage);
   get inventoryImage() {
     return KarambwanImage;

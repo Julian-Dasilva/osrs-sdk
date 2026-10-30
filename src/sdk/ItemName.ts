@@ -1,4 +1,14 @@
 export enum ItemName {
+  PRAYER_POTION = "Prayer potion",
+  RANGING_POTION = "Ranging potion",
+  DIVINE_SUPER_COMBAT_POTION = "Divine super combat potion",
+  SANFEW_SERUM = "Sanfew serum",
+  MANTA_RAY = "Manta ray",
+  HALIBUT = "Halibut",
+  GIANT_KRILL = "Giant krill",
+  LEFTOVERS = "Leftovers",
+  ALLIANCE_LOG = "Alliance log",
+
   BLOOD_BARRAGE = "Blood Barrage",
   ICE_BARRAGE = "Ice Barrage",
   AHRIMS_ROBETOP = "Ahrim's robetop",

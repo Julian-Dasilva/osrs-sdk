@@ -5,6 +5,7 @@ import { PlayerAnimationIndices } from "../rendering/GLTFAnimationConstants";
 
 export class Food extends Item {
   healAmount = 0;
+  attackDelay = 3;
   inventorySprite: HTMLImageElement = ImageLoader.createImage(this.inventoryImage);
 
   constructor() {

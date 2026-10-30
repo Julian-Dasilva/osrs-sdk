@@ -1,0 +1,48 @@
+export const SUPPLY_VALUES = {
+  statDecay: { ticks: 100, source: "https://oldschool.runescape.wiki/w/Ranging_potion?oldid=15293943" },
+  preserve: { activation: 25, extension: 50, source: "https://oldschool.runescape.wiki/w/Preserve?oldid=15227349" },
+  prayer: {
+    doseIds: [143, 141, 139, 2434],
+    fraction: 0.25,
+    flat: 7,
+    source: "https://oldschool.runescape.wiki/w/Prayer_potion?oldid=15374387",
+  },
+  ranging: {
+    doseIds: [173, 171, 169, 2444],
+    fraction: 0.1,
+    flat: 4,
+    source: "https://oldschool.runescape.wiki/w/Ranging_potion?oldid=15293943",
+  },
+  superCombat: {
+    doseIds: [12701, 12699, 12697, 12695],
+    fraction: 0.15,
+    flat: 5,
+    source: "https://oldschool.runescape.wiki/w/Super_combat_potion?oldid=15281186",
+  },
+  divine: {
+    doseIds: [23694, 23691, 23688, 23685],
+    fraction: 0.15,
+    flat: 5,
+    damage: 10,
+    duration: 500,
+    source: "https://oldschool.runescape.wiki/w/Divine_super_combat_potion?oldid=15331555",
+  },
+  sanfew: {
+    doseIds: [10931, 10929, 10927, 10925],
+    fraction: 0.3,
+    flat: 4,
+    source: "https://oldschool.runescape.wiki/w/Sanfew_serum?oldid=15236706",
+  },
+  mantaRay: { id: 391, heal: 22, weight: 0.4, source: "https://oldschool.runescape.wiki/w/Manta_ray?oldid=15184402" },
+  halibut: { id: 32336, heal: 20, weight: 0.65, source: "https://oldschool.runescape.wiki/w/Halibut?oldid=15352002" },
+  giantKrill: {
+    id: 32312,
+    heal: 17,
+    weight: 0.65,
+    source: "https://oldschool.runescape.wiki/w/Giant_krill?oldid=15351996",
+  },
+  leftovers: { id: 34730, heal: 5, weight: 1.5, source: "https://oldschool.runescape.wiki/w/Leftovers?oldid=15386167" },
+  allianceLog: { id: 34729, weight: 0.01, source: "https://oldschool.runescape.wiki/w/Alliance_log?oldid=15383767" },
+  food: { attackDelay: 3, source: "https://oldschool.runescape.wiki/w/Food?oldid=15373716" },
+  comboFood: { attackDelay: 2, source: "https://oldschool.runescape.wiki/w/Food?oldid=15373716" },
+} as const;
