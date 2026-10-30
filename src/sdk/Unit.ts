@@ -827,7 +827,7 @@ export abstract class Unit extends Renderable {
     return ammo && weapon.compatibleAmmo().includes(ammo.itemName) ? ammo : null;
   }
 
-  heal(amount: number): void {
+  restoreHitpoints(amount: number): void {
     if (this.currentStats.hitpoint < this.stats.hitpoint) {
       this.currentStats.hitpoint = Math.min(this.currentStats.hitpoint + amount, this.stats.hitpoint);
     }
@@ -858,7 +858,7 @@ export abstract class Unit extends Renderable {
         landed.push({ damage: projectile.damage, attackStyle: projectile.attackStyle, from: projectile.from });
 
         if (projectile.damage < 0) {
-          this.heal(-projectile.damage);
+          this.restoreHitpoints(-projectile.damage);
         } else {
           this.currentStats.hitpoint -= projectile.damage;
           const sound = this.hitSound(projectile.damage > 0);
