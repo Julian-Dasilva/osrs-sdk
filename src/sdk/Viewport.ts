@@ -19,7 +19,7 @@ import { Trainer } from "./Trainer";
 import { Component } from "./ui/Component";
 import { ToggleButton } from "./ui/ToggleButton";
 import { ScreenPoint } from "./rendering/utils/projectedClickbox";
-import { FixedLayout } from "./FixedLayout";
+import { FixedLayout, FRAME } from "./FixedLayout";
 
 type ViewportEntitiesClick = {
   type: "entities";
@@ -69,7 +69,7 @@ export interface ViewportDelegate {
 
   resize?(width: number, height: number): void;
 
-  // fixed mode: where the delegate's own canvas, if it has one, sits over the frame's game view (CSS pixels from the page)
+  /** Fixed mode: the box, in CSS pixels of the playable area, that the delegate's own canvas covers; null restores the full area. */
   place?(box: Readonly<{ left: number; top: number; width: number; height: number }> | null): void;
 }
 
@@ -90,7 +90,6 @@ export class Viewport {
 
   private clickController: ClickController;
   private resizeObserver: ResizeObserver | null = null;
-  /** The canvas's style as mounted, restored when fixed mode turns off. */
   private readonly fullAreaStyle: string;
   private fixedPlaced = false;
   private laidOutFixed = false;
@@ -130,7 +129,6 @@ export class Viewport {
     const game = FixedLayout.gameView(FixedLayout.scaleOf(this.canvas.width));
     const x = offsetX - game.x;
     const y = offsetY - game.y;
-    // In fixed mode only the game view shows the world; the frame around it shows nothing to click.
     if (x < 0 || y < 0 || x >= game.width || y >= game.height) return null;
     return this.delegate.translateClick(x, y, world, this);
   }
@@ -183,21 +181,16 @@ export class Viewport {
     this.delegate.resize?.(width, height);
   }
 
-  /** Lays the viewport out again for the current playable area, as after a resize; call it after changing `Settings.fixedMode`. */
-  relayout() {
+  private relayout() {
     const area = this.resizeTarget.getBoundingClientRect();
     this.resize(area.width, area.height);
   }
 
-  /**
-   * Fixed mode: the canvas becomes the 765 by 503 frame scaled to fit the playable area and centred in it, and the
-   * delegate renders only the frame's game view. The UI controllers read the canvas's size, so they lay out in the frame.
-   */
   private resizeFixed(areaWidth: number, areaHeight: number) {
     const { left, top, scale } = FixedLayout.place(areaWidth, areaHeight);
     this.fixedPlaced = true;
-    const width = Math.round(765 * scale);
-    const height = Math.round(503 * scale);
+    const width = Math.round(FRAME.width * scale);
+    const height = Math.round(FRAME.height * scale);
     this.canvas.style.inset = "auto";
     this.canvas.style.left = `${left}px`;
     this.canvas.style.top = `${top}px`;
@@ -370,7 +363,6 @@ export class Viewport {
     this.context.restore();
   }
 
-  /** Where the countdown is centred: 50 pixels above the middle of the game view, which fixed mode insets in its frame. */
   static countdownAnchor(width: number, height: number): Readonly<{ x: number; y: number }> {
     if (!FixedLayout.enabled) return { x: width / 2, y: height / 2 - 50 };
     const game = FixedLayout.gameView(FixedLayout.scaleOf(width));

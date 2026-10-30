@@ -47,24 +47,24 @@ enum MapHover {
 const INITIAL_WIDTH = 210;
 const INITIAL_HEIGHT = 180;
 
-/**
- * Each orb's top edge in minimap pixels: where the resizable layout draws it, and where interface 160 puts it in fixed
- * mode (its box sits at frame y 4), which keeps the spec orb above the top tab row at y 168.
- */
 const RESIZABLE_ORB_TOPS = { xp: 26, hitpoint: 47, prayer: 81, run: 114, spec: 140 } as const;
+/** The fixed tops are interface 160's, whose box sits at frame y 4. */
 const FIXED_ORB_TOPS = { xp: 21, hitpoint: 41, prayer: 75, run: 107, spec: 132 } as const;
-type OrbShift = Record<keyof typeof RESIZABLE_ORB_TOPS, number>;
+type OrbShift = Readonly<Record<keyof typeof RESIZABLE_ORB_TOPS, number>>;
 
-/** How far each orb sits from its resizable place: nothing in the resizable layout, a few pixels up in fixed mode. */
+const RESIZABLE_ORB_SHIFT: OrbShift = { xp: 0, hitpoint: 0, prayer: 0, run: 0, spec: 0 };
+const FIXED_ORB_SHIFT: OrbShift = {
+  xp: FIXED_ORB_TOPS.xp - RESIZABLE_ORB_TOPS.xp,
+  hitpoint: FIXED_ORB_TOPS.hitpoint - RESIZABLE_ORB_TOPS.hitpoint,
+  prayer: FIXED_ORB_TOPS.prayer - RESIZABLE_ORB_TOPS.prayer,
+  run: FIXED_ORB_TOPS.run - RESIZABLE_ORB_TOPS.run,
+  spec: FIXED_ORB_TOPS.spec - RESIZABLE_ORB_TOPS.spec,
+};
+
 function orbShift(): OrbShift {
-  const shift = { xp: 0, hitpoint: 0, prayer: 0, run: 0, spec: 0 };
-  if (!FixedLayout.enabled) return shift;
-  for (const orb of Object.keys(shift) as (keyof OrbShift)[])
-    shift[orb] = FIXED_ORB_TOPS[orb] - RESIZABLE_ORB_TOPS[orb];
-  return shift;
+  return FixedLayout.enabled ? FIXED_ORB_SHIFT : RESIZABLE_ORB_SHIFT;
 }
 
-/** A point's y measured in the resizable layout's numbers for each orb, so one set of hit boxes serves both layouts. */
 function orbYs(y: number): OrbShift {
   const shift = orbShift();
   return {
@@ -451,7 +451,6 @@ export class MapController {
 
     const gameHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
     const fixed = FixedLayout.enabled;
-    // Fixed mode anchors the map's left edge at the frame's minimap box, so its orbs and map sit where the fixed client's do.
     Settings.minimapScale = fixed
       ? FixedLayout.scaleOf(width)
       : (gameHeight / 500 > 1 ? 1 : gameHeight / 500) * Settings.maxUiScale;

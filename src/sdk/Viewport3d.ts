@@ -232,10 +232,8 @@ export class Viewport3d implements ViewportDelegate {
       this.clientCameraRotation.setMiddleMouseDown(true);
   }
 
-  /** Fixed mode turns and zooms the camera from the game view only, as the client does; the frame around it does neither. */
   private outsideGameView(clientX: number, clientY: number): boolean {
     if (!FixedLayout.enabled) return false;
-    // The 3D canvas covers exactly the game view in fixed mode.
     const box = this.canvas.getBoundingClientRect();
     return clientX < box.left || clientY < box.top || clientX >= box.right || clientY >= box.bottom;
   }
@@ -393,7 +391,6 @@ export class Viewport3d implements ViewportDelegate {
     window.addEventListener("keyup", this.onKeyUp.bind(this), false);
   }
 
-  /** Fixed mode puts the 3D canvas over the frame's game view only; null returns it to the full playable area. */
   place(box: Readonly<{ left: number; top: number; width: number; height: number }> | null) {
     const style = this.canvas.style;
     if (box === null) {

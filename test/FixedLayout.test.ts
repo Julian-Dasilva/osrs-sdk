@@ -2,7 +2,6 @@ import { CHATBOX, FixedLayout, FRAME, FRAME_SPRITES, GAME_VIEW, MINIMAP, SIDE_PA
 
 test("fits the 765 by 503 frame in the playable area and centres it", () => {
   expect(FixedLayout.place(1530, 1006)).toEqual({ left: 0, top: 0, scale: 2 });
-  // A wide area letterboxes left and right; a tall one top and bottom.
   expect(FixedLayout.place(1920, 1006)).toEqual({ left: 195, top: 0, scale: 2 });
   expect(FixedLayout.place(765, 803)).toEqual({ left: 0, top: 150, scale: 1 });
 });
@@ -67,7 +66,6 @@ function image(pixels: number[], complete = true): HTMLImageElement {
 test("cuts a tab's icon from its plain stone so the open tab's icon can sit on the red stone", () => {
   Object.defineProperty(globalThis, "OffscreenCanvas", { configurable: true, value: PixelCanvas });
   const stone = image([100, 91, 79, 255, 100, 91, 79, 255, 100, 91, 79, 255]);
-  // The second pixel is the same stone decoded a few levels off, as the two images' colour profiles leave it.
   const tab = image([100, 91, 79, 255, 103, 88, 80, 255, 232, 245, 232, 255]);
   expect(FixedLayout.tabIcon(image([1, 2, 3, 255], false), stone)).toBeNull();
   const icon = FixedLayout.tabIcon(tab, stone) as unknown as PixelCanvas;

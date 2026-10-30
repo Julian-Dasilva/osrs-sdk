@@ -1,9 +1,6 @@
 import { Settings } from "./Settings";
 
-/**
- * The classic fixed-mode interface: the game client's top-level interface 548 and its chatbox 162 (cache 2746), a 765 by
- * 503 frame scaled to fit the playable area. Every box below is in frame pixels, as the cache places it.
- */
+/** A box in frame pixels, as interface 548 and chatbox 162 of cache 2746 place it. */
 export type FrameBox = Readonly<{ x: number; y: number; width: number; height: number }>;
 export type FrameSprite = Readonly<{
   sprite: number;
@@ -21,12 +18,11 @@ export const MINIMAP: FrameBox = { x: 516, y: 4, width: 249, height: 163 };
 export const SIDE_PANEL: FrameBox = { x: 547, y: 205, width: 190, height: 261 };
 export const CHATBOX: FrameBox = { x: 0, y: 338, width: 519, height: 165 };
 
-/** The left edge of each tab's 33 by 36 slot; the top row's slots start at y 168 and the bottom row's at y 466. */
 const TAB_LEFTS = [526, 560, 593, 626, 659, 692, 726] as const;
 const TAB_ROWS = [168, 466] as const;
 export const TAB = { width: 33, height: 36 } as const;
 
-/** The frame's sprites in the order the client draws them; the minimap cover and stones go over what they surround. */
+/** In the client's draw order: later pieces overlap earlier ones. */
 export const FRAME_SPRITES: readonly FrameSprite[] = [
   { sprite: 1039, x: 0, y: 0, width: 717, height: 4, tiled: true },
   { sprite: 1441, x: 717, y: 0, width: 48, height: 4, tiled: false },
@@ -43,9 +39,9 @@ export const FRAME_SPRITES: readonly FrameSprite[] = [
   { sprite: 1017, x: 0, y: 338, width: 519, height: 142, tiled: false },
   { sprite: 1018, x: 0, y: 480, width: 519, height: 23, tiled: false },
 ];
-/** The minimap's cover, drawn over the map and compass. */
+/** Kept out of FRAME_SPRITES: MapController draws it after the map and compass. */
 export const MINIMAP_COVER: FrameSprite = { sprite: 1182, x: 545, y: 4, width: 172, height: 156, tiled: false };
-/** The red stone behind the open tab, by slot: the two end slots use wider corner stones. */
+/** By tab index. The end slots use the client's wider corner stones, so their x differs from TAB_LEFTS. */
 const SELECTED_STONES: readonly (readonly [number, number])[] = [
   [1026, 520],
   [1030, 560],
@@ -63,8 +59,7 @@ const SELECTED_STONES: readonly (readonly [number, number])[] = [
   [1029, 725],
 ];
 
-/** Stone brown, drawn under the frame where a sprite has not loaded. */
-const STONE = "#3e3529";
+const MISSING_SPRITE_FILL = "#3e3529";
 /**
  * How far a tab pixel's channels may sit from the empty tab's and still count as stone: the tab images carry an ICC
  * profile and the empty tab a gamma, so the browser decodes the same stone a few levels apart.
@@ -75,7 +70,7 @@ export class FixedLayout {
   private static sprites = new Map<number, CanvasImageSource>();
   private static icons = new Map<HTMLImageElement, OffscreenCanvas>();
 
-  /** Frame sprites by cache sprite id; the trainer extracts them from its cache. Any missing piece draws as plain stone. */
+  /** Keyed by cache sprite id; replaces the previous set. A missing sprite leaves plain stone. */
   static setSprites(sprites: ReadonlyMap<number, CanvasImageSource>): void {
     FixedLayout.sprites = new Map(sprites);
   }
@@ -113,7 +108,7 @@ export class FixedLayout {
   static drawFrame(context: CanvasRenderingContext2D, scale: number): void {
     context.save();
     context.imageSmoothingEnabled = false;
-    context.fillStyle = STONE;
+    context.fillStyle = MISSING_SPRITE_FILL;
     context.fillRect(
       (GAME_VIEW.x + GAME_VIEW.width) * scale,
       0,
@@ -138,7 +133,6 @@ export class FixedLayout {
     context.restore();
   }
 
-  /** The red stone behind the open tab's slot. */
   static drawSelectedStone(context: CanvasRenderingContext2D, index: number, scale: number): void {
     const stone = SELECTED_STONES[index];
     if (stone === undefined) return;
@@ -149,10 +143,7 @@ export class FixedLayout {
     context.drawImage(image, x * scale, y * scale, imageWidth(image) * scale, imageHeight(image) * scale);
   }
 
-  /**
-   * A tab image with its plain stone cut away, leaving the icon: pixels within a few levels of the empty tab's stone turn clear.
-   * Null until both images have loaded.
-   */
+  /** `tab` with the pixels that match `stone` made transparent. Null until both images have loaded; cached per tab. */
   static tabIcon(tab: HTMLImageElement, stone: HTMLImageElement): OffscreenCanvas | null {
     const cached = FixedLayout.icons.get(tab);
     if (cached !== undefined) return cached;

@@ -110,7 +110,7 @@ export class Settings {
   static hoveredTileColor: string;
   static hoveredTileEnabled: boolean;
   static hideDeadNpcs = false;
-  /** The classic fixed-mode interface: a 765 by 503 frame scaled to fit, the game in its 512 by 334 view. */
+  /** Draws the classic fixed-mode interface (see `FixedLayout`) instead of the resizable layout. */
   static fixedMode = false;
 
   static loadout: string;
