@@ -52,6 +52,57 @@ const cases = [
   [24780, "Amulet of blood fury", [10, 10, 10, 10, 10], [15, 15, 15, 15, 15], [8, 0, 0, 5]],
   [28955, "Blessed Dizana's quiver", [0, 0, 0, 0, 18], [0, 0, 0, 0, 0], [0, 3, 0, 0]],
 ];
+const stances = {
+  13576: [
+    ["ACCURATE", 6, 1],
+    ["AGGRESSIVE (CRUSH)", 6, 1],
+    ["DEFENSIVE", 6, 1],
+  ],
+  28035: [
+    ["ACCURATE", 6, 1],
+    ["AGGRESSIVE (CRUSH)", 6, 1],
+    ["DEFENSIVE", 6, 1],
+  ],
+  29589: [
+    ["ACCURATE", 4, 1],
+    ["AGGRESSIVE (SLASH)", 4, 1],
+    ["STAB", 4, 1],
+    ["DEFENSIVE", 4, 1],
+  ],
+  25739: [
+    ["REAP", 5, 1],
+    ["AGGRESSIVE (SLASH)", 5, 1],
+    ["AGGRESSIVE (CRUSH)", 5, 1],
+    ["DEFENSIVE", 5, 1],
+  ],
+  26374: [
+    ["ACCURATE", 6, 8],
+    ["RAPID", 5, 8],
+    ["LONGRANGE", 6, 10],
+  ],
+  21902: [
+    ["ACCURATE", 6, 7],
+    ["RAPID", 5, 7],
+    ["LONGRANGE", 6, 9],
+  ],
+  29591: [
+    ["ACCURATE", 5, 10],
+    ["RAPID", 4, 10],
+    ["LONGRANGE", 5, 10],
+  ],
+};
+const weights = {
+  13576: 2,
+  28035: 2,
+  29589: 0.907,
+  25739: 3.175,
+  26374: 6.001,
+  21902: 6,
+  29591: 1.814,
+  25975: 0.05,
+  24780: 0.02,
+  28955: 0.453,
+};
 function item(id) {
   const entry = SDK_ITEM_CATALOG.get(id);
   assert.ok(entry, `public catalog must construct wiki item ${id}`);
@@ -62,6 +113,7 @@ for (const [id, name, attack, defence, other, speed, range, cost] of cases) {
     AttackStylesController.controller = new AttackStylesController();
     const built = item(id);
     assert.equal(built.itemName.toLowerCase(), name.toLowerCase());
+    assert.equal(built.weight, weights[id]);
     for (const [index, key] of ["stab", "slash", "crush", "magic", "range"].entries()) {
       assert.equal(built.bonuses.attack[key], attack[index], `attack ${key}`);
       assert.equal(built.bonuses.defence[key], defence[index], `defence ${key}`);
@@ -73,7 +125,17 @@ for (const [id, name, attack, defence, other, speed, range, cost] of cases) {
       assert.equal(built.attackRange, range);
       assert.equal(built.hasSpecialAttack(), cost !== null);
       if (cost !== null) assert.equal(built.specialAttackDrain(), cost);
-      assert.ok(built.attackStyles().includes(built.defaultStyle()));
+      assert.deepEqual(
+        built.attackStyles().map(String),
+        stances[id].map(([style]) => style),
+      );
+      assert.deepEqual(
+        built.attackStyles().map((style) => {
+          AttackStylesController.controller.setWeaponAttackStyle(built, style);
+          return [String(style), built.attackSpeed, built.attackRange];
+        }),
+        stances[id],
+      );
     }
   });
 }

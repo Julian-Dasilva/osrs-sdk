@@ -16,6 +16,9 @@ export class ZaryteCrossbow extends DragonCrossbow {
   override get cacheItemId(): number {
     return CACHE_ASSETS.items.zaryteCrossbow.id;
   }
+  override get weight(): number {
+    return 6.001;
+  }
   override get itemName(): ItemName {
     return ItemName.ZARYTE_CROSSBOW;
   }

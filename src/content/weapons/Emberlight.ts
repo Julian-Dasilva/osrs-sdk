@@ -18,6 +18,9 @@ export class Emberlight extends MeleeWeapon {
   override get cacheItemId(): number {
     return CACHE_ASSETS.items.emberlight.id;
   }
+  override get weight(): number {
+    return 0.907;
+  }
   override get itemName(): ItemName {
     return ItemName.EMBERLIGHT;
   }
