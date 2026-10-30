@@ -55,6 +55,7 @@ export type SettingsState = {
   hoveredTileColor: string;
   hoveredTileEnabled: boolean;
   hideDeadNpcs: boolean;
+  fixedMode: boolean;
   use3dView: boolean;
   westPillar: boolean;
   zoomScale: number;
@@ -109,6 +110,8 @@ export class Settings {
   static hoveredTileColor: string;
   static hoveredTileEnabled: boolean;
   static hideDeadNpcs = false;
+  /** Draws the classic fixed-mode interface (see `FixedLayout`) instead of the resizable layout. */
+  static fixedMode = false;
 
   static loadout: string;
   static customLoadout: Loadout | null;
@@ -248,6 +251,7 @@ export class Settings {
       hoveredTileColor: Settings.hoveredTileColor,
       hoveredTileEnabled: Settings.hoveredTileEnabled,
       hideDeadNpcs: Settings.hideDeadNpcs,
+      fixedMode: Settings.fixedMode,
       use3dView: Settings.use3dView,
       westPillar: Settings.westPillar,
       zoomScale: Settings.zoomScale,
@@ -300,6 +304,7 @@ function createDefaults(): SettingsState {
     hoveredTileColor: "#FFFFFF",
     hoveredTileEnabled: true,
     hideDeadNpcs: false,
+    fixedMode: false,
     use3dView: true,
     westPillar: true,
     zoomScale: 1,
@@ -359,6 +364,7 @@ const legacyStorage: SettingsStorage<SettingsState> = {
       hoveredTileColor: defaults.hoveredTileColor,
       hoveredTileEnabled: defaults.hoveredTileEnabled,
       hideDeadNpcs: defaults.hideDeadNpcs,
+      fixedMode: defaults.fixedMode,
       use3dView: window.localStorage.getItem("use3dView") !== "false",
       westPillar: window.localStorage.getItem("westPillar") !== "false",
       zoomScale: parseFloat(window.localStorage.getItem("zoomScale")) || 1,

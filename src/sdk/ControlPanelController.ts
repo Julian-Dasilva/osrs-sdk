@@ -1,11 +1,14 @@
 "use strict";
 import { AccountControls } from "./controlpanels/AccountControls";
+import { FixedLayout, SIDE_PANEL, GAME_VIEW } from "./FixedLayout";
 import { AncientsSpellbookControls } from "./controlpanels/AncientsSpellbookControls";
 import { BaseControls } from "./controlpanels/BaseControls";
 import { ClanChatControls } from "./controlpanels/ClanChatControls";
 import { CombatControls } from "./controlpanels/CombatControls";
 import { EmotesControls } from "./controlpanels/EmotesControls";
 import { EmptyControls } from "./controlpanels/EmptyControls";
+import EmptyTab from "../assets/images/tabs/empty.png";
+import { ImageLoader } from "./utils/ImageLoader";
 import { EquipmentControls } from "./controlpanels/EquipmentControls";
 import { FriendsControls } from "./controlpanels/FriendsControls";
 import { InventoryControls } from "./controlpanels/InventoryControls";
@@ -28,6 +31,9 @@ interface TabPosition {
 
 const BASE_WIDTH = 33 * 7;
 const BASE_HEIGHT = 36 * 2 + 275;
+
+const PANEL_SPRITE_BORDER = 7;
+const EMPTY_TAB = ImageLoader.createImage(EmptyTab);
 
 export class ControlPanelController {
   static controls = Object.freeze({
@@ -116,6 +122,13 @@ export class ControlPanelController {
 
   getTabScale() {
     const { width, height } = Chrome.size();
+    if (FixedLayout.enabled) {
+      const scale = FixedLayout.scaleOf(width);
+      Settings.controlPanelScale = scale;
+      this.width = BASE_WIDTH * scale;
+      this.height = BASE_HEIGHT * scale;
+      return scale;
+    }
 
     const controlAreaHeight = height - MapController.controller.height;
     let scaleRatio = controlAreaHeight / 7 / 36;
@@ -140,6 +153,9 @@ export class ControlPanelController {
   boostPosition() {
     const { width, height } = Chrome.size();
     const scale = this.getTabScale();
+    if (FixedLayout.enabled) {
+      return { x: (GAME_VIEW.x + 4) * scale, y: (GAME_VIEW.y + GAME_VIEW.height - 4) * scale };
+    }
     if (Settings.mobileCheck()) {
       const mapHeight = 170 * Settings.minimapScale;
       const spacer = (height - mapHeight - 36 * scale * 7) / 2;
@@ -156,6 +172,7 @@ export class ControlPanelController {
     // let scale = Settings.controlPanelScale
     const { width, height } = Chrome.size();
     const scale = this.getTabScale();
+    if (FixedLayout.enabled) return FixedLayout.tabPosition(i, scale);
 
     if (Settings.mobileCheck()) {
       const mapHeight = 170 * Settings.minimapScale;
@@ -317,6 +334,9 @@ export class ControlPanelController {
   controlPosition(control: BaseControls): Location {
     const scale = this.getTabScale();
     const { width, height } = Chrome.size();
+    if (FixedLayout.enabled) {
+      return { x: (SIDE_PANEL.x - PANEL_SPRITE_BORDER) * scale, y: (SIDE_PANEL.y - PANEL_SPRITE_BORDER) * scale };
+    }
 
     if (Settings.mobileCheck()) {
       const mapHeight = 170 * Settings.minimapScale;
@@ -352,7 +372,16 @@ export class ControlPanelController {
 
     if (this.selectedControl && this.selectedControl.draw) {
       const position = this.controlPosition(this.selectedControl);
-      this.selectedControl.draw(context, this, position.x, position.y);
+      if (FixedLayout.enabled) {
+        context.save();
+        context.beginPath();
+        context.rect(SIDE_PANEL.x * scale, SIDE_PANEL.y * scale, SIDE_PANEL.width * scale, SIDE_PANEL.height * scale);
+        context.clip();
+        this.selectedControl.draw(context, this, position.x, position.y);
+        context.restore();
+      } else {
+        this.selectedControl.draw(context, this, position.x, position.y);
+      }
     }
 
     // TODO: make this rendering configurable
@@ -383,7 +412,12 @@ export class ControlPanelController {
       }
     });
 
-    if (selectedPosition) {
+    if (selectedPosition && FixedLayout.enabled) {
+      FixedLayout.drawSelectedStone(context, this.controls.indexOf(this.selectedControl), scale);
+      const icon = FixedLayout.tabIcon(this.selectedControl.tabImage, EMPTY_TAB);
+      if (icon !== null)
+        context.drawImage(icon, selectedPosition.x, selectedPosition.y, icon.width * scale, icon.height * scale);
+    } else if (selectedPosition) {
       context.strokeStyle = "#00FF0073";
       context.lineWidth = 3;
       context.strokeRect(selectedPosition.x, selectedPosition.y, 33 * scale, 36 * scale);

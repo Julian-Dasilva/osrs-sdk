@@ -38,6 +38,7 @@ import {
 import { CameraFocalPoint, CameraFocalPosition } from "./utils/camera/CameraFocalPoint";
 import { cameraOrbitDistance } from "./utils/camera/CameraOrbit";
 import { CHUNK_SIZE } from "./utils/Chunk";
+import { FixedLayout } from "./FixedLayout";
 import { FirstFrame } from "./FirstFrame";
 
 // how many pixels wide should 2d elements be scaled to
@@ -122,6 +123,7 @@ export class Viewport3d implements ViewportDelegate {
   private renderingSuspended = false;
   private renderFailureLogged = false;
   private firstFrame = new FirstFrame();
+  private fullAreaStyle = "";
 
   constructor(faceCameraSouth: boolean, worldCanvas: HTMLCanvasElement) {
     this.scene = new THREE.Scene();
@@ -130,6 +132,7 @@ export class Viewport3d implements ViewportDelegate {
     this.canvas.width = this.canvasDimensions.width;
     this.canvas.height = this.canvasDimensions.height;
     this.canvas.style.cssText = worldCanvas.style.cssText;
+    this.fullAreaStyle = this.canvas.style.cssText;
     this.canvas.hidden = true;
     worldCanvas.before(this.canvas);
     this.uiCanvas = new OffscreenCanvas(this.canvasDimensions.width, this.canvasDimensions.height);
@@ -225,7 +228,14 @@ export class Viewport3d implements ViewportDelegate {
 
   onDocumentMouseDown(e: MouseEvent) {
     this.clientCameraRotation.setPointerPosition(e.clientX, e.clientY);
-    if (e.button === 1) this.clientCameraRotation.setMiddleMouseDown(true);
+    if (e.button === 1 && !this.outsideGameView(e.clientX, e.clientY))
+      this.clientCameraRotation.setMiddleMouseDown(true);
+  }
+
+  private outsideGameView(clientX: number, clientY: number): boolean {
+    if (!FixedLayout.enabled) return false;
+    const box = this.canvas.getBoundingClientRect();
+    return clientX < box.left || clientY < box.top || clientX >= box.right || clientY >= box.bottom;
   }
 
   onDocumentMouseUp(e: MouseEvent) {
@@ -238,6 +248,7 @@ export class Viewport3d implements ViewportDelegate {
   }
 
   onDocumentMouseWheel(e: WheelEvent) {
+    if (this.outsideGameView(e.clientX, e.clientY)) return;
     const v = this.camera.position.z + e.deltaY * ZOOM_MULT;
     if (v >= 2 && v <= 20) {
       this.camera.position.z = v;
@@ -248,6 +259,11 @@ export class Viewport3d implements ViewportDelegate {
   }
 
   onDocumentTouchStart(e: TouchEvent) {
+    if (e.touches.length >= 1 && this.outsideGameView(e.touches[0].clientX, e.touches[0].clientY)) {
+      this.touchStart = null;
+      this.touchStart2 = null;
+      return;
+    }
     if (e.touches.length >= 1) {
       this.touchStart = e.touches[0];
     }
@@ -373,6 +389,19 @@ export class Viewport3d implements ViewportDelegate {
     canvas.addEventListener("touchend", this.onDocumentTouchEnd.bind(this), false);
     window.addEventListener("keydown", this.onKeyDown.bind(this), false);
     window.addEventListener("keyup", this.onKeyUp.bind(this), false);
+  }
+
+  place(box: Readonly<{ left: number; top: number; width: number; height: number }> | null) {
+    const style = this.canvas.style;
+    if (box === null) {
+      style.cssText = this.fullAreaStyle;
+      return;
+    }
+    style.inset = "auto";
+    style.left = `${box.left}px`;
+    style.top = `${box.top}px`;
+    style.width = `${box.width}px`;
+    style.height = `${box.height}px`;
   }
 
   resize(width: number, height: number) {
