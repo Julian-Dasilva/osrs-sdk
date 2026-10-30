@@ -1,4 +1,4 @@
-import { SDK_ITEM_CATALOG, Karambwan, SaradominBrew } from "../../src/content";
+import { SDK_ITEM_CATALOG, BastionPotion, Karambwan, SaradominBrew } from "../../src/content";
 import { Food } from "../../src/sdk/gear/Food";
 import { Potion } from "../../src/sdk/gear/Potion";
 import { Player } from "../../src/sdk/Player";
@@ -228,3 +228,65 @@ test("karambwan shares the two-tick combo-food attack delay", () => {
   expect(player.attackDelay).toBe(2);
   expect(player.inventory[0]).toBeNull();
 });
+
+for (const { name, potion, stat, boosted, decayed } of [
+  { name: "Saradomin brew", potion: SaradominBrew, stat: "defence", boosted: 120, decayed: 119 },
+  { name: "Bastion potion", potion: BastionPotion, stat: "range", boosted: 112, decayed: 111 },
+] as const) {
+  test(`${name} alone decays on the shared 100-tick timer`, () => {
+    const { player, world } = fight();
+    const item = new potion();
+    player.inventory[0] = item;
+    item.inventoryLeftClick(player);
+    world.tickWorld(1);
+    expect(player.currentStats[stat]).toBe(boosted);
+    world.tickWorld(99);
+    expect(player.currentStats[stat]).toBe(decayed);
+  });
+}
+
+test("guard: a super combat dose followed by a brew decays 120 Defence to 119", () => {
+  const { player, world } = fight();
+  carry(player, 12695).inventoryLeftClick(player);
+  world.tickWorld(3);
+  const brew = new SaradominBrew();
+  player.inventory[1] = brew;
+  brew.inventoryLeftClick(player);
+  world.tickWorld(1);
+  expect(player.currentStats.defence).toBe(120);
+  world.tickWorld(96);
+  expect(player.currentStats.defence).toBe(119);
+});
+
+for (const { id, stat, cap } of [
+  { id: 2444, stat: "range", cap: 112 },
+  { id: 12695, stat: "attack", cap: 118 },
+  { id: 23685, stat: "strength", cap: 118 },
+] as const) {
+  test(`${id} cannot raise a boost above its cap with another dose`, () => {
+    const { player, world } = fight();
+    const potion = carry(player, id);
+    potion.inventoryLeftClick(player);
+    world.tickWorld(3);
+    expect(player.currentStats[stat]).toBe(cap);
+    potion.inventoryLeftClick(player);
+    world.tickWorld(1);
+    expect(player.currentStats[stat]).toBe(cap);
+  });
+}
+
+for (const { activeTicks, activateAfter, decayAt } of [
+  { activeTicks: 24, activateAfter: 76, decayAt: 100 },
+  { activeTicks: 25, activateAfter: 75, decayAt: 150 },
+]) {
+  test(`Preserve with ${activeTicks} active ticks before decay drains at tick ${decayAt}`, () => {
+    const { player, world } = fight();
+    carry(player, 2444).inventoryLeftClick(player);
+    world.tickWorld(activateAfter);
+    player.prayerController.findPrayerByName("Preserve").activate(player);
+    world.tickWorld(decayAt - activateAfter - 1);
+    expect(player.currentStats.range).toBe(112);
+    world.tickWorld(1);
+    expect(player.currentStats.range).toBe(111);
+  });
+}
