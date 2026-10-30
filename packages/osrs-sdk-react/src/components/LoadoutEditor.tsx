@@ -58,6 +58,11 @@ const EQUIPMENT_LAYOUT: readonly Placement[] = REFERENCE_LAYOUT.map((place) => (
 }));
 const EQUIPMENT_WIDTH = Math.max(...EQUIPMENT_LAYOUT.map(({ left }) => left + SLOT_SIZE));
 const EQUIPMENT_HEIGHT = Math.max(...EQUIPMENT_LAYOUT.map(({ top }) => top + SLOT_SIZE));
+const INVENTORY_GAP = 2;
+const INVENTORY_WIDTH = 4 * SLOT_SIZE + 3 * INVENTORY_GAP;
+
+const percent = (part: number, whole: number) => `${(part / whole) * 100}%`;
+const shrinksFrom = (width: number): React.CSSProperties => ({ flex: `1 1 ${width}px`, maxWidth: width, minWidth: 0 });
 
 const SLOTS_WITHOUT_BARE_MODELS: ReadonlySet<EquipmentSlot> = new Set<EquipmentSlot>([
   "helmet",
@@ -75,9 +80,7 @@ const slotStyle: React.CSSProperties = {
   color: "#aaa",
   display: "flex",
   fontSize: 10,
-  height: SLOT_SIZE,
   justifyContent: "center",
-  width: SLOT_SIZE,
 };
 
 const menuEntryStyle: React.CSSProperties = {
@@ -285,11 +288,22 @@ export function LoadoutEditor({ sim, store, onApply, choices }: LoadoutEditorPro
         </select>
       </label>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-        <section>
+        <section style={shrinksFrom(EQUIPMENT_WIDTH)}>
           <h3>Worn</h3>
-          <div style={{ height: EQUIPMENT_HEIGHT, position: "relative", width: EQUIPMENT_WIDTH }}>
+          <div style={{ aspectRatio: `${EQUIPMENT_WIDTH} / ${EQUIPMENT_HEIGHT}`, position: "relative", width: "100%" }}>
             {EQUIPMENT_LAYOUT.map(({ slot, label, left, top }) => (
-              <div key={slot} aria-label={label} style={{ ...slotStyle, left, position: "absolute", top }}>
+              <div
+                key={slot}
+                aria-label={label}
+                style={{
+                  ...slotStyle,
+                  height: percent(SLOT_SIZE, EQUIPMENT_HEIGHT),
+                  left: percent(left, EQUIPMENT_WIDTH),
+                  position: "absolute",
+                  top: percent(top, EQUIPMENT_HEIGHT),
+                  width: percent(SLOT_SIZE, EQUIPMENT_WIDTH),
+                }}
+              >
                 <Dropdown trigger={<ItemIcon item={draft.equipment[slot]} empty={label} />}>
                   {!SLOTS_WITHOUT_BARE_MODELS.has(slot) && (
                     <MenuEntry label="Empty" onSelect={() => edit({ kind: "unequip", slot })} />
@@ -309,9 +323,9 @@ export function LoadoutEditor({ sim, store, onApply, choices }: LoadoutEditorPro
             ))}
           </div>
         </section>
-        <section>
+        <section style={shrinksFrom(INVENTORY_WIDTH)}>
           <h3>Inventory</h3>
-          <div style={{ display: "grid", gap: 2, gridTemplateColumns: `repeat(4, ${SLOT_SIZE}px)` }}>
+          <div style={{ display: "grid", gap: INVENTORY_GAP, gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
             {INVENTORY_INDICES.map((index) => {
               const item = draft.inventory[index];
               return (
@@ -333,7 +347,7 @@ export function LoadoutEditor({ sim, store, onApply, choices }: LoadoutEditorPro
                     setDragging(null);
                   }}
                   onDragEnd={() => setDragging(null)}
-                  style={{ ...slotStyle, opacity: dragging === index ? 0.5 : 1 }}
+                  style={{ ...slotStyle, aspectRatio: "1", opacity: dragging === index ? 0.5 : 1 }}
                 >
                   <Dropdown trigger={<ItemIcon item={item} empty="" />}>
                     {item && supplies.has(item.id) && (
