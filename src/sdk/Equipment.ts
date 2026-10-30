@@ -1,3 +1,4 @@
+import type { Projectile } from "./weapons/Projectile";
 import { Item } from "./Item";
 import { UnitBonuses, UnitEquipment } from "./Unit";
 import { SetEffect } from "./SetEffect";
@@ -110,6 +111,8 @@ export class Equipment extends Item {
   get type(): EquipmentTypes {
     throw new Error("equipment must have a type");
   }
+
+  onDealtHit(_hit: Projectile): void {}
 
   updateBonuses(gear: Item[]) {
     // update bonuses based on other items that have been equipped

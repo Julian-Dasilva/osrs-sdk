@@ -1,16 +1,12 @@
 "use strict";
 
 import InventImage from "../../assets/images/equipment/Rune_crossbow.png";
-import { Unit } from "../../sdk/Unit";
-import { RangedWeapon } from "../../sdk/weapons/RangedWeapon";
-import { AttackBonuses } from "../../sdk/gear/Weapon";
+import { EnchantedCrossbow } from "../weapons/EnchantedCrossbow";
 import { ItemName } from "../../sdk/ItemName";
 import { AttackStyleTypes, AttackStyle } from "../../sdk/AttackStylesController";
-import { Projectile } from "../../sdk/weapons/Projectile";
-import { Random } from "../../sdk/Random";
 
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
-export class RuneCrossbow extends RangedWeapon {
+export class RuneCrossbow extends EnchantedCrossbow {
   get cacheItemId(): number {
     return CACHE_ASSETS.items.runeCrossbow.id;
   }
@@ -88,31 +84,5 @@ export class RuneCrossbow extends RangedWeapon {
 
   get inventoryImage() {
     return InventImage;
-  }
-
-  rollDamage(from: Unit, to: Unit, bonuses: AttackBonuses) {
-    if (
-      from.equipment.ammo &&
-      from.equipment.ammo.itemName === ItemName.RUBY_BOLTS_E &&
-      Random.get() < 0.066 &&
-      from.currentStats.hitpoint - Math.floor(from.currentStats.hitpoint * 0.1) > 0
-    ) {
-      this.damage = to.currentStats.hitpoint * 0.2;
-      from.addProjectile(
-        new Projectile(this, Math.floor(from.currentStats.hitpoint * 0.1), from, from, "rubyboltspec", {
-          reduceDelay: 15,
-        }),
-      );
-    } else if (
-      from.equipment.ammo &&
-      from.equipment.ammo.itemName === ItemName.DIAMOND_BOLTS_E &&
-      Random.get() < 0.11
-    ) {
-      this.damage = this._calculateHitDamage(from, to, bonuses);
-    } else if (from.equipment.ammo) {
-      super.rollDamage(from, to, bonuses);
-    } else {
-      this.damage = -1;
-    }
   }
 }

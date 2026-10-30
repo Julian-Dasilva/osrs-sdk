@@ -68,3 +68,6 @@ export { OathplateLegs } from "./OathplateLegs";
 export { UltorRing } from "./UltorRing";
 export { ZaryteVambraces } from "./ZaryteVambraces";
 export { ConflictionGauntlets } from "./ConflictionGauntlets";
+export { Lightbearer } from "./Lightbearer";
+export { AmuletOfBloodFury } from "./AmuletOfBloodFury";
+export { BlessedDizanasQuiver } from "./BlessedDizanasQuiver";

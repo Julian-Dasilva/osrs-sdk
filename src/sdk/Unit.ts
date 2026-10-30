@@ -137,6 +137,10 @@ export abstract class Unit extends Renderable {
   hasLOS = false;
   frozen = 0;
   stunned = 0;
+
+  get demonbaneMultiplier(): number {
+    return 0;
+  }
   incomingProjectiles: Projectile[] = [];
   private landedHits: Readonly<{ tick: number; hits: readonly AppliedHit[] }> = { tick: 0, hits: [] };
   healHitsplatImage: HTMLImageElement = ImageLoader.createImage(HealSplat);
@@ -858,6 +862,7 @@ export abstract class Unit extends Renderable {
         if (projectile.damage > 0 && projectile.options.consumeTargetMaxDamageRoll) {
           this.consumeMaxDamageRollsOnNextIncomingAttack();
         }
+        projectile.from.equipment.necklace?.onDealtHit(projectile);
         this.damageTaken();
         this.lastHitAgo = 0;
         if (this.shouldChangeAggro(projectile)) {
