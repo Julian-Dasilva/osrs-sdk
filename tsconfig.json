@@ -18,5 +18,5 @@
     },
     "typeRoots": ["node_modules/@types"]
   },
-  "exclude": ["scripts", "packages/osrs-sdk-assets", "osrs-assets.config.ts"]
+  "exclude": ["scripts", "packages/osrs-sdk-assets", "osrs-assets.config.ts", "test/sdk/WeaponsSlice.test.cjs"]
 }

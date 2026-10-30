@@ -2,6 +2,7 @@ import InventoryImage from "../../assets/images/equipment/Dragon_crossbow.png";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { AttackStyle, AttackStyleTypes } from "../../sdk/AttackStylesController";
 import { ItemName } from "../../sdk/ItemName";
+import { Random } from "../../sdk/Random";
 import { Unit } from "../../sdk/Unit";
 import { AttackBonuses } from "../../sdk/gear/Weapon";
 import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
@@ -74,8 +75,13 @@ export class DragonCrossbow extends EnchantedCrossbow {
     this.damage = primaryDamage;
     return true;
   }
-  override _maxHit(from: Unit, to: Unit, bonuses: AttackBonuses): number {
-    const maximum = super._maxHit(from, to, bonuses);
-    return bonuses.isSpecialAttack ? Math.floor(maximum * 1.2) : maximum;
+  override _calculateHitDamage(from: Unit, to: Unit, bonuses: AttackBonuses): number {
+    if (!bonuses.isSpecialAttack || this.guaranteesBoltEffect) return super._calculateHitDamage(from, to, bonuses);
+    this.lastHitHit = true;
+    const maximum = this._maxHit(from, to, bonuses);
+    const roll = to.incomingAttackRollModifiers({ attacker: from, weapon: this, bonuses }).maxDamage
+      ? maximum
+      : 1 + Math.floor(Random.get() * maximum);
+    return Math.floor(roll * 1.2);
   }
 }

@@ -112,7 +112,9 @@ export class Equipment extends Item {
     throw new Error("equipment must have a type");
   }
 
-  onDealtHit(_hit: Projectile): void {}
+  onDealtHit(_hit: Projectile): void {
+    return;
+  }
 
   updateBonuses(gear: Item[]) {
     // update bonuses based on other items that have been equipped

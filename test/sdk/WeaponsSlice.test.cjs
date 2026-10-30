@@ -331,3 +331,21 @@ test("Annihilate hits nearby enemies with successively reduced damage and leaves
   assert.equal(near.incomingProjectiles[0].damage, Math.floor(f.weapon.damage * 0.8));
   assert.equal(far.incomingProjectiles.length, 0);
 });
+
+test("Annihilate rolls one through the ordinary maximum before its damage bonus", () => {
+  const f = fight(21902);
+  class Target extends TestNpc {
+    incomingAttackRollModifiers() {
+      return { guaranteedHit: true };
+    }
+  }
+  const target = new Target(f.region, { x: 7, y: 7 }, {});
+  const previous = Random.randomFn;
+  try {
+    Random.setRandom(() => 0.5);
+    f.weapon.specialAttack(f.player, target);
+    assert.equal(f.weapon.damage, 18);
+  } finally {
+    Random.setRandom(previous);
+  }
+});

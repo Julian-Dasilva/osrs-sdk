@@ -42,7 +42,4 @@ export class ZaryteCrossbow extends DragonCrossbow {
     const roll = super._attackRoll(from, to, bonuses);
     return bonuses.isSpecialAttack ? roll * 2 : roll;
   }
-  override _maxHit(from: Unit, to: Unit, bonuses: AttackBonuses): number {
-    return super._maxHit(from, to, { ...bonuses, isSpecialAttack: false });
-  }
 }
