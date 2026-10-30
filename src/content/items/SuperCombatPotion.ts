@@ -16,6 +16,10 @@ export class SuperCombatPotion extends DosedPotion {
     return [Dose1, Dose2, Dose3, Dose4];
   }
 
+  override get weight(): number {
+    return this.doses === 4 ? SUPPLY_VALUES.superCombat.fullWeight : SUPPLY_VALUES.superCombat.partialWeight;
+  }
+
   override get itemName(): ItemName {
     return ItemName.SUPER_COMBAT_POTION;
   }

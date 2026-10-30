@@ -14,12 +14,16 @@ export const SUPPLY_VALUES = {
     source: "https://oldschool.runescape.wiki/w/Ranging_potion?oldid=15293943",
   },
   superCombat: {
+    fullWeight: 0.035,
+    partialWeight: 0.03,
     doseIds: [12701, 12699, 12697, 12695],
     fraction: 0.15,
     flat: 5,
     source: "https://oldschool.runescape.wiki/w/Super_combat_potion?oldid=15281186",
   },
   divine: {
+    fullWeight: 0.035,
+    partialWeight: 0.03,
     doseIds: [23694, 23691, 23688, 23685],
     fraction: 0.15,
     flat: 5,

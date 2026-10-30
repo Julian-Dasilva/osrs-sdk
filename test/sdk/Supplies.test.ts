@@ -48,6 +48,7 @@ for (const { name, id, next, doses, stat, initial, expected } of POTIONS) {
     if (!(potion instanceof Potion)) throw new Error("Expected potion");
     expect(potion.doses).toBe(doses);
     expect(potion.itemId).toBe(next);
+    expect(potion.weight).toBe(id === 141 || id === 171 ? 0.02 : 0.03);
     expect(player.attackDelay).toBe(0);
     world.tickWorld(1);
     expect(player.currentStats[stat]).toBe(expected);

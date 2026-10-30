@@ -16,6 +16,10 @@ export class DivineSuperCombatPotion extends DosedPotion {
     return [Dose1, Dose2, Dose3, Dose4];
   }
 
+  override get weight(): number {
+    return this.doses === 4 ? SUPPLY_VALUES.divine.fullWeight : SUPPLY_VALUES.divine.partialWeight;
+  }
+
   override get itemName(): ItemName {
     return ItemName.DIVINE_SUPER_COMBAT_POTION;
   }
