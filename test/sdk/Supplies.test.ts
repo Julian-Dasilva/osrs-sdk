@@ -1,4 +1,4 @@
-import { SDK_ITEM_CATALOG, BastionPotion, Karambwan, SaradominBrew } from "../../src/content";
+import { SDK_ITEM_CATALOG, ArmadylBrew, BastionPotion, Karambwan, SaradominBrew } from "../../src/content";
 import { Food } from "../../src/sdk/gear/Food";
 import { Potion } from "../../src/sdk/gear/Potion";
 import { Player } from "../../src/sdk/Player";
@@ -232,6 +232,7 @@ test("karambwan shares the two-tick combo-food attack delay", () => {
 for (const { name, potion, stat, boosted, decayed } of [
   { name: "Saradomin brew", potion: SaradominBrew, stat: "defence", boosted: 120, decayed: 119 },
   { name: "Bastion potion", potion: BastionPotion, stat: "range", boosted: 112, decayed: 111 },
+  { name: "Armadyl brew", potion: ArmadylBrew, stat: "range", boosted: 112, decayed: 111 },
 ] as const) {
   test(`${name} alone decays on the shared 100-tick timer`, () => {
     const { player, world } = fight();
@@ -288,5 +289,32 @@ for (const { activeTicks, activateAfter, decayAt } of [
     expect(player.currentStats.range).toBe(112);
     world.tickWorld(1);
     expect(player.currentStats.range).toBe(111);
+  });
+}
+
+test("the combat timer decays boosted Magic without restoring drained Attack", () => {
+  const { player, world } = fight();
+  player.currentStats.magic = 105;
+  player.currentStats.attack = 60;
+  world.tickWorld(100);
+  expect([player.currentStats.magic, player.currentStats.attack]).toEqual([104, 60]);
+});
+
+for (const { id, prefix, name } of [
+  { id: 2434, prefix: "Prayer_potion", name: "Prayer potion" },
+  { id: 2444, prefix: "Ranging_potion", name: "Ranging potion" },
+  { id: 23685, prefix: "Divine_super_combat_potion", name: "Divine super combat potion" },
+  { id: 10925, prefix: "Sanfew_serum", name: "Sanfew serum" },
+]) {
+  test(`${name} draws and names each remaining dose`, () => {
+    const { player, world } = fight();
+    const potion = carry(player, id);
+    for (const doses of [4, 3, 2, 1]) {
+      expect(potion.inventorySprite.getAttribute("src")).toBe(`${prefix}(${doses}).png`);
+      expect(potion.itemName).toBe(`${name}(${doses})`);
+      potion.inventoryLeftClick(player);
+      world.tickWorld(3);
+    }
+    expect(player.inventory[0]).toBeNull();
   });
 }

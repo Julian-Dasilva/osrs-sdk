@@ -6,6 +6,6 @@ The SDK catalog builds each potion dose by its own item ID. Inventory clicks que
 
 Manta ray heals 22, halibut heals 20, giant krill heals 17, and leftovers heals 5. Food never overheals. Divine super combat costs 10 HP, refuses consumption at 10 HP or below, prevents natural melee-stat decay for 500 ticks, and removes remaining melee boosts on expiry. Ordinary boosts decay every 100 ticks. Preserve adds 50 ticks after it has been active for 25 ticks.
 
-Alliance log is a carried record, not a consumable. Its raid-performance transcript is outside the combat simulator. Sanfew's poison and disease immunity, nail-beast use, parasite cure, and Prayer-restoration equipment modifiers are outside this fight and remain unsimulated. The trainer does not carry the Prayer cape, holy wrench, or ring of the gods.
+Alliance log is a non-consumable record. Sanfew models combat-stat and Prayer restoration.
 
-Inventory PNGs bundled with these classes come from the corresponding OSRS Wiki file pages, retrieved on 2026-10-30. They follow the SDK's existing bundled inventory-image convention. No cache assets or models are included.
+Inventory PNGs bundled with these classes come from the corresponding OSRS Wiki file pages, retrieved on 2026-10-30.

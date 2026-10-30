@@ -9,7 +9,9 @@ module.exports = {
     },
   },
   setupFiles: ["./test/setupFiles.ts"],
+  transform: { "\\.png$": "<rootDir>/test/__mocks__/assetTransform.cjs" },
   moduleNameMapper: {
+    "assets/images/potions/([^/]+\\([1-4]\\))\\.png$": "<rootDir>/src/assets/images/potions/$1.png",
     "^osrs-sdk$": "<rootDir>/src/index.ts",
     "^osrs-sdk-react$": "<rootDir>/packages/osrs-sdk-react/src/index.ts",
     "^(\\.{1,2}/.*)\\.js$": "$1",

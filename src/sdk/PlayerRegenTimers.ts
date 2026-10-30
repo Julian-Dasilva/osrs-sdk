@@ -3,7 +3,8 @@
 import { SUPPLY_VALUES } from "../content/items/SupplyValues";
 import { Player } from "./Player";
 
-type BoostedStat = "attack" | "strength" | "defence" | "range";
+const COMBAT_STATS = ["attack", "strength", "defence", "range", "magic"] as const;
+type BoostedStat = (typeof COMBAT_STATS)[number];
 type CombatBoost = { kind: "normal" } | { kind: "divine"; expiresAt: number };
 
 export class PlayerRegenTimer {
@@ -11,7 +12,6 @@ export class PlayerRegenTimer {
   spec: number;
   hitpoint: number;
   private combatBoost: CombatBoost = { kind: "normal" };
-  private readonly boostedStats = new Set<BoostedStat>();
   private statTimer: number = SUPPLY_VALUES.statDecay.ticks;
   private preserveTicks = 0;
   private statExtended = false;
@@ -23,7 +23,6 @@ export class PlayerRegenTimer {
         this.player.stats[stat] + amount,
         this.player.currentStats[stat] + amount,
       );
-      this.boostedStats.add(stat);
     }
   }
 
@@ -57,8 +56,8 @@ export class PlayerRegenTimer {
     }
     this.statTimer = SUPPLY_VALUES.statDecay.ticks;
     this.statExtended = false;
-    for (const stat of Array.from(this.boostedStats)) {
-      if (stat !== "range" && this.combatBoost.kind === "divine") continue;
+    for (const stat of COMBAT_STATS) {
+      if (stat !== "range" && stat !== "magic" && this.combatBoost.kind === "divine") continue;
       if (this.player.currentStats[stat] > this.player.stats[stat]) this.player.currentStats[stat]--;
     }
   }

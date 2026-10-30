@@ -7,6 +7,13 @@ import { Player } from "../../sdk/Player";
 import { DosedPotion } from "../../sdk/gear/DosedPotion";
 import { SUPPLY_VALUES } from "./SupplyValues";
 
+const DOSE_NAMES = [
+  ItemName.RANGING_POTION_1,
+  ItemName.RANGING_POTION_2,
+  ItemName.RANGING_POTION_3,
+  ItemName.RANGING_POTION_4,
+] as const;
+
 export class RangingPotion extends DosedPotion {
   protected get doseIds() {
     return SUPPLY_VALUES.ranging.doseIds;
@@ -17,7 +24,7 @@ export class RangingPotion extends DosedPotion {
   }
 
   override get itemName(): ItemName {
-    return ItemName.RANGING_POTION;
+    return DOSE_NAMES[this.doses - 1] ?? ItemName.RANGING_POTION;
   }
 
   override drink(player: Player): void {

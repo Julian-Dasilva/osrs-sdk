@@ -7,6 +7,13 @@ import { Player } from "../../sdk/Player";
 import { DosedPotion } from "../../sdk/gear/DosedPotion";
 import { SUPPLY_VALUES } from "./SupplyValues";
 
+const DOSE_NAMES = [
+  ItemName.DIVINE_SUPER_COMBAT_POTION_1,
+  ItemName.DIVINE_SUPER_COMBAT_POTION_2,
+  ItemName.DIVINE_SUPER_COMBAT_POTION_3,
+  ItemName.DIVINE_SUPER_COMBAT_POTION_4,
+] as const;
+
 export class DivineSuperCombatPotion extends DosedPotion {
   protected get doseIds() {
     return SUPPLY_VALUES.divine.doseIds;
@@ -21,7 +28,7 @@ export class DivineSuperCombatPotion extends DosedPotion {
   }
 
   override get itemName(): ItemName {
-    return ItemName.DIVINE_SUPER_COMBAT_POTION;
+    return DOSE_NAMES[this.doses - 1] ?? ItemName.DIVINE_SUPER_COMBAT_POTION;
   }
 
   override canDrink(player: Player): boolean {
