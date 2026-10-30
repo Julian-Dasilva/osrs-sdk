@@ -23,8 +23,8 @@ export class RangingPotion extends DosedPotion {
     return [Dose1, Dose2, Dose3, Dose4];
   }
 
-  override get itemName(): ItemName {
-    return DOSE_NAMES[this.doses - 1] ?? ItemName.RANGING_POTION;
+  protected get doseNames(): readonly [ItemName, ItemName, ItemName, ItemName] {
+    return DOSE_NAMES;
   }
 
   override drink(player: Player): void {

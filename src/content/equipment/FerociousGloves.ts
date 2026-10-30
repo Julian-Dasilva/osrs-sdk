@@ -35,7 +35,7 @@ export class FerociousGloves extends Gloves {
         stab: 0,
         slash: 0,
         crush: 0,
-        magic: 6,
+        magic: 0,
         range: 0,
       },
       other: {

@@ -20,8 +20,13 @@ export class SuperCombatPotion extends DosedPotion {
     return this.doses === 4 ? SUPPLY_VALUES.superCombat.fullWeight : SUPPLY_VALUES.superCombat.partialWeight;
   }
 
-  override get itemName(): ItemName {
-    return ItemName.SUPER_COMBAT_POTION;
+  protected get doseNames(): readonly [ItemName, ItemName, ItemName, ItemName] {
+    return [
+      ItemName.SUPER_COMBAT_POTION_1,
+      ItemName.SUPER_COMBAT_POTION_2,
+      ItemName.SUPER_COMBAT_POTION_3,
+      ItemName.SUPER_COMBAT_POTION_4,
+    ];
   }
 
   override drink(player: Player): void {
