@@ -1,4 +1,6 @@
 import { EQUIPMENT_TYPE_TO_SLOT, Equipment } from "./Equipment";
+import { DosedPotion } from "./gear/DosedPotion";
+import type { PotionDoses } from "./gear/DosedPotion";
 import { Weapon } from "./gear/Weapon";
 import type { Item } from "./Item";
 import type { ItemName } from "./ItemName";
@@ -36,6 +38,22 @@ function identity(ItemType: ItemClass, item: Item): CatalogIdentity {
   return { id: itemId, drawnAs: cacheItemId, name: item.itemName, inventoryImage: item.inventoryImage };
 }
 
+function isDosedPotionClass(ItemType: ItemClass): ItemType is new (doses?: PotionDoses) => DosedPotion {
+  return ItemType.prototype instanceof DosedPotion;
+}
+
+function catalogItems(ItemType: ItemClass): readonly CatalogItem[] {
+  if (isDosedPotionClass(ItemType)) {
+    const doses: readonly PotionDoses[] = [4, 3, 2, 1];
+    return doses.map((dose) => ({
+      ...identity(ItemType, new ItemType(dose)),
+      slot: "carried",
+      build: () => new ItemType(dose),
+    }));
+  }
+  return [catalogItem(ItemType)];
+}
+
 function catalogItem(ItemType: ItemClass): CatalogItem {
   if (isEquipmentClass(ItemType)) {
     const item = new ItemType();
@@ -61,10 +79,11 @@ export class ItemCatalog {
   constructor(classes: readonly ItemClass[], base?: ItemCatalog) {
     const own = new Map<number, CatalogItem>();
     for (const ItemType of classes) {
-      const item = catalogItem(ItemType);
-      const claimed = own.get(item.id);
-      if (claimed) throw new Error(`Item id ${item.id} is claimed by both ${claimed.name} and ${item.name}`);
-      own.set(item.id, item);
+      for (const item of catalogItems(ItemType)) {
+        const claimed = own.get(item.id);
+        if (claimed) throw new Error(`Item id ${item.id} is claimed by both ${claimed.name} and ${item.name}`);
+        own.set(item.id, item);
+      }
     }
     for (const item of [...(base?.items ?? []), ...Array.from(own.values())]) this.byId.set(item.id, item);
     this.items = Array.from(this.byId.values());

@@ -13,7 +13,7 @@ export class Preserve extends BasePrayer {
   }
 
   levelRequirement(): number {
-    return 100;
+    return 55;
   }
   drainRate(): number {
     return 2;

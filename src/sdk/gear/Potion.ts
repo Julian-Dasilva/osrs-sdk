@@ -16,6 +16,10 @@ export class Potion extends Item {
     super();
     this.defaultAction = "Drink";
   }
+  canDrink(player: Player): boolean {
+    return true;
+  }
+
   drink(player: Player) {
     player.interruptCombat();
     player.playAnimation(PlayerAnimationIndices.Eat, true);
@@ -42,7 +46,7 @@ export class Potion extends Item {
   }
   inventoryLeftClick(player: Player) {
     let didDrink = false;
-    if (this.doses > 0) {
+    if (this.doses > 0 && this.canDrink(player)) {
       didDrink = player.eats.drinkPotion(this);
     }
     if (this.doses === 0) {
