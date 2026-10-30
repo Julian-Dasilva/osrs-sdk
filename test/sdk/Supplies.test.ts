@@ -1,4 +1,4 @@
-import { SDK_ITEM_CATALOG, SaradominBrew } from "../../src/content";
+import { SDK_ITEM_CATALOG, Karambwan, SaradominBrew } from "../../src/content";
 import { Food } from "../../src/sdk/gear/Food";
 import { Potion } from "../../src/sdk/gear/Potion";
 import { Player } from "../../src/sdk/Player";
@@ -213,4 +213,17 @@ test("Preserve extends ordinary boosts by thirty seconds after its activation ti
   expect(player.currentStats.range).toBe(112);
   world.tickWorld(1);
   expect(player.currentStats.range).toBe(111);
+});
+
+test("karambwan shares the two-tick combo-food attack delay", () => {
+  const { player, world } = fight();
+  const food = new Karambwan();
+  player.inventory[0] = food;
+  player.currentStats.hitpoint = 40;
+  player.attackDelay = 1;
+  food.inventoryLeftClick(player);
+  world.tickWorld(1);
+  expect(player.currentStats.hitpoint).toBe(58);
+  expect(player.attackDelay).toBe(2);
+  expect(player.inventory[0]).toBeNull();
 });
