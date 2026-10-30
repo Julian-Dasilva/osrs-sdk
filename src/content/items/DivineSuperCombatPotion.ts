@@ -27,8 +27,8 @@ export class DivineSuperCombatPotion extends DosedPotion {
     return this.doses === 4 ? SUPPLY_VALUES.divine.fullWeight : SUPPLY_VALUES.divine.partialWeight;
   }
 
-  override get itemName(): ItemName {
-    return DOSE_NAMES[this.doses - 1] ?? ItemName.DIVINE_SUPER_COMBAT_POTION;
+  protected get doseNames(): readonly [ItemName, ItemName, ItemName, ItemName] {
+    return DOSE_NAMES;
   }
 
   override canDrink(player: Player): boolean {

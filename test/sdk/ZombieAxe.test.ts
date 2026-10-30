@@ -2,7 +2,9 @@ import { SEMANTIC_POSE_MAP } from "../../src/assets/CacheAssets";
 import { ZombieAxe } from "../../src/content/weapons/ZombieAxe";
 import { AttackStyle, AttackStylesController, AttackStyleTypes } from "../../src/sdk/AttackStylesController";
 import { MeleeWeapon } from "../../src/sdk/weapons/MeleeWeapon";
-import { Unit, UnitTypes } from "../../src/sdk/Unit";
+import { Unit } from "../../src/sdk/Unit";
+import { Player } from "../../src/sdk/Player";
+import { TestRegion } from "../../src/sdk/testing/TestRegion";
 
 describe("Zombie axe", () => {
   beforeEach(() => {
@@ -30,7 +32,7 @@ describe("Zombie axe", () => {
 
   test("Chop grants accuracy and Attack XP; Block grants defence", () => {
     const weapon = new ZombieAxe();
-    const player = { type: UnitTypes.PLAYER, currentStats: { attack: 99, defence: 99 } } as Unit;
+    const player = new Player(new TestRegion(10, 10), { x: 2, y: 2 });
     const bonuses = { effectivePrayers: {}, voidMultiplier: 1 };
     AttackStylesController.controller.setWeaponAttackStyle(weapon, AttackStyle.ACCURATE);
     expect(weapon._attackLevel(player, player, bonuses)).toBe(110);

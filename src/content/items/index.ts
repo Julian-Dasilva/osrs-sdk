@@ -17,3 +17,4 @@ export { Halibut } from "./Halibut";
 export { GiantKrill } from "./GiantKrill";
 export { Leftovers } from "./Leftovers";
 export { AllianceLog } from "./AllianceLog";
+export { DivineRunePouch } from "./DivineRunePouch";
