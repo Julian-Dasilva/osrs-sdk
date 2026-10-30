@@ -20,9 +20,6 @@ export class AmuletOfBloodFury extends AmuletOfFury {
   }
   override onDealtHit(hit: Projectile): void {
     if (hit.damage <= 0 || !hit.isMeleeStyle() || Random.get() >= 0.2) return;
-    hit.from.currentStats.hitpoint = Math.min(
-      hit.from.stats.hitpoint,
-      hit.from.currentStats.hitpoint + Math.floor(hit.damage * 0.3),
-    );
+    hit.from.heal(Math.floor(hit.damage * 0.3));
   }
 }

@@ -115,6 +115,7 @@ export const CACHE_ASSETS = {
     venatorRing: { id: 28310 },
     ringOfSufferingI: { id: 19710 },
     robinHoodHat: { id: 2581 },
+    rubyDragonBoltsE: { id: 21944 },
     rubyBoltsE: { id: 9242 },
     runeCrossbow: { id: 9185 },
     runeKiteshield: { id: 1201 },

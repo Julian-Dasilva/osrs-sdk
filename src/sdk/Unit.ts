@@ -822,6 +822,17 @@ export abstract class Unit extends Renderable {
     return this.landedHits.tick === this.region.world?.globalTickCounter ? this.landedHits.hits : [];
   }
 
+  ammunitionFor(weapon: Weapon): Ammo | null {
+    const ammo = this.equipment.ammo;
+    return ammo && weapon.compatibleAmmo().includes(ammo.itemName) ? ammo : null;
+  }
+
+  heal(amount: number): void {
+    if (this.currentStats.hitpoint < this.stats.hitpoint) {
+      this.currentStats.hitpoint = Math.min(this.currentStats.hitpoint + amount, this.stats.hitpoint);
+    }
+  }
+
   processIncomingAttacks() {
     this.lastHitAgo++;
     const landed: AppliedHit[] = [];
@@ -847,11 +858,7 @@ export abstract class Unit extends Renderable {
         landed.push({ damage: projectile.damage, attackStyle: projectile.attackStyle, from: projectile.from });
 
         if (projectile.damage < 0) {
-          // subtracting a negative gives a positive
-          if (this.currentStats.hitpoint < this.stats.hitpoint) {
-            this.currentStats.hitpoint -= projectile.damage;
-            this.currentStats.hitpoint = Math.min(this.currentStats.hitpoint, this.stats.hitpoint);
-          }
+          this.heal(-projectile.damage);
         } else {
           this.currentStats.hitpoint -= projectile.damage;
           const sound = this.hitSound(projectile.damage > 0);

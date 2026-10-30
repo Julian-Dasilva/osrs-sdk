@@ -13,13 +13,13 @@ export class EnchantedCrossbow extends RangedWeapon {
     return false;
   }
   override compatibleAmmo(): ItemName[] {
-    return [ItemName.RUBY_BOLTS_E, ItemName.DIAMOND_BOLTS_E];
+    return [ItemName.RUBY_BOLTS_E, ItemName.RUBY_DRAGON_BOLTS_E, ItemName.DIAMOND_BOLTS_E];
   }
   override getMaxDamageCap(): number {
     return this.enhancedBolts ? 110 : 100;
   }
   override rollDamage(from: Unit, to: Unit, bonuses: AttackBonuses): void {
-    const ammo = from.equipment.ammo;
+    const ammo = from.ammunitionFor(this);
     if (!ammo || !this.compatibleAmmo().includes(ammo.itemName)) {
       this.damage = -1;
       return;
@@ -29,7 +29,7 @@ export class EnchantedCrossbow extends RangedWeapon {
       if (this.lastHitHit) this.damage = this.damageRoll = Math.max(1, this.damage);
       return;
     }
-    const ruby = ammo.itemName === ItemName.RUBY_BOLTS_E;
+    const ruby = ammo.itemName === ItemName.RUBY_BOLTS_E || ammo.itemName === ItemName.RUBY_DRAGON_BOLTS_E;
     const cost = Math.floor(from.currentStats.hitpoint * 0.1);
     const canProc = !ruby || (cost >= 1 && from.currentStats.hitpoint > cost);
     const proc = canProc && Random.get() < (ruby ? 0.06 : 0.1);

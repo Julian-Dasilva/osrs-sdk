@@ -84,3 +84,5 @@ export { GhommalsAvernicDefender6 } from "./GhommalsAvernicDefender6";
 export { TwistedBuckler } from "./TwistedBuckler";
 export { DragonBoots } from "./DragonBoots";
 export { BookOfTheDead } from "./BookOfTheDead";
+
+export { RubyDragonBoltsE } from "./RubyDragonBoltsE";

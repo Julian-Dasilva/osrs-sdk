@@ -15,7 +15,6 @@ for (const key of [
 ]) {
   Object.defineProperty(globalThis, key, { value: dom.window[key], configurable: true });
 }
-// Node supplies combat, while the browser's canvas and asset transport are inert.
 const context = new Proxy(
   { measureText: () => ({ width: 0 }), canvas: { width: 800, height: 600 } },
   { get: (object, key) => object[key] ?? (() => {}) },
@@ -425,7 +424,9 @@ test("a blood fury heal never lowers Hitpoints boosted above base by a Saradomin
     for (let i = 0; i < 4; i++) target.processIncomingAttacks();
     assert.equal(target.incomingProjectiles.length, 0, "the hit landed");
     assert.equal(player.currentStats.hitpoint, 110, "boosted Hitpoints after a blood fury proc");
-  } finally { Random.setRandom(previous); }
+  } finally {
+    Random.setRandom(previous);
+  }
 });
 
 for (const id of [21902, 26374]) {
@@ -445,7 +446,9 @@ for (const id of [21902, 26374]) {
       assert.equal(player.attack(), true);
       assert.equal(player.currentStats.specialAttack, id === 26374 ? 25 : 40);
       assert.equal(player.equipment.ammo.itemId, 11212);
-    } finally { Random.setRandom(previous); }
+    } finally {
+      Random.setRandom(previous);
+    }
   });
 }
 
@@ -480,12 +483,18 @@ test("guard: rune crossbow retains its base ruby rate, arbitrary ammo and self-h
     arrows.player.equipmentChanged();
     assert.equal(arrows.weapon.attack(arrows.player, arrows.target), true);
     assert.equal(arrows.weapon.damage, 14);
-  } finally { Random.setRandom(previous); }
+  } finally {
+    Random.setRandom(previous);
+  }
 });
 
 test("guard: rune crossbow retains its base eleven percent diamond proc", () => {
   const { player, region, weapon } = fight(9185);
-  class ArmouredTarget extends TestNpc { incomingAttackRollModifiers() { return { maxDamage: true }; } }
+  class ArmouredTarget extends TestNpc {
+    incomingAttackRollModifiers() {
+      return { maxDamage: true };
+    }
+  }
   const target = new ArmouredTarget(region, { x: 7, y: 7 }, {});
   target.currentStats.defence = 1000000000;
   player.equipment.ammo = item(9243);
@@ -495,5 +504,7 @@ test("guard: rune crossbow retains its base eleven percent diamond proc", () => 
     Random.setRandom(() => 0.105);
     assert.equal(weapon.attack(player, target), true);
     assert.equal(weapon.damage, 32);
-  } finally { Random.setRandom(previous); }
+  } finally {
+    Random.setRandom(previous);
+  }
 });

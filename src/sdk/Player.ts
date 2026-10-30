@@ -7,6 +7,8 @@ import { Collision } from "./Collision";
 import { Eating } from "./Eating";
 import { Equipment } from "./Equipment";
 import { AmmoType } from "./gear/Ammo";
+import type { Ammo } from "./gear/Ammo";
+import { Cape } from "./gear/Cape";
 import { AttackBonuses, Weapon } from "./gear/Weapon";
 import { Item } from "./Item";
 import { ItemName } from "./ItemName";
@@ -191,6 +193,18 @@ export class Player extends Unit {
     this.inventory[pos2] = temp;
   }
 
+  override ammunitionFor(weapon: Weapon): Ammo | null {
+    const worn = super.ammunitionFor(weapon);
+    if (worn) return worn;
+    const capeAmmo = this.equipment.cape?.ammunitionFor(weapon);
+    if (capeAmmo) return capeAmmo;
+    for (const item of this.inventory) {
+      const ammo = item instanceof Cape ? item.ammunitionFor(weapon) : null;
+      if (ammo) return ammo;
+    }
+    return null;
+  }
+
   equipmentChanged() {
     this.interruptCombat();
     this.clearSpotAnim("weapon-attack");
@@ -208,13 +222,9 @@ export class Player extends Unit {
       this.equipment.cape,
     ];
 
-    if (
-      this.equipment.weapon &&
-      this.equipment.ammo &&
-      this.equipment.weapon.compatibleAmmo().includes(this.equipment.ammo.itemName)
-    ) {
-      gear.push(this.equipment.ammo);
-    } else if (this.equipment.ammo && this.equipment.ammo.ammoType() == AmmoType.BLESSING) {
+    const ammo = this.equipment.weapon ? this.ammunitionFor(this.equipment.weapon) : null;
+    if (ammo) gear.push(ammo);
+    if (this.equipment.ammo !== ammo && this.equipment.ammo?.ammoType() === AmmoType.BLESSING) {
       gear.push(this.equipment.ammo);
     }
 
