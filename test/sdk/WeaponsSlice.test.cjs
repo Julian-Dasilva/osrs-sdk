@@ -411,3 +411,89 @@ test("Annihilate rolls one through the ordinary maximum before its damage bonus"
     Random.setRandom(previous);
   }
 });
+
+test("a blood fury heal never lowers Hitpoints boosted above base by a Saradomin brew", () => {
+  const { player, target, weapon } = fight(13576);
+  player.equipment.necklace = item(24780);
+  player.stats.hitpoint = 99;
+  player.currentStats.hitpoint = 110;
+  const previous = Random.randomFn;
+  try {
+    Random.setRandom(() => 0);
+    weapon.attack(player, target);
+    assert.ok(weapon.damage > 0, "the hammer hit");
+    for (let i = 0; i < 4; i++) target.processIncomingAttacks();
+    assert.equal(target.incomingProjectiles.length, 0, "the hit landed");
+    assert.equal(player.currentStats.hitpoint, 110, "boosted Hitpoints after a blood fury proc");
+  } finally { Random.setRandom(previous); }
+});
+
+for (const id of [21902, 26374]) {
+  test(`crossbow ${id} uses ruby bolts from a carried quiver while arrows stay worn`, () => {
+    const { player, target, weapon } = fight(id);
+    const { BlessedDizanasQuiver } = require("../../src/content/equipment/BlessedDizanasQuiver.ts");
+    player.equipment.ammo = item(11212);
+    player.inventory[0] = new BlessedDizanasQuiver(item(9242));
+    player.equipmentChanged();
+    player.setAggro(target);
+    const previous = Random.randomFn;
+    try {
+      Random.setRandom(() => 0);
+      assert.equal(player.attack(), true);
+      assert.equal(weapon.damage, id === 26374 ? 110 : 100);
+      player.useSpecialAttack = true;
+      assert.equal(player.attack(), true);
+      assert.equal(player.currentStats.specialAttack, id === 26374 ? 25 : 40);
+      assert.equal(player.equipment.ammo.itemId, 11212);
+    } finally { Random.setRandom(previous); }
+  });
+}
+
+test("a worn blessed quiver supplies ruby dragon bolts and their charged bonuses", () => {
+  const { player, target, weapon } = fight(26374);
+  const { BlessedDizanasQuiver } = require("../../src/content/equipment/BlessedDizanasQuiver.ts");
+  const quiver = new BlessedDizanasQuiver(item(21944));
+  player.equipment.ammo = item(11212);
+  quiver.assignToPlayer(player);
+  player.equipmentChanged();
+  assert.equal(player.bonuses.attack.range, 138);
+  assert.equal(player.bonuses.other.rangedStrength, 126);
+  assert.equal(weapon.attack(player, target), true);
+  player.equipment.ammo = item(9243);
+  player.equipmentChanged();
+  assert.equal(player.ammunitionFor(weapon).itemId, 9243);
+  assert.equal(player.bonuses.other.rangedStrength, 109);
+});
+
+test("guard: rune crossbow retains its base ruby rate, arbitrary ammo and self-hit timing", () => {
+  const previous = Random.randomFn;
+  try {
+    const ruby = fight(9185);
+    Random.setRandom(() => 0.065);
+    assert.equal(ruby.weapon.attack(ruby.player, ruby.target), true);
+    assert.equal(ruby.weapon.damage, 100);
+    assert.equal(ruby.player.currentStats.hitpoint, 99);
+    ruby.player.processIncomingAttacks();
+    assert.equal(ruby.player.currentStats.hitpoint, 90);
+    const arrows = fight(9185);
+    arrows.player.equipment.ammo = item(11212);
+    arrows.player.equipmentChanged();
+    assert.equal(arrows.weapon.attack(arrows.player, arrows.target), true);
+    assert.equal(arrows.weapon.damage, 14);
+  } finally { Random.setRandom(previous); }
+});
+
+test("guard: rune crossbow retains its base eleven percent diamond proc", () => {
+  const { player, region, weapon } = fight(9185);
+  class ArmouredTarget extends TestNpc { incomingAttackRollModifiers() { return { maxDamage: true }; } }
+  const target = new ArmouredTarget(region, { x: 7, y: 7 }, {});
+  target.currentStats.defence = 1000000000;
+  player.equipment.ammo = item(9243);
+  player.equipmentChanged();
+  const previous = Random.randomFn;
+  try {
+    Random.setRandom(() => 0.105);
+    assert.equal(weapon.attack(player, target), true);
+    assert.equal(weapon.damage, 32);
+  } finally { Random.setRandom(previous); }
+});
