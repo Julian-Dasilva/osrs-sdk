@@ -137,6 +137,10 @@ export abstract class Unit extends Renderable {
   hasLOS = false;
   frozen = 0;
   stunned = 0;
+
+  get demonbaneMultiplier(): number {
+    return 0;
+  }
   incomingProjectiles: Projectile[] = [];
   private landedHits: Readonly<{ tick: number; hits: readonly AppliedHit[] }> = { tick: 0, hits: [] };
   healHitsplatImage: HTMLImageElement = ImageLoader.createImage(HealSplat);
@@ -818,6 +822,17 @@ export abstract class Unit extends Renderable {
     return this.landedHits.tick === this.region.world?.globalTickCounter ? this.landedHits.hits : [];
   }
 
+  ammunitionFor(weapon: Weapon): Ammo | null {
+    const ammo = this.equipment.ammo;
+    return ammo && weapon.compatibleAmmo().includes(ammo.itemName) ? ammo : null;
+  }
+
+  restoreHitpoints(amount: number): void {
+    if (this.currentStats.hitpoint < this.stats.hitpoint) {
+      this.currentStats.hitpoint = Math.min(this.currentStats.hitpoint + amount, this.stats.hitpoint);
+    }
+  }
+
   processIncomingAttacks() {
     this.lastHitAgo++;
     const landed: AppliedHit[] = [];
@@ -843,11 +858,7 @@ export abstract class Unit extends Renderable {
         landed.push({ damage: projectile.damage, attackStyle: projectile.attackStyle, from: projectile.from });
 
         if (projectile.damage < 0) {
-          // subtracting a negative gives a positive
-          if (this.currentStats.hitpoint < this.stats.hitpoint) {
-            this.currentStats.hitpoint -= projectile.damage;
-            this.currentStats.hitpoint = Math.min(this.currentStats.hitpoint, this.stats.hitpoint);
-          }
+          this.restoreHitpoints(-projectile.damage);
         } else {
           this.currentStats.hitpoint -= projectile.damage;
           const sound = this.hitSound(projectile.damage > 0);
@@ -858,6 +869,7 @@ export abstract class Unit extends Renderable {
         if (projectile.damage > 0 && projectile.options.consumeTargetMaxDamageRoll) {
           this.consumeMaxDamageRollsOnNextIncomingAttack();
         }
+        projectile.from.equipment.necklace?.onDealtHit(projectile);
         this.damageTaken();
         this.lastHitAgo = 0;
         if (this.shouldChangeAggro(projectile)) {

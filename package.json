@@ -27,7 +27,8 @@
     "test": "npx jest",
     "build:assets-tool": "npm run build --workspace osrs-sdk-assets",
     "build:asset-manifest": "node scripts/build-asset-manifest.mjs",
-    "test:assets": "npm run build:asset-manifest && npm run build:assets-tool && npm test --workspace osrs-sdk-assets"
+    "test:assets": "npm run build:asset-manifest && npm run build:assets-tool && npm test --workspace osrs-sdk-assets",
+    "test:weapons": "node --test test/sdk/WeaponsSlice.test.cjs"
   },
   "repository": {
     "type": "git",

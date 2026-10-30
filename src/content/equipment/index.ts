@@ -68,6 +68,9 @@ export { OathplateLegs } from "./OathplateLegs";
 export { UltorRing } from "./UltorRing";
 export { ZaryteVambraces } from "./ZaryteVambraces";
 export { ConflictionGauntlets } from "./ConflictionGauntlets";
+export { Lightbearer } from "./Lightbearer";
+export { AmuletOfBloodFury } from "./AmuletOfBloodFury";
+export { BlessedDizanasQuiver } from "./BlessedDizanasQuiver";
 export { MagmaHelm } from "./MagmaHelm";
 export { VoidMeleeHelm } from "./VoidMeleeHelm";
 export { VoidRangerHelm } from "./VoidRangerHelm";
@@ -81,3 +84,5 @@ export { GhommalsAvernicDefender6 } from "./GhommalsAvernicDefender6";
 export { TwistedBuckler } from "./TwistedBuckler";
 export { DragonBoots } from "./DragonBoots";
 export { BookOfTheDead } from "./BookOfTheDead";
+
+export { RubyDragonBoltsE } from "./RubyDragonBoltsE";

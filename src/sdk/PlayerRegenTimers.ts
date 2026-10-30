@@ -10,6 +10,7 @@ type CombatBoost = { kind: "normal" } | { kind: "divine"; expiresAt: number };
 export class PlayerRegenTimer {
   player: Player;
   spec: number;
+  private specInterval = 50;
   hitpoint: number;
   private combatBoost: CombatBoost = { kind: "normal" };
   private statTimer: number = SUPPLY_VALUES.statDecay.ticks;
@@ -70,7 +71,7 @@ export class PlayerRegenTimer {
 
   specUsed() {
     if (this.spec <= 0) {
-      this.spec = 50;
+      this.spec = this.specInterval;
     }
   }
 
@@ -80,10 +81,18 @@ export class PlayerRegenTimer {
     this.tickBoosts();
   }
 
+  updateSpecInterval(): void {
+    const interval = this.player.equipment.ring?.specialAttackRegenTicks ?? 50;
+    if (interval === this.specInterval) return;
+    this.spec = interval < this.specInterval ? Math.min(this.spec, interval) : interval;
+    this.specInterval = interval;
+  }
+
   specRegen() {
+    this.updateSpecInterval();
     this.spec--;
     if (this.spec === 0) {
-      this.spec = 50;
+      this.spec = this.specInterval;
       this.player.currentStats.specialAttack += 10;
       this.player.currentStats.specialAttack = Math.min(100, this.player.currentStats.specialAttack);
     }

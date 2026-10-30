@@ -127,6 +127,11 @@ export class AttackStylesController {
       [AttackStyle.RAPID]: ImageLoader.createImage(BowRapidImage),
       [AttackStyle.LONGRANGE]: ImageLoader.createImage(BowLongrangeImage),
     },
+    [AttackStyleTypes.BLUNT]: {
+      [AttackStyle.ACCURATE]: ImageLoader.createImage(StaffAccurateImage),
+      [AttackStyle.AGGRESSIVECRUSH]: ImageLoader.createImage(StaffAggressiveImage),
+      [AttackStyle.DEFENSIVE]: ImageLoader.createImage(StaffDefensiveImage),
+    },
     [AttackStyleTypes.STAFF]: {
       [AttackStyle.ACCURATE]: ImageLoader.createImage(StaffAccurateImage),
       [AttackStyle.AGGRESSIVECRUSH]: ImageLoader.createImage(StaffAggressiveImage),
@@ -214,7 +219,7 @@ export class AttackStylesController {
 
   getWeaponXpDrops(style: AttackStyle, damage: number, npcMultiplier: number, category?: AttackStyleTypes): XpDrop[] {
     const xpTypes =
-      category === AttackStyleTypes.AXE && style === AttackStyle.ACCURATE
+      (category === AttackStyleTypes.AXE || category === AttackStyleTypes.BLUNT) && style === AttackStyle.ACCURATE
         ? MELEE_ACCURATE
         : AttackStylesController.attackStyleXpType[style];
     return xpTypes.map(({ skill, multiplier: skillMultiplier }) => {
