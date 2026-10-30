@@ -1,3 +1,4 @@
+import { SetEffectTypes } from "../SetEffect";
 import { AttackStylesController } from "../AttackStylesController";
 import { PrayerGroups } from "../BasePrayer";
 import { EquipmentTypes } from "../Equipment";
@@ -88,7 +89,8 @@ export class MeleeWeapon extends Weapon {
     }
     return Math.floor(
       (Math.floor(from.currentStats.strength * prayerMultiplier) + bonuses.styleStrengthBonus + 8) *
-        bonuses.voidMultiplier,
+        (bonuses.voidMultiplier ?? 1) *
+        (from.setEffects.some((effect) => effect.effectName() === SetEffectTypes.ELITE_VOID_MELEE) ? 1.1 : 1),
     );
   }
 
@@ -118,7 +120,9 @@ export class MeleeWeapon extends Weapon {
     }
 
     return Math.floor(
-      (Math.floor(from.currentStats.attack * prayerMultiplier) + bonuses.styleBonus + 8) * bonuses.voidMultiplier,
+      (Math.floor(from.currentStats.attack * prayerMultiplier) + bonuses.styleBonus + 8) *
+        (bonuses.voidMultiplier ?? 1) *
+        (from.setEffects.some((effect) => effect.effectName() === SetEffectTypes.ELITE_VOID_MELEE) ? 1.1 : 1),
     );
   }
 

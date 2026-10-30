@@ -1,3 +1,4 @@
+import { SetEffectTypes } from "../SetEffect";
 import { Unit, UnitTypes } from "../Unit";
 import { mergeProjectileOptions, Projectile, ProjectileOptions } from "./Projectile";
 import { AttackBonuses, Weapon } from "../gear/Weapon";
@@ -82,9 +83,10 @@ export class RangedWeapon extends Weapon {
       }
     }
 
-    return (
+    return Math.floor(
       Math.floor(Math.floor(from.currentStats.range) * prayerMultiplier + (bonuses.isAccurate ? 3 : 0) + 8) *
-      bonuses.voidMultiplier
+        (bonuses.voidMultiplier ?? 1) *
+        (from.setEffects.some((effect) => effect.effectName() === SetEffectTypes.ELITE_VOID_RANGED) ? 1.1 : 1),
     );
   }
 
@@ -102,9 +104,11 @@ export class RangedWeapon extends Weapon {
         prayerMultiplier = 1.23;
       }
     }
-    const rangedStrength =
+    const rangedStrength = Math.floor(
       Math.floor(Math.floor(from.currentStats.range) * prayerMultiplier + (bonuses.isAccurate ? 3 : 0) + 8) *
-      bonuses.voidMultiplier;
+        (bonuses.voidMultiplier ?? 1) *
+        (from.setEffects.some((effect) => effect.effectName() === SetEffectTypes.ELITE_VOID_RANGED) ? 1.125 : 1),
+    );
     const max = Math.floor(
       Math.floor(
         0.5 + ((rangedStrength * (from.bonuses.other.rangedStrength + 64)) / 640) * bonuses.gearRangeMultiplier,
