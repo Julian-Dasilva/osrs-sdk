@@ -87,7 +87,6 @@ export interface ProjectileOptions {
   sound?: Sound;
   // Sound to play on the target when the attack hitsplat lands on the target (irrespective of visuals)
   hitSound?: Sound;
-  /** Cache spotanim played on the target when the hit lands. */
   impactSpotAnim?: CacheRenderSpotAnim;
   visuals?: ProjectileVisuals;
 }

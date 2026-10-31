@@ -11,7 +11,6 @@ import { ZombieAxe } from "./ZombieAxe";
 const MAX_SOUL_STACKS = 5;
 const SOUL_STACK_DECAY_TICKS = 50;
 
-/** Soulreaper axe: Soul stacks raise Strength 6% each, and Behead spends them for accuracy and damage. */
 export class SoulreaperAxe extends ZombieAxe {
   private soulStacks = 0;
   private stacksSinceTick: number | null = null;
@@ -68,7 +67,7 @@ export class SoulreaperAxe extends ZombieAxe {
     bonuses.isSpecialAttack = true;
     return this.attack(from, to, bonuses, options);
   }
-  override strengthBoost(bonuses: AttackBonuses): number {
+  override strengthMultiplierBonus(bonuses: AttackBonuses): number {
     return bonuses.isSpecialAttack ? 0 : 0.06 * this.soulStacks;
   }
   override _attackRoll(from: Unit, to: Unit, bonuses: AttackBonuses): number {

@@ -8,7 +8,6 @@ import { ProjectileOptions } from "../../sdk/weapons/Projectile";
 import { DragonCrossbow } from "./DragonCrossbow";
 import { weaponBonuses } from "./WeaponValues";
 
-/** Ascension crossbows: fire ascension bolts every 3 ticks (2 on Rapid), alternating hands, at half the bolt effect chance. */
 export class AscensionCrossbows extends DragonCrossbow {
   private shots = 0;
 

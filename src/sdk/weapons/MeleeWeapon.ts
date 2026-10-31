@@ -88,7 +88,7 @@ export class MeleeWeapon extends Weapon {
       bonuses.styleStrengthBonus = 0;
     }
     return Math.floor(
-      (Math.floor(from.currentStats.strength * (prayerMultiplier + this.strengthBoost(bonuses))) +
+      (Math.floor(from.currentStats.strength * (prayerMultiplier + this.strengthMultiplierBonus(bonuses))) +
         bonuses.styleStrengthBonus +
         8) *
         (bonuses.voidMultiplier ?? 1) *
@@ -96,8 +96,7 @@ export class MeleeWeapon extends Weapon {
     );
   }
 
-  /** Strength multiplier a weapon adds to the strength prayer's, such as the Soulreaper axe's Soul stacks. */
-  strengthBoost(_bonuses: AttackBonuses): number {
+  strengthMultiplierBonus(_bonuses: AttackBonuses): number {
     return 0;
   }
 

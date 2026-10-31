@@ -8,11 +8,7 @@ import { MeleeWeapon } from "../../sdk/weapons/MeleeWeapon";
 import { ProjectileOptions } from "../../sdk/weapons/Projectile";
 import { weaponBonuses } from "./WeaponValues";
 
-/**
- * Charged Obligator. Thrust keeps the best of two damage rolls, plus one for each of stab and slash defence above crush,
- * and adds 20% on 2x2 and 40% on 3x3 or larger targets; Smash is a plain 3-tick hit. Thrust's reach onto two more
- * targets behind the first is not simulated.
- */
+/** The charged Obligator; Thrust's reach onto the two targets behind the first is not simulated. */
 export class Obligator extends MeleeWeapon {
   constructor() {
     super();
