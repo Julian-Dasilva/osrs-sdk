@@ -61,7 +61,7 @@ export class ScorchingBow extends RangedWeapon {
     return AttackStyle.RAPID;
   }
   override compatibleAmmo(): ItemName[] {
-    return [ItemName.DRAGON_ARROWS];
+    return [ItemName.DRAGON_ARROWS, ItemName.SEEKING_DRAGON_ARROWS];
   }
   override get specialAttackGraphics(): AttackGraphics | null {
     return {
