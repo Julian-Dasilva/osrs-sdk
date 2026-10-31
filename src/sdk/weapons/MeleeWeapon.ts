@@ -88,10 +88,17 @@ export class MeleeWeapon extends Weapon {
       bonuses.styleStrengthBonus = 0;
     }
     return Math.floor(
-      (Math.floor(from.currentStats.strength * prayerMultiplier) + bonuses.styleStrengthBonus + 8) *
+      (Math.floor(from.currentStats.strength * (prayerMultiplier + this.strengthBoost(bonuses))) +
+        bonuses.styleStrengthBonus +
+        8) *
         (bonuses.voidMultiplier ?? 1) *
         (from.setEffects.some((effect) => effect.effectName() === SetEffectTypes.ELITE_VOID_MELEE) ? 1.1 : 1),
     );
+  }
+
+  /** Strength multiplier a weapon adds to the strength prayer's, such as the Soulreaper axe's Soul stacks. */
+  strengthBoost(_bonuses: AttackBonuses): number {
+    return 0;
   }
 
   _maxHit(from: Unit, to: Unit, bonuses: AttackBonuses) {

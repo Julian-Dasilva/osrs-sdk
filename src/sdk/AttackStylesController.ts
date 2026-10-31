@@ -66,6 +66,7 @@ export enum AttackStyleTypes {
   STABSWORD = "STABSWORD",
   UNARMED = "UNARMED",
   WHIP = "WHIP",
+  CHAIN_MACE = "CHAIN_MACE",
 }
 
 export enum AttackStyle {
@@ -82,6 +83,7 @@ export enum AttackStyle {
   SHORT_FUSE = "SHORT_FUSE",
   MEDIUM_FUSE = "MEDIUM_FUSE",
   LONG_FUSE = "LONG_FUSE",
+  SMASH = "SMASH",
 }
 
 interface AttackStyleStorage {
@@ -155,6 +157,11 @@ export class AttackStylesController {
       [AttackStyle.AGGRESSIVECRUSH]: ImageLoader.createImage(AxeSmashImage),
       [AttackStyle.DEFENSIVE]: ImageLoader.createImage(AxeBlockImage),
     },
+    [AttackStyleTypes.CHAIN_MACE]: {
+      [AttackStyle.ACCURATE]: ImageLoader.createImage(StaffAccurateImage),
+      [AttackStyle.AGGRESSIVECRUSH]: ImageLoader.createImage(StaffAggressiveImage),
+      [AttackStyle.SMASH]: ImageLoader.createImage(AxeSmashImage),
+    },
     [AttackStyleTypes.SLASHSWORD]: {
       [AttackStyle.ACCURATE]: ImageLoader.createImage(SwordChopImage),
       [AttackStyle.AGGRESSIVESLASH]: ImageLoader.createImage(SwordSlashImage),
@@ -188,12 +195,14 @@ export class AttackStylesController {
     [AttackStyle.SHORT_FUSE]: RANGE_ACCURATE,
     [AttackStyle.MEDIUM_FUSE]: RANGE_RAPID,
     [AttackStyle.LONG_FUSE]: RANGE_LONGRANGE,
+    [AttackStyle.SMASH]: MELEE_AGGRESSIVE,
   };
 
   static attackStyleStrengthBonus: { [style in AttackStyle]?: number } = {
     // aggressive = 3
     [AttackStyle.AGGRESSIVECRUSH]: 3,
     [AttackStyle.AGGRESSIVESLASH]: 3,
+    [AttackStyle.SMASH]: 3,
     // controlled = 1
     [AttackStyle.CONTROLLED]: 1,
     [AttackStyle.STAB]: 1,
@@ -219,7 +228,10 @@ export class AttackStylesController {
 
   getWeaponXpDrops(style: AttackStyle, damage: number, npcMultiplier: number, category?: AttackStyleTypes): XpDrop[] {
     const xpTypes =
-      (category === AttackStyleTypes.AXE || category === AttackStyleTypes.BLUNT) && style === AttackStyle.ACCURATE
+      (category === AttackStyleTypes.AXE ||
+        category === AttackStyleTypes.BLUNT ||
+        category === AttackStyleTypes.CHAIN_MACE) &&
+      style === AttackStyle.ACCURATE
         ? MELEE_ACCURATE
         : AttackStylesController.attackStyleXpType[style];
     return xpTypes.map(({ skill, multiplier: skillMultiplier }) => {

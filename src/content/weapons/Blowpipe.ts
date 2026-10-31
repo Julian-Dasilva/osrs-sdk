@@ -4,7 +4,7 @@ import BPInventImage from "../../assets/images/weapons/blowpipe.png";
 import { RangedWeapon } from "../../sdk/weapons/RangedWeapon";
 import { ItemName } from "../../sdk/ItemName";
 import { Unit } from "../../sdk/Unit";
-import { AttackBonuses } from "../../sdk/gear/Weapon";
+import { AttackBonuses, AttackGraphics } from "../../sdk/gear/Weapon";
 import { AttackStyle, AttackStyleTypes } from "../../sdk/AttackStylesController";
 import { ArcProjectileMotionInterpolator, Projectile, ProjectileOptions } from "../../sdk/weapons/Projectile";
 
@@ -134,6 +134,15 @@ export class Blowpipe extends RangedWeapon {
 
   get isTwoHander(): boolean {
     return true;
+  }
+
+  override get specialAttackGraphics(): AttackGraphics | null {
+    return {
+      animation: CACHE_ASSETS.playerAnimations.fireBlowpipe.id,
+      cast: null,
+      projectile: CACHE_ASSETS.spotAnims.toxicBlowpipeSpecial.id,
+      impact: null,
+    };
   }
 
   hasSpecialAttack(): boolean {

@@ -175,6 +175,93 @@ export const WEAPON_VALUES = {
       },
     },
   },
+  soulreaperAxe: {
+    source: "https://oldschool.runescape.wiki/w/Soulreaper_axe?oldid=15381771",
+    bonuses: {
+      attack: {
+        stab: 28,
+        slash: 134,
+        crush: 66,
+        magic: 0,
+        range: 0,
+      },
+      defence: {
+        stab: 0,
+        slash: 0,
+        crush: 0,
+        magic: 0,
+        range: 0,
+      },
+      other: {
+        meleeStrength: 125,
+        rangedStrength: 0,
+        magicDamage: 0,
+        prayer: 0,
+      },
+      targetSpecific: {
+        undead: 0,
+        slayer: 0,
+      },
+    },
+  },
+  ascensionCrossbows: {
+    source: "https://oldschool.runescape.wiki/w/Ascension_crossbows?oldid=15385929",
+    bonuses: {
+      attack: {
+        stab: 0,
+        slash: 0,
+        crush: 0,
+        magic: 3,
+        range: 34,
+      },
+      defence: {
+        stab: -7,
+        slash: -5,
+        crush: 0,
+        magic: 10,
+        range: 0,
+      },
+      other: {
+        meleeStrength: 0,
+        rangedStrength: 0,
+        magicDamage: 0,
+        prayer: 0,
+      },
+      targetSpecific: {
+        undead: 0,
+        slayer: 0,
+      },
+    },
+  },
+  obligator: {
+    source: "https://oldschool.runescape.wiki/w/Obligator?oldid=15386629",
+    bonuses: {
+      attack: {
+        stab: 22,
+        slash: -8,
+        crush: 120,
+        magic: 0,
+        range: 0,
+      },
+      defence: {
+        stab: 0,
+        slash: 16,
+        crush: 0,
+        magic: 3,
+        range: 8,
+      },
+      other: {
+        meleeStrength: 40,
+        rangedStrength: 0,
+        magicDamage: 0,
+        prayer: 3,
+      },
+      targetSpecific: {
+        undead: 0,
+        slayer: 0,
+      },
+    },
+  },
 } as const;
 
 export function weaponBonuses(key: keyof typeof WEAPON_VALUES): UnitBonuses {

@@ -22,3 +22,7 @@ export { SanguineScytheOfVitur } from "./SanguineScytheOfVitur";
 export { ZaryteCrossbow } from "./ZaryteCrossbow";
 export { DragonCrossbow } from "./DragonCrossbow";
 export { ScorchingBow } from "./ScorchingBow";
+export { SoulreaperAxe } from "./SoulreaperAxe";
+export { SoulreaperAxeOrnament } from "./SoulreaperAxeOrnament";
+export { AscensionCrossbows } from "./AscensionCrossbows";
+export { Obligator } from "./Obligator";

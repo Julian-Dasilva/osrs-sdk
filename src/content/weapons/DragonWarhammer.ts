@@ -3,7 +3,7 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { AttackStyle, AttackStyleTypes } from "../../sdk/AttackStylesController";
 import { ItemName } from "../../sdk/ItemName";
 import { Unit } from "../../sdk/Unit";
-import { AttackBonuses } from "../../sdk/gear/Weapon";
+import { AttackBonuses, AttackGraphics } from "../../sdk/gear/Weapon";
 import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 import { MeleeWeapon } from "../../sdk/weapons/MeleeWeapon";
 import { ProjectileOptions } from "../../sdk/weapons/Projectile";
@@ -44,6 +44,14 @@ export class DragonWarhammer extends MeleeWeapon {
   }
   override defaultStyle(): AttackStyle {
     return AttackStyle.AGGRESSIVECRUSH;
+  }
+  override get specialAttackGraphics(): AttackGraphics | null {
+    return {
+      animation: CACHE_ASSETS.playerAnimations.dragonWarhammerSpecial.id,
+      cast: CACHE_ASSETS.spotAnims.dragonWarhammerSpecial.id,
+      projectile: null,
+      impact: null,
+    };
   }
   override hasSpecialAttack(): boolean {
     return true;

@@ -3,7 +3,7 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { AttackStyle, AttackStyleTypes } from "../../sdk/AttackStylesController";
 import { ItemName } from "../../sdk/ItemName";
 import { Unit } from "../../sdk/Unit";
-import { AttackBonuses } from "../../sdk/gear/Weapon";
+import { AttackBonuses, AttackGraphics } from "../../sdk/gear/Weapon";
 import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 import { MeleeWeapon } from "../../sdk/weapons/MeleeWeapon";
 import { ProjectileOptions } from "../../sdk/weapons/Projectile";
@@ -44,6 +44,14 @@ export class Emberlight extends MeleeWeapon {
   }
   override defaultStyle(): AttackStyle {
     return AttackStyle.AGGRESSIVESLASH;
+  }
+  override get specialAttackGraphics(): AttackGraphics | null {
+    return {
+      animation: CACHE_ASSETS.playerAnimations.emberlightSpecial.id,
+      cast: null,
+      projectile: null,
+      impact: CACHE_ASSETS.spotAnims.emberlightSpecial.id,
+    };
   }
   override hasSpecialAttack(): boolean {
     return true;
