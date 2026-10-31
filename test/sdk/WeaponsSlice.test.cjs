@@ -753,3 +753,12 @@ for (const [id, ammo, demon, cost, graphics] of SPECIALS) {
       );
   });
 }
+
+test("the Scorching bow fires and specials with worn seeking dragon arrows", () => {
+  const f = wield(29591, 33595, true);
+  assert.equal(f.player.equipment.ammo.itemName, "Seeking dragon arrow");
+  assert.equal(f.player.attack(), true, "an ordinary shot");
+  f.player.useSpecialAttack = true;
+  assert.equal(f.player.attack(), true, "Burning Shackles");
+  assert.equal(f.player.currentStats.specialAttack, 75);
+});
