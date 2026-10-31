@@ -43,6 +43,14 @@ export interface AttackBonuses {
   isSpecialAttack?: boolean;
 }
 
+/** Cache graphics of a special attack: the wielder's sequence and the spotanims on the wielder, in flight and on the target. */
+export interface AttackGraphics {
+  readonly animation: number;
+  readonly cast: number | null;
+  readonly projectile: number | null;
+  readonly impact: number | null;
+}
+
 export class Weapon extends Equipment {
   damage: number;
   damageRoll: number;
@@ -90,7 +98,10 @@ export class Weapon extends Equipment {
     return false;
   }
   get specialAttackAnimationId(): number | null {
-    return this.attackAnimationId;
+    return this.specialAttackGraphics?.animation ?? this.attackAnimationId;
+  }
+  get specialAttackGraphics(): AttackGraphics | null {
+    return null;
   }
   specialAttackDrain(): number {
     return 50;
@@ -204,15 +215,25 @@ export class Weapon extends Equipment {
 
     this.grantXp(from, to);
     const modifiers = to.incomingAttackRollModifiers({ attacker: from, weapon: this, bonuses });
+    const special = bonuses.isSpecialAttack ? this.specialAttackGraphics : null;
     this.registerProjectile(
       from,
       to,
       bonuses,
-      mergeProjectileOptions(options, {
-        consumeTargetMaxDamageRoll: modifiers.maxDamage && modifiers.consumeAfterDamage,
-      }),
+      mergeProjectileOptions(
+        options,
+        {
+          consumeTargetMaxDamageRoll: modifiers.maxDamage && modifiers.consumeAfterDamage,
+        },
+        special?.impact ? { impactSpotAnim: { id: special.impact } } : {},
+        special?.projectile ? { visuals: { spotAnim: { id: special.projectile } } } : {},
+      ),
     );
-    const attackSpotAnim = this.attackSpotAnim;
+    const attackSpotAnim = special?.cast
+      ? { id: special.cast, animation: special.animation }
+      : special
+        ? null
+        : this.attackSpotAnim;
     if (attackSpotAnim) {
       from.addSpotAnim({
         ...attackSpotAnim,

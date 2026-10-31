@@ -3,16 +3,29 @@ import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { AttackStyle, AttackStyleTypes } from "../../sdk/AttackStylesController";
 import { ItemName } from "../../sdk/ItemName";
 import { Unit } from "../../sdk/Unit";
-import { AttackBonuses } from "../../sdk/gear/Weapon";
+import { AttackBonuses, AttackGraphics } from "../../sdk/gear/Weapon";
 import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
 import { RangedWeapon } from "../../sdk/weapons/RangedWeapon";
-import { Projectile, ProjectileOptions } from "../../sdk/weapons/Projectile";
+import { ArcProjectileMotionInterpolator, Projectile, ProjectileOptions } from "../../sdk/weapons/Projectile";
+import { Assets } from "../../sdk/utils/Assets";
 import { weaponBonuses } from "./WeaponValues";
 
 export class ScorchingBow extends RangedWeapon {
   constructor() {
-    super();
+    super({
+      visuals: {
+        modelScale: 1 / 128,
+        startCycleOffset: 30,
+        hitEarlyCycleOffset: 30,
+        verticalOffset: -0.75,
+        motionInterpolator: new ArcProjectileMotionInterpolator(1),
+      },
+    });
     this.bonuses = weaponBonuses("scorchingBow");
+  }
+  private readonly ProjectileModel = Assets.getAssetUrl("models/dragon_arrow.glb");
+  override get projectileModel(): string {
+    return this.ProjectileModel;
   }
   override get cacheItemId(): number {
     return CACHE_ASSETS.items.scorchingBow.id;
@@ -48,7 +61,15 @@ export class ScorchingBow extends RangedWeapon {
     return AttackStyle.RAPID;
   }
   override compatibleAmmo(): ItemName[] {
-    return [ItemName.DRAGON_ARROWS];
+    return [ItemName.DRAGON_ARROWS, ItemName.SEEKING_DRAGON_ARROWS];
+  }
+  override get specialAttackGraphics(): AttackGraphics | null {
+    return {
+      animation: CACHE_ASSETS.playerAnimations.scorchingBowSpecial.id,
+      cast: CACHE_ASSETS.spotAnims.scorchingBowSpecial.id,
+      projectile: CACHE_ASSETS.spotAnims.scorchingBowSpecialProjectile.id,
+      impact: CACHE_ASSETS.spotAnims.scorchingBowSpecialImpact.id,
+    };
   }
   override hasSpecialAttack(): boolean {
     return true;

@@ -4,8 +4,7 @@ import { AttackStyle, AttackStyleTypes } from "../../sdk/AttackStylesController"
 import { ItemName } from "../../sdk/ItemName";
 import { Random } from "../../sdk/Random";
 import { Unit } from "../../sdk/Unit";
-import { AttackBonuses } from "../../sdk/gear/Weapon";
-import { PlayerAnimationIndices } from "../../sdk/rendering/GLTFAnimationConstants";
+import { AttackBonuses, AttackGraphics } from "../../sdk/gear/Weapon";
 import { ProjectileOptions } from "../../sdk/weapons/Projectile";
 import { EnchantedCrossbow } from "./EnchantedCrossbow";
 import { weaponBonuses } from "./WeaponValues";
@@ -34,7 +33,10 @@ export class DragonCrossbow extends EnchantedCrossbow {
     return this.attackStyle() === AttackStyle.LONGRANGE ? 9 : 7;
   }
   override get attackAnimationId(): number {
-    return PlayerAnimationIndices.FireBow;
+    return CACHE_ASSETS.playerAnimations.crossbowFire.id;
+  }
+  override get specialAttackGraphics(): AttackGraphics | null {
+    return { animation: this.attackAnimationId, cast: null, projectile: null, impact: null };
   }
   override attackStyles(): AttackStyle[] {
     return [AttackStyle.ACCURATE, AttackStyle.RAPID, AttackStyle.LONGRANGE];

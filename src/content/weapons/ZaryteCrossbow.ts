@@ -2,7 +2,7 @@ import InventoryImage from "../../assets/images/equipment/Zaryte_crossbow.png";
 import { CACHE_ASSETS } from "../../assets/CacheAssets";
 import { AttackStyle } from "../../sdk/AttackStylesController";
 import { ItemName } from "../../sdk/ItemName";
-import { AttackBonuses } from "../../sdk/gear/Weapon";
+import { AttackBonuses, AttackGraphics } from "../../sdk/gear/Weapon";
 import { Unit } from "../../sdk/Unit";
 import { ProjectileOptions } from "../../sdk/weapons/Projectile";
 import { DragonCrossbow } from "./DragonCrossbow";
@@ -24,6 +24,17 @@ export class ZaryteCrossbow extends DragonCrossbow {
   }
   override get inventoryImage(): string {
     return InventoryImage;
+  }
+  override get attackAnimationId(): number {
+    return CACHE_ASSETS.playerAnimations.zaryteCrossbowFire.id;
+  }
+  override get specialAttackGraphics(): AttackGraphics | null {
+    return {
+      animation: this.attackAnimationId,
+      cast: null,
+      projectile: CACHE_ASSETS.spotAnims.zaryteCrossbowSpecial.id,
+      impact: null,
+    };
   }
   override get attackRange(): number {
     return this.attackStyle() === AttackStyle.LONGRANGE ? 10 : 8;

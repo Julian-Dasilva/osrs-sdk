@@ -26,6 +26,8 @@ export { CrystalShield } from "./CrystalShield";
 export { DagonhaiRobeTop } from "./DagonhaiRobeTop";
 export { DevoutBoots } from "./DevoutBoots";
 export { DiamondBoltsE } from "./DiamondBoltsE";
+export { AscensionBolts } from "./AscensionBolts";
+export { DiamondAscensionBoltsE } from "./DiamondAscensionBoltsE";
 export { DizanasQuiver } from "./DizanasQuiver";
 export { DragonArrows } from "./DragonArrows";
 export { SeekingDragonArrows } from "./SeekingDragonArrows";

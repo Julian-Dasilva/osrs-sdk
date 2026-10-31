@@ -88,10 +88,16 @@ export class MeleeWeapon extends Weapon {
       bonuses.styleStrengthBonus = 0;
     }
     return Math.floor(
-      (Math.floor(from.currentStats.strength * prayerMultiplier) + bonuses.styleStrengthBonus + 8) *
+      (Math.floor(from.currentStats.strength * (prayerMultiplier + this.strengthMultiplierBonus(bonuses))) +
+        bonuses.styleStrengthBonus +
+        8) *
         (bonuses.voidMultiplier ?? 1) *
         (from.setEffects.some((effect) => effect.effectName() === SetEffectTypes.ELITE_VOID_MELEE) ? 1.1 : 1),
     );
+  }
+
+  strengthMultiplierBonus(_bonuses: AttackBonuses): number {
+    return 0;
   }
 
   _maxHit(from: Unit, to: Unit, bonuses: AttackBonuses) {

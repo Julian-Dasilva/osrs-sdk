@@ -87,6 +87,7 @@ export interface ProjectileOptions {
   sound?: Sound;
   // Sound to play on the target when the attack hitsplat lands on the target (irrespective of visuals)
   hitSound?: Sound;
+  impactSpotAnim?: CacheRenderSpotAnim;
   visuals?: ProjectileVisuals;
 }
 
@@ -222,6 +223,9 @@ export class Projectile {
   beforeHit() {
     if (this.options.hitSound) {
       SoundCache.play(this.options.hitSound);
+    }
+    if (this.options.impactSpotAnim && !targetIsLocation(this.to)) {
+      this.to.addSpotAnim(this.options.impactSpotAnim);
     }
     if (
       !targetIsLocation(this.to) &&
