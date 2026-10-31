@@ -50,6 +50,12 @@ const cases = [
   [25975, "Lightbearer", [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0]],
   [24780, "Amulet of blood fury", [10, 10, 10, 10, 10], [15, 15, 15, 15, 15], [8, 0, 0, 5]],
   [28955, "Blessed Dizana's quiver", [0, 0, 0, 0, 18], [0, 0, 0, 0, 0], [0, 3, 0, 0]],
+  [28338, "Soulreaper axe", [28, 134, 66, 0, 0], [0, 0, 0, 0, 0], [125, 0, 0, 0], 5, 1, 0],
+  [33335, "Soulreaper axe (o)", [28, 134, 66, 0, 0], [0, 0, 0, 0, 0], [125, 0, 0, 0], 5, 1, 0],
+  [34681, "Ascension crossbows", [0, 0, 0, 3, 34], [-7, -5, 0, 10, 0], [0, 0, 0, 0], 2, 6, null],
+  [34715, "Obligator", [22, -8, 120, 0, 0], [0, 16, 0, 3, 8], [40, 0, 0, 3], 5, 1, null],
+  [34684, "Ascension bolts", [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 53, 0, 0]],
+  [34696, "Diamond ascension bolts (e)", [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 58, 0, 0]],
 ];
 const stances = {
   13576: [
@@ -89,6 +95,28 @@ const stances = {
     ["RAPID", 4, 10],
     ["LONGRANGE", 5, 10],
   ],
+  28338: [
+    ["ACCURATE", 5, 1],
+    ["AGGRESSIVE (SLASH)", 5, 1],
+    ["AGGRESSIVE (CRUSH)", 5, 1],
+    ["DEFENSIVE", 5, 1],
+  ],
+  33335: [
+    ["ACCURATE", 5, 1],
+    ["AGGRESSIVE (SLASH)", 5, 1],
+    ["AGGRESSIVE (CRUSH)", 5, 1],
+    ["DEFENSIVE", 5, 1],
+  ],
+  34681: [
+    ["ACCURATE", 3, 6],
+    ["RAPID", 2, 6],
+    ["LONGRANGE", 3, 8],
+  ],
+  34715: [
+    ["ACCURATE", 5, 1],
+    ["AGGRESSIVE (CRUSH)", 5, 1],
+    ["SMASH", 3, 1],
+  ],
 };
 const weights = {
   13576: 2,
@@ -101,6 +129,12 @@ const weights = {
   25975: 0.05,
   24780: 0.02,
   28955: 0.453,
+  28338: 2.825,
+  33335: 2.825,
+  34681: 6,
+  34715: 4.989,
+  34684: 0,
+  34696: 0,
 };
 function item(id) {
   const entry = SDK_ITEM_CATALOG.get(id);
@@ -508,3 +542,214 @@ test("guard: rune crossbow retains its base eleven percent diamond proc", () => 
     Random.setRandom(previous);
   }
 });
+
+function withRandom(values, body) {
+  const previous = Random.randomFn;
+  const queue = Array.isArray(values) ? [...values] : null;
+  Random.setRandom(() => (queue ? (queue.length > 1 ? queue.shift() : queue[0]) : values));
+  try {
+    return body();
+  } finally {
+    Random.setRandom(previous);
+  }
+}
+function wield(id, ammo, demon = false) {
+  const f = fight(id, demon);
+  f.player.equipment.ammo = ammo === null ? null : item(ammo);
+  f.player.equipmentChanged();
+  f.player.setAggro(f.target);
+  return f;
+}
+function recordAnimations(unit) {
+  const played = [];
+  unit.setAnimationListener({ animationChanged: (id) => played.push(id), spotAnimChanged: () => {} });
+  return played;
+}
+function landAll(target) {
+  for (let i = 0; i < 12 && target.incomingProjectiles.length; i++) target.processIncomingAttacks();
+}
+
+test("soul stacks add six percent Strength per earlier axe attack, hit or miss, up to five", () => {
+  const { player, target, weapon } = fight(28338);
+  assert.equal(player.currentStats.strength, 99, "base Strength");
+  const hits = [];
+  for (let i = 0; i < 7; i++) {
+    weapon.attack(player, target);
+    hits.push(weapon.damage);
+  }
+  assert.deepEqual(hits, [32, 34, 36, 38, 39, 41, 41]);
+  class Dodger extends TestNpc {
+    incomingAttackRollModifiers() {
+      return {};
+    }
+  }
+  const missed = fight(28338);
+  const dodger = new Dodger(missed.region, { x: 7, y: 7 }, {});
+  dodger.currentStats.defence = 1000000;
+  withRandom(0.99, () => {
+    for (let i = 0; i < 5; i++) missed.weapon.attack(missed.player, dodger);
+  });
+  missed.weapon.attack(missed.player, missed.target);
+  assert.equal(missed.weapon.damage, 41, "five misses still built five stacks");
+});
+
+test("soul stacks decay one per 50 ticks without an axe attack", () => {
+  const { player, target, weapon, region } = fight(28338);
+  region.world = { globalTickCounter: 0 };
+  for (let i = 0; i < 5; i++) weapon.attack(player, target);
+  region.world.globalTickCounter = 100;
+  weapon.attack(player, target);
+  assert.equal(weapon.damage, 38, "three stacks left after 100 idle ticks");
+});
+
+test("Behead costs no energy, consumes every stack, and scales accuracy, max and min hit per stack", () => {
+  const max = fight(28338);
+  for (let i = 0; i < 5; i++) max.weapon.attack(max.player, max.target);
+  max.player.useSpecialAttack = true;
+  max.player.setAggro(max.target);
+  assert.equal(max.player.attack(), true);
+  assert.equal(max.weapon.damage, 41, "32 base max hit raised 30 percent");
+  assert.equal(max.player.currentStats.specialAttack, 100);
+  max.weapon.attack(max.player, max.target);
+  assert.equal(max.weapon.damage, 32, "no stacks left after Behead");
+
+  class Sure extends TestNpc {
+    incomingAttackRollModifiers() {
+      return { guaranteedHit: true };
+    }
+  }
+  const low = fight(28338);
+  const sure = new Sure(low.region, { x: 7, y: 7 }, {});
+  sure.currentStats.hitpoint = 2000;
+  for (let i = 0; i < 5; i++) low.weapon.attack(low.player, low.target);
+  withRandom(0, () => low.weapon.specialAttack(low.player, sure));
+  assert.equal(low.weapon.damage, 12, "minimum hit of 30 percent of 41");
+
+  class Ordinary extends TestNpc {}
+  for (const special of [false, true]) {
+    const f = fight(28338);
+    const target = new Ordinary(f.region, { x: 7, y: 7 }, {});
+    target.currentStats.defence = 250;
+    target.currentStats.hitpoint = 2000;
+    withRandom(0.7, () => {
+      for (let i = 0; i < 5; i++) f.weapon.attack(f.player, target);
+      if (special) f.weapon.specialAttack(f.player, target);
+      else f.weapon.attack(f.player, target);
+    });
+    assert.equal(f.weapon.lastHitHit, special, "a 0.7 roll misses at 61 percent and hits at 76 percent");
+  }
+});
+
+test("the Obligator's charged thrust keeps the best of two rolls, three past a softer stab or slash, plus 40 percent on a 3x3", () => {
+  class Sure extends TestNpc {
+    incomingAttackRollModifiers() {
+      return { guaranteedHit: true };
+    }
+  }
+  class SlashSoft extends Sure {
+    get bonuses() {
+      const bonuses = super.bonuses;
+      return { ...bonuses, defence: { ...bonuses.defence, slash: 10 } };
+    }
+  }
+  const run = (Target, rolls, style) => {
+    const f = fight(34715);
+    if (style) AttackStylesController.controller.setWeaponAttackStyle(f.weapon, style);
+    const target = new Target(f.region, { x: 7, y: 7 }, {});
+    target.currentStats.hitpoint = 2000;
+    withRandom(rolls, () => f.weapon.attack(f.player, target));
+    return f.weapon.damage;
+  };
+  assert.equal(run(Sure, [0.1, 0.9]), 23, "best of 1 and 17, times 1.4");
+  assert.equal(run(Sure, [0.1, 0.2, 0.95]), 4, "two rolls of 1 and 3 when crush is the softest");
+  assert.equal(run(SlashSoft, [0.1, 0.2, 0.95]), 25, "a third roll of 18 when slash defence beats crush");
+  assert.equal(run(Sure, [0.9, 0.1], AttackStyle.SMASH), 17, "smash makes one plain roll");
+});
+
+test("ascension crossbows fire only ascension bolts, alternate hands, and halve the diamond proc chance", () => {
+  assert.equal(wield(34681, 9242).player.attack(), false, "ruby bolts (e) do not fit");
+  const f = wield(34681, 34684);
+  const played = recordAnimations(f.player);
+  for (let i = 0; i < 2; i++) {
+    assert.equal(f.player.attack(), true);
+    f.player.didAttack();
+  }
+  assert.deepEqual(played, [15114, 15116]);
+  assert.equal(f.target.incomingProjectiles[0].options.visuals.spotAnim.id, 4437);
+  for (const [roll, procs] of [
+    [0.04, true],
+    [0.06, false],
+  ]) {
+    const d = wield(34681, 34696);
+    withRandom(roll, () => d.player.attack());
+    assert.equal(d.target.incomingProjectiles[0].options.visuals.spotAnim.id, 4439);
+    landAll(d.target);
+    assert.deepEqual(
+      d.target.spotAnims.map(({ id }) => id),
+      procs ? [758] : [],
+    );
+  }
+});
+
+test("enchanted bolts fly their own bolt and show their effect on the target only when it procs", () => {
+  for (const [weapon, ammo, roll, travel, effect] of [
+    [21902, 9242, 0, 27, 754],
+    [21902, 9243, 0, 27, 758],
+    [21902, 9242, 0.9, 27, null],
+    [26374, 21944, 0.9, 1468, null],
+  ]) {
+    const f = wield(weapon, ammo);
+    withRandom(roll, () => f.player.attack());
+    const projectile = f.target.incomingProjectiles[0];
+    assert.equal(projectile.options.visuals.hidden, undefined, `${weapon} bolt is drawn`);
+    assert.equal(projectile.options.visuals.spotAnim.id, travel);
+    landAll(f.target);
+    assert.deepEqual(
+      f.target.spotAnims.map(({ id }) => id),
+      effect === null ? [] : [effect],
+    );
+  }
+});
+
+const SPECIALS = [
+  [26374, 21944, false, 75, { animation: 9168, cast: null, projectile: 1995, impact: 754 }],
+  [21902, 9242, false, 60, { animation: 7552, cast: null, projectile: 27, impact: null }],
+  [13576, null, false, 50, { animation: 1378, cast: 1292, projectile: null, impact: null }],
+  [28338, null, false, 0, { animation: 10173, cast: 2430, projectile: null, impact: null }],
+  [33335, null, false, 0, { animation: 10173, cast: 4008, projectile: null, impact: null }],
+  [29589, null, true, 50, { animation: 11138, cast: null, projectile: null, impact: 2810 }],
+  [29591, 11212, true, 25, { animation: 11133, cast: 2806, projectile: 2807, impact: 2908 }],
+  [12926, null, false, 50, { animation: 5061, cast: null, projectile: 1043, impact: null }],
+];
+for (const [id, ammo, demon, cost, graphics] of SPECIALS) {
+  test(`special attack of ${id} spends ${cost} energy, lands, and plays its own cache graphics`, () => {
+    const f = wield(id, ammo, demon);
+    const played = recordAnimations(f.player);
+    f.player.useSpecialAttack = true;
+    withRandom(0, () => {
+      assert.equal(f.player.attack(), true, "the special fired");
+      f.player.didAttack();
+    });
+    assert.equal(f.player.currentStats.specialAttack, 100 - cost);
+    assert.equal(played.at(-1), graphics.animation);
+    assert.deepEqual(
+      f.player.spotAnims.map(({ id: spotAnim }) => spotAnim),
+      graphics.cast === null ? [] : [graphics.cast],
+    );
+    const [projectile] = f.target.incomingProjectiles;
+    if (graphics.projectile === null) assert.equal(projectile.options.visuals.hidden, true);
+    else assert.equal(projectile.options.visuals.spotAnim.id, graphics.projectile);
+    const before = f.target.currentStats.hitpoint;
+    withRandom(0, () => landAll(f.target));
+    assert.ok(f.target.currentStats.hitpoint < before, "the special's hit landed");
+    assert.ok(
+      f.target.spotAnims.map(({ id: spotAnim }) => spotAnim).includes(graphics.impact) || graphics.impact === null,
+      `impact ${graphics.impact} shown on the target`,
+    );
+    if (graphics.impact === null)
+      assert.deepEqual(
+        f.target.spotAnims.map(({ id: spotAnim }) => spotAnim),
+        [],
+      );
+  });
+}
